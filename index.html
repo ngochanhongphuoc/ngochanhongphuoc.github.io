@@ -190,6 +190,8 @@
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
+    // URL Web App của Google Apps Script ghi form vào Google Sheet
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwvqN_QYk5V8NzH9x0nCP0v0cYaMsGibJtDT_PqI2UXBDznEVnBE9CnKwb2tftsl6cI/exec";
     const translations = {
       vi: {
         pageTitle: "Ngọc Hân & Hồng Phước | Thiệp cưới", pageDescription: "Thiệp cưới Ngọc Hân và Hồng Phước, ngày 28 tháng 11 năm 2026.",
@@ -203,7 +205,7 @@
         rsvpIntroEn: "Your presence would be an honor. Please RSVP so we can prepare the warmest welcome for you.", rsvpIntroVi: "Sự hiện diện của bạn là niềm vinh hạnh cho gia đình chúng tôi. Xin xác nhận để chúng tôi chuẩn bị chu đáo nhất.",
         yourName: "Tên của bạn", namePlaceholder: "Nhập tên của bạn", attendanceQuestion: "Bạn sẽ đến chứ?", attendYes: "Tôi sẽ đến", attendNo: "Rất tiếc, tôi không thể đến", guestCountQuestion: "Số lượng khách", shuttleQuestion: "Bạn có cần xe đưa đón không?", shuttleYes: "Có", shuttleNo: "Không", confirmRsvp: "Gửi xác nhận",
         mapTitle: "Bản đồ đến địa điểm tiệc cưới", directions: "Chỉ đường", wishNameLabel: "Tên của bạn*", wishNamePlaceholder: "Nhập tên của bạn", wishMessageLabel: "Lời chúc của bạn*", wishMessagePlaceholder: "Gửi lời chúc đến cô dâu và chú rể", sendWishes: "Gửi lời chúc",
-        rsvpYes: "Cảm ơn bạn! Hẹn gặp bạn trong ngày vui của chúng mình.", rsvpNo: "Cảm ơn bạn đã hồi âm và gửi lời chúc đến chúng mình.", wishSaved: "Lời chúc của bạn đã được lưu trên thiết bị này.", storageError: "Không thể lưu lời chúc trên thiết bị này.",
+        rsvpYes: "Cảm ơn bạn! Hẹn gặp bạn trong ngày vui của chúng mình.", rsvpNo: "Cảm ơn bạn đã hồi âm và gửi lời chúc đến chúng mình.", wishSaved: "Cảm ơn bạn đã gửi lời chúc đến chúng mình!", storageError: "Không thể lưu lời chúc trên thiết bị này.", sending: "Đang gửi...", sendError: "Gửi không thành công, bạn vui lòng thử lại.",
         days: "ngày", hours: "giờ", minutes: "phút", seconds: "giây", monthDays: ["T2", "T3", "T4", "T5", "T6", "T7", "CN"], weddingDay: "Ngày cưới, 28 tháng 11",
         startAutoScroll: "Bắt đầu tự cuộn", pauseAutoScroll: "Tạm dừng tự cuộn", resumeAutoScroll: "Tiếp tục tự cuộn"
       },
@@ -219,7 +221,7 @@
         rsvpIntroEn: "Your presence would be an honor. Please RSVP so we can prepare the warmest welcome for you.", rsvpIntroVi: "Your presence would be an honor. Please RSVP so we can prepare the warmest welcome for you.",
         yourName: "Your name", namePlaceholder: "Enter your name", attendanceQuestion: "Will you attend?", attendYes: "I will attend", attendNo: "Sorry, I can't make it", guestCountQuestion: "Number of guests", shuttleQuestion: "Do you need a shuttle bus?", shuttleYes: "Yes", shuttleNo: "No", confirmRsvp: "Confirm attendance",
         mapTitle: "Map to the wedding reception venue", directions: "Get directions", wishNameLabel: "Your name*", wishNamePlaceholder: "Enter your name", wishMessageLabel: "Your wishes*", wishMessagePlaceholder: "Send a wish to the couple", sendWishes: "Send wishes",
-        rsvpYes: "Thank you! We look forward to celebrating with you.", rsvpNo: "Thank you for letting us know and for your kind wishes.", wishSaved: "Your wish has been saved on this device.", storageError: "Unable to save your wish on this device.",
+        rsvpYes: "Thank you! We look forward to celebrating with you.", rsvpNo: "Thank you for letting us know and for your kind wishes.", wishSaved: "Thank you for your kind wishes!", storageError: "Unable to save your wish on this device.", sending: "Sending...", sendError: "Something went wrong, please try again.",
         days: "days", hours: "hours", minutes: "minutes", seconds: "seconds", monthDays: ["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"], weddingDay: "Wedding day, November 28",
         startAutoScroll: "Start auto-scroll", pauseAutoScroll: "Pause auto-scroll", resumeAutoScroll: "Resume auto-scroll"
       }
@@ -658,17 +660,49 @@
         input.required = !declined;
       });
     }
+    async function sendToSheet(type, fields) {
+      if (!SHEET_URL) return;
+      await fetch(SHEET_URL, {
+        method: "POST",
+        mode: "no-cors",
+        body: new URLSearchParams({ type, language: selectedLanguage, ...fields })
+      });
+    }
+    async function submitWithStatus(form, send) {
+      const button = form.querySelector(".submit-button");
+      const label = button.textContent;
+      button.disabled = true;
+      button.textContent = translations[selectedLanguage].sending;
+      try {
+        await send();
+        return true;
+      } catch {
+        showToast(translations[selectedLanguage].sendError);
+        return false;
+      } finally {
+        button.disabled = false;
+        button.textContent = label;
+      }
+    }
+
     rsvpForm.addEventListener("change", updateAttendingDetails);
-    rsvpForm.addEventListener("submit", event => {
+    rsvpForm.addEventListener("submit", async event => {
       event.preventDefault();
       const data = new FormData(rsvpForm);
       const attending = data.get("attendance") === "yes";
       const rsvp = {
-        name: data.get("name"),
+        name: data.get("name").trim(),
         attendance: data.get("attendance"),
         guests: attending ? Number(data.get("guests")) : 0,
         shuttle: attending ? data.get("shuttle") : null
       };
+      const sent = await submitWithStatus(rsvpForm, () => sendToSheet("rsvp", {
+        name: rsvp.name,
+        attendance: rsvp.attendance,
+        guests: rsvp.guests,
+        shuttle: rsvp.shuttle || ""
+      }));
+      if (!sent) return;
       lastRsvp = rsvp;
       renderRsvpStatus();
       try { localStorage.setItem("phuoc-han-rsvp", JSON.stringify(rsvp)); } catch {}
@@ -697,10 +731,12 @@
       });
     }
     renderWishes();
-    wishForm.addEventListener("submit", event => {
+    wishForm.addEventListener("submit", async event => {
       event.preventDefault();
       const data = new FormData(wishForm);
-      wishes.push({ name: data.get("name").trim(), message: data.get("message").trim() });
+      const wish = { name: data.get("name").trim(), message: data.get("message").trim() };
+      if (!await submitWithStatus(wishForm, () => sendToSheet("wish", wish))) return;
+      wishes.push(wish);
       try { localStorage.setItem("phuoc-han-wishes", JSON.stringify(wishes)); } catch { showToast(translations[selectedLanguage].storageError); }
       wishForm.reset();
       renderWishes();
