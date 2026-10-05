@@ -191,7 +191,7 @@
 
   <script>
     // URL Web App của Google Apps Script ghi form vào Google Sheet
-    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwvqN_QYk5V8NzH9x0nCP0v0cYaMsGibJtDT_PqI2UXBDznEVnBE9CnKwb2tftsl6cI/exec";
+    const SHEET_URL = "https://script.google.com/macros/s/AKfycbwJD_QxTMFlZ-y7gJv0ZTeaSNLJ2oBvNWgYBP_vkJaitEOnPQ9zao0iIabkOxnVCJg/exec";
     const translations = {
       vi: {
         pageTitle: "Ngọc Hân & Hồng Phước | Thiệp cưới", pageDescription: "Thiệp cưới Ngọc Hân và Hồng Phước, ngày 28 tháng 11 năm 2026.",
@@ -660,12 +660,14 @@
         input.required = !declined;
       });
     }
+    // Thiệp nhà gái; bản nhà trai (hongphuocngocthan.github.io) dùng chung Sheet với "Nhà trai"
+    const guestSide = "Nhà gái";
     async function sendToSheet(type, fields) {
       if (!SHEET_URL) return;
       await fetch(SHEET_URL, {
         method: "POST",
         mode: "no-cors",
-        body: new URLSearchParams({ type, language: selectedLanguage, ...fields })
+        body: new URLSearchParams({ type, language: selectedLanguage, side: guestSide, ...fields })
       });
     }
     async function submitWithStatus(form, send) {
