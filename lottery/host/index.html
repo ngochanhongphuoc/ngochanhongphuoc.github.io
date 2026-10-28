@@ -48,6 +48,8 @@
   .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #111; color: #fff; padding: 10px 18px; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 70; }
   .toast.show { opacity: 1; }
   .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; }
+  .card .ladder { font-size: 0.85rem; }
+  .card .board { gap: 0.3em; }
 </style>
 </head>
 <body class="xs">
@@ -58,7 +60,7 @@
 <script type="module">
   import { CONFIGURED, roomRef, onValue, signIn, watchServerTime, escapeHtml, tidyUrl, avatarHtml } from '../../shared/live.js';
   import { claimControl, sendCommand, saveMcSession } from '../../shared/remote.js';
-  import { ROUNDS, hitsOf, survivors, winnersOf, ticketHtml, ballsHtml } from '../lottery.js';
+  import { PRIZES, ALL_NUMS, ROW_TEXT, callsOf, stageOf, waitingList, winnersAt, ladderHtml, boardHtml } from '../lottery.js';
   tidyUrl();
 
   const app = document.getElementById('app');
@@ -128,27 +130,26 @@
   }
 
   const chip = (p, extra = '') => `<span class="chip">${avatarHtml(p.animal)} ${escapeHtml(p.name)}${extra}</span>`;
-  const orderOf = (r) => String((room.order && room.order[r]) || '');
   const common = '<button class="btn btn-soft" data-act="help">❓ Bật/tắt bảng Cách chơi trên TV</button>';
   const newRoomBtn = '<button class="btn btn-soft" data-act="newroom">🔁 Tạo phòng mới</button>';
+  const ladder = () => ladderHtml(room, avatarHtml, escapeHtml);
 
   function render() {
     if (switching) return;
     if (!room) { message('👋', 'Phòng đã đóng', 'Quét lại "🎤 MC" trên TV để điều khiển phòng mới.'); return; }
+    if (room.version !== 2) { message('🔁', 'Phòng lô tô kiểu cũ', 'Trên TV bấm "🔁 Phòng mới" rồi quét lại "🎤 MC".'); return; }
     const s = room.status;
     const players = Object.values(room.players || {});
-    const statusText = {
-      lobby: '⏳ Sảnh chờ', ready: `🎟️ Vòng ${room.round + 1}`, drawing: `🎲 Vòng ${room.round + 1}`,
-      won: `🧧 Trúng vòng ${room.round + 1}`, ended: '🏆 Tổng kết',
-    }[s] || s;
+    const calls = callsOf(room);
+    const statusText = { lobby: '⏳ Sảnh chờ', drawing: `🎲 ${calls.length}/${ALL_NUMS.length} số`, won: '🧧 Có người KINH', ended: '🏆 Tổng kết' }[s] || s;
     let body = '';
     if (s === 'lobby') body = lobbyView(players);
-    else if (s === 'ready' || s === 'drawing') body = drawView();
-    else if (s === 'won') body = wonView();
-    else if (s === 'ended') body = endedView();
+    else if (s === 'drawing') body = drawView(calls);
+    else if (s === 'won') body = wonView(calls);
+    else if (s === 'ended') body = endedView(calls);
     app.innerHTML = `<div class="screen">
       <div class="head">
-        <div class="title">🎤 MC · Loto<small>Phòng ${pin} · 👥 ${players.length} người</small></div>
+        <div class="title">🎤 MC · Lô tô<small>Phòng ${pin} · 👥 ${players.length} người</small></div>
         <span class="badge">${statusText}</span>
       </div>
       ${body}
@@ -156,80 +157,71 @@
     bind();
   }
 
-  const roundsList = (cur) => `<ul class="rounds">${ROUNDS.map((R, i) => `<li class="${i === cur ? 'on' : ''}"><span class="han">${R.han}</span> Vòng ${i + 1}: <b>${R.prize}</b> · vé ${R.digits} số · ${R.winners} giải</li>`).join('')}</ul>`;
-
   function lobbyView(players) {
     return `<div class="card">
-        <h2>Khách đã nhận vé</h2>
+        <h2>Khách đã vào phòng</h2>
         <div class="big-num">${players.length}</div>
         <div class="chips">${players.map((p) => chip(p)).join('') || '<span class="muted">Đang chờ khách quét mã trên TV...</span>'}</div>
       </div>
-      <div class="card"><h2>Các vòng quay</h2>${roundsList(0)}</div>
-      <div class="card"><p class="muted">🎵 Nhạc và tiếng phát trên TV: lúc mở game trên máy tính, bấm 1 lần vào màn hình TV để trình duyệt cho phát âm thanh.</p></div>
+      <div class="card"><h2>4 giải</h2>${ladder()}</div>
+      <div class="card"><p class="muted">🎟️ Mỗi khách 1 vé 3 hàng × 3 số (0–30), giữ nguyên đến hết game. Khách vào trễ vẫn được phát vé.</p></div>
       <div class="actions">
-        <button class="btn btn-main" data-act="deal" ${players.length ? '' : 'disabled'}>🎟️ Phát vé vòng 1</button>
+        <button class="btn btn-main" data-act="deal" ${players.length ? '' : 'disabled'}>🎟️ Phát vé</button>
         ${common}
         ${newRoomBtn}
       </div>`;
   }
 
-  function drawView() {
-    const r = room.round;
-    const R = ROUNDS[r];
-    const hits = hitsOf(room, r);
-    const order = orderOf(r);
-    const alive = survivors(room, r, hits);
-    const miss = room.miss && room.miss.r === r ? room.miss : null;
-    const last = room.last && room.last.r === r ? room.last : null;
-    const pool = '0123456789'.split('').filter((d) => !order.includes(d));
-    const tie = alive.length > R.winners && !pool.some((d) => alive.some((p) => p.ticket.includes(d)));
+  function drawView(calls) {
+    const called = new Set(calls);
+    const stage = stageOf(room);
+    const P = PRIZES[Math.min(stage, PRIZES.length - 1)];
+    const last = calls.length ? calls[calls.length - 1] : null;
+    const waiting = waitingList(room, called);
     const spinning = Boolean(room.spinning);
-    let note;
-    if (spinning) note = room.spinning.tiebreak ? 'Đang bốc thăm chung kết trên TV... 🥁' : 'Đang quay số trên TV... 🥁';
-    else if (miss) note = `Số ${miss.digit}: không ai giữ, bấm quay lại nha 😆`;
-    else if (tie) note = `Còn ${alive.length} vé giống hệt nhau, bấm để bốc thăm chung kết!`;
-    else if (last) note = `Số ${last.digit}: ${last.before} vé ➜ còn ${last.after} vé`;
-    else note = `Đã phát ${alive.length} vé, bấm Quay số để bắt đầu!`;
     return `<div class="card">
-        <h2><span class="han">${R.han}</span> Vòng ${r + 1} · ${R.prize} · ${R.winners} giải</h2>
+        <h2><span class="han">${P.han}</span> Đang tìm ${P.name} · ${ROW_TEXT[P.rows]}</h2>
         <div class="draw-row">
-          <div class="ballbig ${spinning ? 'rolling' : ''}">${spinning ? '?' : escapeHtml(order ? order[order.length - 1] : '?')}</div>
-          <div><div class="big-num">${alive.length}</div><div class="muted">vé đang giữ</div></div>
+          <div class="ballbig ${spinning ? 'rolling' : ''}">${spinning ? '?' : (last === null ? '?' : last)}</div>
+          <div><div class="big-num">${calls.length}<span style="font-size:1rem">/${ALL_NUMS.length}</span></div><div class="muted">số đã quay</div></div>
         </div>
-        <div class="balls">${ballsHtml(hits, order)}</div>
-        <p class="note" style="margin-top:10px">${note}</p>
-        ${alive.length <= 30 ? `<div class="chips">${alive.map((p) => chip(p, ' ' + ticketHtml(p.ticket, hits))).join('')}</div>` : ''}
+        <div style="margin-top:10px;font-size:0.8rem">${boardHtml(calls, last)}</div>
       </div>
+      <div class="card">
+        <h2>⏳ Đang chờ ${P.short}: ${waiting.length} người</h2>
+        <div class="chips">${waiting.slice(0, 30).map((p) => chip(p, ` · chờ ${p.waiting.join(', ')}`)).join('') || '<span class="muted">Chưa ai chỉ còn thiếu 1 số</span>'}</div>
+      </div>
+      <div class="card"><h2>Bậc giải</h2>${ladder()}</div>
       <div class="actions">
-        <button class="btn btn-main" data-act="spin" ${spinning ? 'disabled' : ''}>${tie ? '🎲 Bốc thăm chung kết' : '🎲 Quay số'}</button>
+        <button class="btn btn-main" data-act="spin" ${spinning ? 'disabled' : ''}>🎲 Quay số</button>
+        <button class="btn btn-soft" data-act="auto">${room.auto ? '⏸ Dừng tự quay (đang bật)' : '⏯ Bật tự quay (TV tự quay mỗi 4,5 giây)'}</button>
         ${common}
         ${newRoomBtn}
       </div>`;
   }
 
-  function wonView() {
-    const r = room.round;
-    const R = ROUNDS[r];
-    const list = winnersOf(room, r);
-    const lastRound = r >= ROUNDS.length - 1;
+  function wonView(calls) {
+    const lw = room.lastWin || { stages: [] };
+    const done = stageOf(room) >= PRIZES.length;
     return `<div class="card">
-        <h2>🧧 Trúng ${R.prize}</h2>
-        ${list.map((p) => `<div class="wcard"><span class="ani">${avatarHtml(p.animal)}</span><span style="flex:1">${escapeHtml(p.name)}</span>${p.ticket ? ticketHtml(p.ticket, p.ticket) : ''}</div>`).join('')}
-        <p class="muted" style="margin-top:10px">💬 Gợi ý lời dẫn: mời ${list.length > 1 ? 'các bạn' : 'bạn'} lên nhận quà từ cô dâu chú rể!</p>
+        <h2>🧧 KINH! Số ${lw.n}</h2>
+        ${(lw.stages || []).map((st) => winnersAt(room, st).map((p) => `<div class="wcard"><span class="ani">${avatarHtml(p.animal)}</span><span style="flex:1">${escapeHtml(p.name)}</span><span>${PRIZES[st].emoji} ${PRIZES[st].short}</span></div>`).join('')).join('')}
+        ${lw.tie ? '<p class="muted" style="margin-top:8px">🎲 Nhiều người cùng đạt nên TV đã bốc thăm</p>' : ''}
+        <p class="muted" style="margin-top:10px">💬 Gợi ý lời dẫn: mời lên nhận quà từ cô dâu chú rể!</p>
       </div>
-      ${lastRound ? '' : `<div class="card"><h2>Vòng tiếp theo</h2>${roundsList(r + 1)}</div>`}
+      <div class="card"><h2>Bậc giải</h2>${ladder()}</div>
       <div class="actions">
-        <button class="btn btn-main" data-act="next">${lastRound ? 'Xem tổng kết 🏆' : `🎟️ Phát vé vòng ${r + 2}`}</button>
+        <button class="btn btn-main" data-act="next">${done ? 'Xem tổng kết 🏆' : '▶ Quay tiếp'}</button>
         ${common}
         ${newRoomBtn}
       </div>`;
   }
 
-  function endedView() {
+  function endedView(calls) {
     return `<div class="card">
         <h2>🏆 Danh sách trúng giải</h2>
-        ${ROUNDS.map((R, r) => `<p style="margin-top:10px;font-weight:800"><span class="han">${R.han}</span> Vòng ${r + 1} · ${R.prize}</p>
-          <div class="chips">${winnersOf(room, r).map((p) => chip(p, p.ticket ? ` · ${p.ticket}` : '')).join('') || '<span class="muted">Chưa quay</span>'}</div>`).join('')}
+        ${ladder()}
+        <p class="muted" style="margin-top:10px">Đã quay ${calls.length} số.</p>
       </div>
       <div class="actions">
         <button class="btn btn-main" data-act="newroom">🔁 Chơi lại (phòng mới)</button>

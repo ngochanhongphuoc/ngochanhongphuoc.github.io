@@ -52,6 +52,14 @@
   .list .row b { color: var(--gold-light); }
   .mine { box-shadow: inset 0 0 0 2px var(--gold); }
   .help-btn { border: 0; background: rgba(255,226,154,0.18); color: var(--gold-light); border-radius: 9999px; padding: 5px 11px; font: 700 0.8rem Montserrat, sans-serif; cursor: pointer; white-space: nowrap; }
+
+  /* Vé lô tô 3×3 */
+  .ticket .lt-grid { font-size: clamp(13px, 4.2vw, 18px); margin: 14px 0 10px; }
+  .lastcall { display: flex; align-items: center; gap: 12px; background: rgba(0,0,0,0.22); border-radius: 9999px; padding: 6px 8px 6px 18px; font-weight: 700; }
+  .lastcall b { width: 58px; height: 58px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: 1.8rem; color: var(--red-deep); background: radial-gradient(circle at 32% 28%, #fff 0, var(--gold-light) 30%, var(--gold) 62%, var(--gold-deep) 100%); box-shadow: 0 0 0 3px var(--red-deep), 0 0 0 5px var(--gold); }
+  .lastcall b.rolling { animation: shake 0.25s linear infinite; }
+  .status b { color: var(--gold-light); }
+  .mini-ladder { width: 100%; max-width: 420px; font-size: 0.85rem; }
 </style>
 </head>
 <body class="xs">
@@ -65,7 +73,10 @@
     tidyUrl,
     avatarHtml, avatarPickerHtml, DEFAULT_AVATARS,
   } from '../../shared/live.js';
-  import { ROUNDS, hitsOf, ticketOf, keeps, survivors, winnersOf, ticketHtml, howToHtml, lanterns, COUPLE } from '../lottery.js';
+  import {
+    PRIZES, ALL_NUMS, ROW_TEXT, ticketOf, parseTicket, callsOf, stageOf, rowsDone, progress, winnersAt,
+    ticketGridHtml, ladderHtml, howToHtml, lanterns, COUPLE,
+  } from '../lottery.js';
   const BASE = tidyUrl();
 
   const app = document.getElementById('app');
@@ -73,7 +84,7 @@
   let uid = null;
   let room = null;
   let chosenAnimal = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
-  let prev = { round: null, hits: '', alive: true, won: '' }; // để phát âm thanh khi có số mới
+  let prev = { calls: -1, hits: 0, rows: 0, won: '' }; // để phát âm thanh khi có số mới
   let view = '';
 
   lanterns();
@@ -113,7 +124,7 @@
   async function openRoom() {
     const r = (await get(roomRef(pin))).val();
     if (!r) { renderPinForm('Không tìm thấy phòng, kiểm tra lại mã nha'); return; }
-    // Mã của phòng Kahoot: chuyển sang trang chơi Kahoot
+    // Mã của game khác: chuyển sang trang nhập mã chung
     if (r.type !== 'lottery') { location.replace(new URL('../../quiz/join/', BASE).href + `?pin=${pin}${EMU ? '&emu=1' : ''}`); return; }
     const url = new URL(location.href);
     url.search = `?pin=${pin}${EMU ? '&emu=1' : ''}`;
@@ -127,7 +138,7 @@
     app.innerHTML = `<div class="screen"><div class="center">
       <div class="brand couple stack">${COUPLE}</div>
       <div class="han gold-text" style="font-size:3rem;line-height:1">囍</div>
-      <h1>Nhận vé Loto</h1>
+      <h1>Nhận vé lô tô</h1>
       <div class="card">
         <label for="nameInput">Tên hiển thị</label>
         <input class="input" id="nameInput" maxlength="20" autocomplete="off" placeholder="VD: Tuấn bàn 5" value="${escapeHtml(nameValue)}">
@@ -172,8 +183,7 @@
     if (document.querySelector('.help-modal')) return;
     const box = document.createElement('div');
     box.className = 'help-modal';
-    box.innerHTML = `<div class="box"><h2>🧧 Cách chơi Loto</h2>${howToHtml()}
-      <div class="sub" style="margin:12px auto 0">${ROUNDS.map((R, i) => `${R.han} Vòng ${i + 1}: ${R.prize} (vé ${R.digits} số, ${R.winners} giải)`).join('<br>')}</div>
+    box.innerHTML = `<div class="box"><h2>🧧 Cách chơi lô tô</h2>${howToHtml()}
       <button class="btn" id="helpClose">Đã hiểu, chơi thôi!</button></div>`;
     document.body.appendChild(box);
     const close = () => box.remove();
@@ -183,14 +193,23 @@
   document.addEventListener('click', (e) => { if (e.target.closest('[data-help]')) showHelp(); });
   const screen = (me, inner, extra = '') => `<div class="screen">${topBar(me, extra)}<div class="center">${inner}</div></div>`;
 
-  // Vòng mà mình đã trúng (nếu có)
-  function myWin() {
-    for (let r = 0; r < ROUNDS.length; r++) if (room.winners && room.winners[r] && room.winners[r][uid]) return r;
+  // Giải mình đã trúng (nếu có)
+  function myPrize() {
+    for (let st = 0; st < PRIZES.length; st++) if (room.winners && room.winners[st] && room.winners[st][uid]) return st;
     return -1;
+  }
+
+  function ticketCard(me, t, called, last) {
+    return `<div class="ticket">
+      <div class="head"><span>VÉ LÔ TÔ</span><span class="han">囍</span><span>0 – 30</span></div>
+      ${ticketGridHtml(t, called, { last })}
+      <div class="owner">${avatarHtml(me.animal)} ${escapeHtml(me.name)}</div>
+    </div>`;
   }
 
   function render() {
     if (!room) { app.innerHTML = '<div class="screen"><div class="center"><h1>Phòng đã bị xóa</h1><p class="sub">Quét mã QR mới trên màn hình nha!</p></div></div>'; return; }
+    if (room.movedTo) { app.innerHTML = `<div class="screen"><div class="center"><h1>MC đã tạo phòng mới</h1><a class="btn" href="?pin=${room.movedTo}">Vào phòng mới ${room.movedTo}</a></div></div>`; return; }
     const me = room.players && room.players[uid];
     if (!me) {
       if (room.status === 'ended') { app.innerHTML = '<div class="screen"><div class="center"><h1>Lô tô đã kết thúc 🧧</h1><p class="sub">Hẹn bạn ở trò chơi sau nha!</p></div></div>'; return; }
@@ -201,92 +220,77 @@
     const s = room.status;
     if (s === 'lobby') {
       app.innerHTML = screen(me, `<div class="avatar">${avatarHtml(me.animal)}</div><h1>Bạn đã vào phòng! 🎉</h1>
-        <p class="sub">Chờ MC phát vé nha. Trong lúc chờ, đọc nhanh cách chơi nè:</p>
-        <div style="width:100%;max-width:420px">${howToHtml()}</div>
-        <div class="pill">🧧 3 vòng · ${ROUNDS.map((R) => R.han).join(' · ')}</div>`);
+        <p class="sub">Chờ MC phát vé nha. Vé có 3 hàng, mỗi hàng 3 số và giữ nguyên đến hết game.</p>
+        <div style="width:100%;max-width:420px">${howToHtml()}</div>`);
       return;
     }
-    if (s === 'ended') { renderEnded(me); return; }
 
-    const r = room.round;
-    const R = ROUNDS[r];
-    const extra = `<span class="han" style="font-size:1.3rem">${R.han}</span> Vòng ${r + 1}/${ROUNDS.length}`;
-    const t = ticketOf(me, r);
-    const hits = hitsOf(room, r);
-    const alive = survivors(room, r, hits);
-    const won = room.winners && room.winners[r] && room.winners[r][uid];
+    const t = ticketOf(me);
+    if (!t) { app.innerHTML = screen(me, '<div class="spinner"></div><h1>Đang phát vé cho bạn...</h1>'); return; }
+    const calls = callsOf(room);
+    const called = new Set(calls);
+    const last = calls.length ? calls[calls.length - 1] : null;
+    const rows = parseTicket(t);
+    const done = rowsDone(rows, called);
+    const hits = rows.flat().filter((n) => called.has(n)).length;
+    const mine = myPrize();
+    const stage = stageOf(room);
+    const extra = `🎲 ${calls.length}/${ALL_NUMS.length}`;
 
-    if (s === 'won' && won) {
-      app.innerHTML = screen(me, `<div class="win-han han gold-text">${r === ROUNDS.length - 1 ? '大吉' : '囍'}</div>
-        <h1 class="gold-text" style="font-size:2rem">BẠN TRÚNG ${R.prize.toUpperCase()}!</h1>
-        ${ticketCard(me, r, t, t, false)}
+    if (s === 'ended') { renderEnded(me, t, called); return; }
+
+    // Vừa trúng giải ở số này
+    if (s === 'won' && mine >= 0 && room.lastWin && (room.lastWin.stages || []).includes(mine)) {
+      const P = PRIZES[mine];
+      app.innerHTML = screen(me, `<div class="win-han han gold-text">${P.han}</div>
+        <h1 class="gold-text" style="font-size:2rem">BẠN TRÚNG ${P.name.toUpperCase()}!</h1>
+        ${ticketCard(me, t, called, last)}
         <p class="sub">Lên sân khấu nhận quà từ cô dâu chú rể nha 🧧</p>`, extra);
-      if (prev.won !== `${pin}:${r}`) {
-        prev.won = `${pin}:${r}`;
+      if (prev.won !== `${pin}:${mine}`) {
+        prev.won = `${pin}:${mine}`;
         sfx.fanfare();
         burst(['🧧', '🧨', '🎆', '✨', '💰'], 60);
         if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
       }
       return;
     }
-    if (s === 'won') {
-      const names = winnersOf(room, r).map((p) => `${avatarHtml(p.animal)} ${escapeHtml(p.name)}`).join(', ');
-      app.innerHTML = screen(me, `<div class="han gold-text" style="font-size:4rem;line-height:1">囍</div>
-        <h1>${R.prize} đã có chủ!</h1><p class="sub">Chúc mừng ${names} 🎉</p>
-        ${t ? ticketCard(me, r, t, hits, true) : ''}
-        <p class="sub">${r < ROUNDS.length - 1 ? 'Vòng sau sẽ có vé mới, đừng bỏ lỡ nha!' : 'Cảm ơn bạn đã chơi!'}</p>`, extra);
-      return;
-    }
 
-    // Đang phát vé / đang quay
-    if (!t) {
-      const w = myWin();
-      app.innerHTML = screen(me, w >= 0
-        ? `<div class="avatar">🎉</div><h1>Bạn đã trúng ${ROUNDS[w].prize} ở vòng ${w + 1}</h1><p class="sub">Vòng này nhường vé cho mọi người nha. Cùng xem ai may mắn tiếp theo!</p>`
-        : '<div class="spinner"></div><h1>Đang phát vé cho bạn...</h1><p class="sub">Nếu vòng này đã bắt đầu quay, bạn sẽ có vé ở vòng sau nha.</p>', extra);
-      return;
-    }
-    const isAlive = keeps(t, hits);
-    const spinning = Boolean(room.spinning) && isAlive;
+    // Trạng thái của mình
     let status;
-    if (!isAlive) status = `Vé không có số ${firstMiss(t, hits)} nên đã trượt 😢 Chờ vòng sau nha!`;
-    else if (room.spinning && room.spinning.tiebreak) status = 'Vé của bạn vào chung kết! Đang bốc thăm... 🙏';
-    else if (room.spinning) status = 'Đang quay số may mắn... cầu may nào 🙏';
-    else if (!hits) status = 'Đã nhận vé! Vé có số may mắn thì giữ, không có là trượt 🍀';
-    else status = `Vé còn giữ! Đã có ${hits.length}/${R.digits} số may mắn 🍀`;
-    app.innerHTML = screen(me, `${ticketCard(me, r, t, hits, !isAlive, spinning)}
-      <div class="status">${status}</div>
-      <div class="pill">Còn ${alive.length} vé · ${R.prize}: ${R.winners} giải</div>`, extra);
-
-    // Âm thanh khi có chữ số mới
-    if (prev.round === r && hits.length > prev.hits.length) {
-      if (isAlive) { sfx.correct(); if (navigator.vibrate) navigator.vibrate(80); }
-      else if (prev.alive) sfx.wrong();
+    if (room.spinning) status = 'Đang quay số... cầu may nào 🙏';
+    else if (mine >= 0) status = `🎉 Bạn đã trúng <b>${PRIZES[mine].name}</b>! Chơi tiếp cho vui nha.`;
+    else if (stage >= PRIZES.length) status = 'Đã đủ 4 giải 🧧';
+    else {
+      const P = PRIZES[stage];
+      const pr = progress(rows, called, P.rows);
+      if (!calls.length) status = 'Đã nhận vé! Chờ MC quay số đầu tiên 🍀';
+      else if (pr.left === 0) status = `Vé bạn đã ${ROW_TEXT[P.rows]}! Chờ TV công bố nha 🙏`;
+      else if (pr.left === 1) status = `🔥 Bạn đang <b>chờ số ${pr.waiting.join(' hoặc ')}</b> để trúng ${P.name}!`;
+      else status = `Đang tìm ${P.name} (${ROW_TEXT[P.rows]}). Bạn còn thiếu ${pr.left} số.`;
     }
-    prev = { ...prev, round: r, hits, alive: isAlive };
+    const wonNote = s === 'won' && room.lastWin
+      ? `<div class="pill">🎉 Số ${room.lastWin.n}: ${(room.lastWin.stages || []).map((st) => `${winnersAt(room, st).map((w) => escapeHtml(w.name)).join(', ')} trúng ${PRIZES[st].short}`).join(' · ')}</div>`
+      : '';
+    app.innerHTML = screen(me, `
+      <div class="lastcall"><span>Số vừa quay</span><b class="${room.spinning ? 'rolling' : ''}">${room.spinning ? '?' : (last === null ? '–' : last)}</b></div>
+      ${ticketCard(me, t, called, room.spinning ? null : last)}
+      <div class="status">${status}</div>
+      ${wonNote}
+      <div class="mini-ladder">${ladderHtml(room, avatarHtml, escapeHtml)}</div>`, extra);
+
+    // Âm thanh khi có số mới
+    if (prev.calls >= 0 && calls.length > prev.calls) {
+      if (done > prev.rows) { sfx.correct(); if (navigator.vibrate) navigator.vibrate([120, 60, 120, 60, 240]); }
+      else if (hits > prev.hits) { sfx.answer(); if (navigator.vibrate) navigator.vibrate(80); }
+    }
+    prev = { ...prev, calls: calls.length, hits, rows: done };
   }
 
-  // Số may mắn đầu tiên mà vé không có
-  const firstMiss = (t, hits) => hits.split('').find((d) => !t.includes(d));
-
-  function ticketCard(me, r, t, hits, dead, spinning = false) {
-    const R = ROUNDS[r];
-    return `<div class="ticket">
-      <div class="head"><span>VÉ LÔ TÔ</span><span class="han">${R.han}</span><span>VÒNG ${r + 1}</span></div>
-      ${ticketHtml(t, hits, { spinning, dead })}
-      <div class="owner">${avatarHtml(me.animal)} ${escapeHtml(me.name)} · ${R.prize}</div>
-      ${dead ? '<div class="stamp">TRƯỢT</div>' : ''}
-    </div>`;
-  }
-
-  function renderEnded(me) {
+  function renderEnded(me, t, called) {
     app.innerHTML = screen(me, `<div class="han gold-text" style="font-size:4rem;line-height:1">囍</div>
-      <h1>Tổng kết Loto</h1>
-      <div class="list">${ROUNDS.map((R, r) => {
-        const ws = winnersOf(room, r);
-        const mine = ws.some((p) => p.uid === uid);
-        return `<div class="row ${mine ? 'mine' : ''}"><b>${R.han} ${R.prize}</b><br>${ws.map((p) => `${avatarHtml(p.animal)} ${escapeHtml(p.name)}`).join(', ') || 'Chưa quay'}</div>`;
-      }).join('')}</div>
+      <h1>Tổng kết lô tô</h1>
+      <div class="mini-ladder">${ladderHtml(room, avatarHtml, escapeHtml)}</div>
+      ${ticketCard(me, t, called, null)}
       <p class="sub">Cảm ơn bạn đã chơi cùng Ngọc Hân &amp; Hồng Phước! 💕</p>
       <a class="btn" href="${new URL('../../', BASE).href}">Xem thiệp cưới</a>`);
   }

@@ -33,7 +33,7 @@ Mọi game dùng chung Firebase (project `wedding-game-acf62`, dùng chung với
 | Game | Thư mục | Khách | Số quà | Cách chọn người thắng |
 |---|---|---|---|---|
 | Ai Là Triệu Phú | `quiz/` | `join/` | 3 | Top 3 điểm (15 câu trong `questions.js`) |
-| Loto | `lottery/` | `ticket/` | 4 | 2 Lộc + 1 Song Hỷ + 1 Độc Đắc (`ROUNDS` trong `lottery.js`) |
+| Loto | `lottery/` | `ticket/` | 4 | Lô tô kiểu Việt Nam: mỗi khách 1 vé 3 hàng × 3 số (0–30), **giữ nguyên cả game**, TV quay số, vé tự đánh dấu. 2 người đầu tiên đủ 1 hàng (KINH) → 2 Giải Lộc, người đầu đủ 2 hàng → Song Hỷ, đủ 3 hàng → Độc Đắc (`PRIZES` trong `lottery.js`). Mỗi người tối đa 1 giải (trừ khi ai cũng đã trúng); cùng đạt ở một số thì TV bốc thăm. Có chế độ Tự quay (`room.auto`, phím A). Phòng kiểu mới có `version: 2` |
 | Rung Cây, Rinh Quà | `tree/` | `play/` | 3 | 3 vòng × 1 người, **ai lắc nhiều nhất vòng đó thắng**, không bốc thăm, không loại người đã thắng (`drawWinners` trong `tree.js`) |
 
 - **Nhạc nền theo kịch bản** là file trong `assets/audio/game/`: `quiz-intro.mp3` (Ai Là Triệu Phú: giới thiệu/sảnh chờ), `quiz-music.mp3` (lúc trả lời), `tree-music.mp3` (Rung Cây), `lottery-music.mp3` (Loto, đã cắt 10 phút đầu từ bản 69 phút). Chọn bài theo trạng thái phòng ở `MUSIC_FILES` trong `shared/live.js`; Loto ở `lottery/sound.js`. File lỗi thì dùng bài YouTube dự phòng ([shared/yt-music.js](shared/yt-music.js)), rồi nhạc tổng hợp. Chỉ trang TV phát nhạc. Đổi bài: chép mp3 đè lên file cùng tên.

@@ -1,63 +1,118 @@
-// Phần dùng chung cho game Loto (TV: /lottery, điện thoại khách: /lottery/ticket).
-// Luật kiểu lô tô: mỗi vòng mỗi khách nhận 1 vé gồm các chữ số khác nhau. Mỗi lần quay ra 1 "số may mắn"
-// (không lặp lại); vé nào có số đó thì giữ, vé không có là trượt. Khi số vé còn lại <= số giải thì những vé đó trúng.
-// Lần quay làm trượt hết mọi vé thì bỏ qua số đó (quay lại). Còn nhiều vé giống nhau quá số giải thì bốc thăm.
+// Phần dùng chung cho game Loto (TV: /lottery, điện thoại khách: /lottery/ticket, MC: /lottery/host).
+// Lô tô kiểu Việt Nam: mỗi khách 1 vé 3 hàng × 3 số (9 số khác nhau, 0–30), giữ nguyên từ đầu đến cuối game.
+// TV quay ra từng số (không lặp), vé có số đó tự đánh dấu. Đủ 1 hàng là "KINH".
+// 4 giải theo thứ tự: 2 người đầu tiên đủ 1 hàng (Giải Lộc), người đầu tiên đủ 2 hàng (Song Hỷ),
+// người đầu tiên đủ cả 3 hàng (Độc Đắc). Mỗi người tối đa 1 giải; nhiều người cùng đạt ở một số thì TV bốc thăm.
+
+export const MAX_NUM = 30;                 // số từ 0 đến 30
+export const ALL_NUMS = Array.from({ length: MAX_NUM + 1 }, (_, i) => i);
 
 // spinMs: thời gian quay 1 số. suspense: mức hồi hộp trên TV (0 nhẹ, 1 tối màn hình, 2 thêm nhịp tim + dừng ở "?")
-export const ROUNDS = [
-  { name: 'Tiểu Cát', han: '小吉', prize: 'Giải Lộc', digits: 4, winners: 2, emoji: '🧧', spinMs: 2500, suspense: 0 },
-  { name: 'Song Hỷ', han: '囍', prize: 'Giải Song Hỷ', digits: 5, winners: 1, emoji: '🏮', spinMs: 4500, suspense: 1 },
-  { name: 'Đại Cát', han: '大吉', prize: 'Giải Độc Đắc', digits: 6, winners: 1, emoji: '🐉', spinMs: 5500, suspense: 2 },
+export const PRIZES = [
+  { name: 'Giải Lộc', short: 'Lộc 1', rows: 1, emoji: '🧧', han: '小吉', spinMs: 1600, suspense: 0 },
+  { name: 'Giải Lộc', short: 'Lộc 2', rows: 1, emoji: '🧧', han: '小吉', spinMs: 1600, suspense: 0 },
+  { name: 'Giải Song Hỷ', short: 'Song Hỷ', rows: 2, emoji: '🏮', han: '囍', spinMs: 2200, suspense: 1 },
+  { name: 'Giải Độc Đắc', short: 'Độc Đắc', rows: 3, emoji: '🐉', han: '大吉', spinMs: 2800, suspense: 2 },
 ];
+export const ROW_TEXT = ['', 'đủ 1 hàng', 'đủ 2 hàng', 'đủ cả 3 hàng'];
 
-export const hitsOf = (room, r) => String((room.draws && room.draws[r]) || '');    // các số đã ra và còn người giữ
-export const missesOf = (room, r) => String((room.misses && room.misses[r]) || ''); // các số đã ra nhưng không ai giữ
-export const ticketOf = (p, r) => (p && p.tickets && p.tickets[r] != null ? String(p.tickets[r]) : null);
-export const keeps = (ticket, hits) => hits.split('').every((d) => ticket.includes(d));
-
-// Vé gồm các chữ số khác nhau
-export function randomTicket(digits) {
-  const pool = '0123456789'.split('');
+// ---------- Vé ----------
+// Vé lưu dạng chuỗi "3,12,25|0,8,19|5,17,30" ở players/<uid>/tickets/0 (TV ghi, luật Firebase cho phép)
+export function randomTicket() {
+  const pool = ALL_NUMS.slice();
   for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-  return pool.slice(0, digits).join('');
+  const nine = pool.slice(0, 9);
+  return [0, 1, 2].map((r) => nine.slice(r * 3, r * 3 + 3).sort((a, b) => a - b).join(',')).join('|');
+}
+export const ticketOf = (p) => (p && p.tickets && p.tickets[0] != null ? String(p.tickets[0]) : null);
+export const parseTicket = (t) => (t ? String(t).split('|').map((row) => row.split(',').map(Number)) : null);
+
+// Các số đã quay (theo thứ tự)
+export const callsOf = (room) => String((room && room.calls) || '').split(',').filter((x) => x !== '').map(Number);
+export const stageOf = (room) => Math.min(PRIZES.length, (room && room.stage) || 0);
+
+// Số hàng đã đủ
+export function rowsDone(rows, called) {
+  return rows.filter((row) => row.every((n) => called.has(n))).length;
+}
+// Còn thiếu bao nhiêu số để đạt "need" hàng, và những số đang chờ khi chỉ còn thiếu 1
+export function progress(rows, called, need) {
+  const missing = rows.map((row) => row.filter((n) => !called.has(n))).sort((a, b) => a.length - b.length);
+  const left = missing.slice(0, need).reduce((s, m) => s + m.length, 0);
+  // Còn thiếu đúng 1 số: đã đủ need-1 hàng, hàng nào thiếu 1 số thì số đó là số đang chờ
+  const waiting = left === 1 ? missing.filter((m) => m.length === 1).flat() : [];
+  return { left, waiting };
 }
 
-// Người đã trúng ở vòng trước (không bốc vé ở vòng sau)
-export function pastWinners(room, beforeRound) {
+// Người đã trúng (mọi giải)
+export function winnerUids(room) {
   const out = new Set();
-  for (let r = 0; r < beforeRound; r++) Object.keys((room.winners && room.winners[r]) || {}).forEach((u) => out.add(u));
+  Object.values((room && room.winners) || {}).forEach((w) => Object.keys(w || {}).forEach((u) => out.add(u)));
   return out;
 }
+export const winnersAt = (room, stage) => Object.keys((room.winners && room.winners[stage]) || {})
+  .map((uid) => ({ uid, ...((room.players || {})[uid] || { name: '?', animal: '🎟️' }), ticket: ticketOf((room.players || {})[uid]) }));
 
-// Vé còn giữ được ở vòng r
-export function survivors(room, r, hits = hitsOf(room, r)) {
-  return Object.entries(room.players || {})
-    .filter(([, p]) => { const t = ticketOf(p, r); return t !== null && keeps(t, hits); })
-    .map(([uid, p]) => ({ uid, ...p, ticket: ticketOf(p, r) }));
+// Người đủ điều kiện nhận giải "stage" với các số đã quay. Mỗi người tối đa 1 giải,
+// trừ khi mọi người có vé đều đã trúng (vẫn phải đủ 4 giải).
+export function candidates(room, stage, called, extraWon = new Set()) {
+  const won = new Set([...winnerUids(room), ...extraWon]);
+  const holders = Object.entries(room.players || {}).filter(([, p]) => ticketOf(p));
+  const fresh = holders.filter(([u]) => !won.has(u));
+  const pool = fresh.length ? fresh : holders;
+  return pool
+    .filter(([, p]) => rowsDone(parseTicket(ticketOf(p)), called) >= PRIZES[stage].rows)
+    .map(([uid, p]) => ({ uid, ...p, ticket: ticketOf(p) }));
 }
 
-export const winnersOf = (room, r) => Object.keys((room.winners && room.winners[r]) || {})
-  .map((uid) => ({ uid, ...((room.players || {})[uid] || { name: '?', animal: '🎟️' }), ticket: ticketOf((room.players || {})[uid], r) }));
-
-// Vé số dạng ô chữ số: số nào đã ra thì sáng vàng
-export function ticketHtml(ticket, hits, { dead = false, spinning = false } = {}) {
-  return `<div class="digits ${dead ? 'dead' : ''} ${spinning ? 'waiting' : ''}">${ticket.split('').map((d) =>
-    `<span class="dg ${hits.includes(d) ? 'hit' : ''}">${d}</span>`).join('')}</div>`;
+// Người chỉ còn thiếu 1 số để nhận giải đang quay ("đang chờ")
+export function waitingList(room, called) {
+  const stage = stageOf(room);
+  if (stage >= PRIZES.length) return [];
+  const won = winnerUids(room);
+  const holders = Object.entries(room.players || {}).filter(([, p]) => ticketOf(p));
+  const fresh = holders.filter(([u]) => !won.has(u));
+  const pool = fresh.length ? fresh : holders;
+  return pool.map(([uid, p]) => ({ uid, ...p, ...progress(parseTicket(ticketOf(p)), called, PRIZES[stage].rows) }))
+    .filter((x) => x.left === 1);
 }
 
-// Dãy bi số đã quay: số trúng màu vàng, số không ai giữ bị gạch
-export function ballsHtml(hits, order) {
-  return (order || '').split('').map((d) =>
-    `<span class="ball ${hits.includes(d) ? 'hit' : 'miss'}">${d}</span>`).join('');
+// ---------- Giao diện ----------
+// Vé 3 × 3: số đã quay đánh dấu, hàng đủ 3 số sáng vàng chữ KINH, số vừa quay nhấp nháy
+export function ticketGridHtml(ticket, called, { last = null, compact = false } = {}) {
+  const rows = parseTicket(ticket);
+  if (!rows) return '';
+  return `<div class="lt-grid ${compact ? 'compact' : ''}">${rows.map((row) => {
+    const done = row.every((n) => called.has(n));
+    return `<div class="lt-row ${done ? 'done' : ''}">${row.map((n) =>
+      `<span class="lt-cell ${called.has(n) ? 'hit' : ''} ${n === last ? 'last' : ''}">${n}</span>`).join('')}${done ? '<span class="kinh">KINH</span>' : ''}</div>`;
+  }).join('')}</div>`;
 }
 
-// Hướng dẫn cách chơi (hiện trên TV ở sảnh chờ và trên điện thoại)
+// Bảng 31 số 0–30: số đã quay sáng vàng
+export function boardHtml(calls, last) {
+  const set = new Set(calls);
+  return `<div class="board">${ALL_NUMS.map((n) => `<span class="bn ${set.has(n) ? 'hit' : ''} ${n === last ? 'last' : ''}">${n}</span>`).join('')}</div>`;
+}
+
+// Bậc giải: giải đang quay sáng lên, giải đã có chủ hiện tên
+export function ladderHtml(room, avatarHtml, escapeHtml) {
+  const stage = stageOf(room);
+  return `<ul class="ladder">${PRIZES.map((P, i) => {
+    const ws = winnersAt(room, i);
+    const state = i < stage ? 'done' : i === stage ? 'now' : '';
+    return `<li class="${state}"><span class="han">${P.han}</span><div><b>${P.short}</b><small>${ROW_TEXT[P.rows]}</small>${ws.length ? `<div class="who">${ws.map((w) => `${avatarHtml(w.animal)} ${escapeHtml(w.name)}`).join(', ')}</div>` : ''}</div></li>`;
+  }).join('')}</ul>`;
+}
+
+// Hướng dẫn cách chơi (TV ở sảnh chờ và điện thoại)
 export const HOW_TO = [
-  ['📱', 'Quét mã QR, nhập tên và chọn avatar (mặt cô dâu chú rể hoặc con vật) để vào phòng.'],
-  ['🎟️', 'Mỗi vòng bạn nhận <b>1 vé số mới</b>, các chữ số trên vé không trùng nhau.'],
-  ['🎲', 'MC quay ra từng <b>số may mắn</b>. Vé <b>có</b> số đó (ở vị trí nào cũng được) thì giữ, số sáng vàng. Vé <b>không có</b> là trượt.'],
-  ['🧧', 'Khi số vé còn lại bằng số giải thì những vé đó <b>trúng</b>! Vé giống hệt nhau thì bốc thăm chung kết.'],
-  ['🤝', 'Đã trúng thì nhường vé vòng sau cho người khác. Trượt vòng này vẫn được vé mới ở vòng sau.'],
+  ['📱', 'Quét mã QR, nhập tên và chọn avatar để vào phòng.'],
+  ['🎟️', 'Mỗi người nhận <b>1 vé gồm 3 hàng, mỗi hàng 3 số</b> (từ 0 đến 30). Vé <b>giữ nguyên đến hết game</b>.'],
+  ['🎲', 'TV quay ra từng số. Vé có số đó <b>tự đánh dấu</b>, không cần chạm gì.'],
+  ['🧧', 'Đủ 3 số một hàng là <b>KINH</b>! 2 người KINH đầu tiên trúng <b>Giải Lộc</b>.'],
+  ['🏮', 'Người đầu tiên đủ <b>2 hàng</b> trúng <b>Song Hỷ</b>, đủ <b>cả 3 hàng</b> trúng <b>Độc Đắc</b>. Mỗi người tối đa 1 giải.'],
+  ['🎲', 'Nhiều người cùng đạt ở một số thì TV <b>bốc thăm</b> chọn người may mắn.'],
 ];
 export const howToHtml = () => `<ol class="howto">${HOW_TO.map(([icon, text]) => `<li><span class="ic">${icon}</span><span>${text}</span></li>`).join('')}</ol>`;
 

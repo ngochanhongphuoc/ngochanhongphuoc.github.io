@@ -107,3 +107,34 @@ body.xs {
   .topbar .brand.couple > * { grid-column: 2; }
 }
 .brand.couple.stack::before { content: ''; display: block; width: min(72vw, 280px); aspect-ratio: 720 / 380; margin: 0 auto 10px; border-radius: 18px; border: 3px solid #fff; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); background: url(../assets/images/gallery/wedding-01.jpg) center 30% / cover; }
+
+/* ---------- Lô tô 3 hàng × 3 số ---------- */
+/* Vé: số đã quay đỏ son chữ vàng; hàng đủ 3 số sáng vàng kèm chữ KINH; số vừa quay nhấp nháy */
+.lt-grid { display: grid; gap: 0.45em; }
+.lt-row { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4em; padding: 0.35em; border-radius: 0.7em; background: rgba(122, 10, 20, 0.08); transition: background 0.3s, box-shadow 0.3s; }
+.lt-row.done { background: linear-gradient(180deg, var(--gold-light), var(--gold)); box-shadow: 0 0 0 2px var(--gold-deep), 0 0 18px rgba(255, 210, 100, 0.8); }
+.lt-cell { aspect-ratio: 1.2; display: flex; align-items: center; justify-content: center; border-radius: 0.55em; background: #fff; color: var(--red-deep); font-weight: 800; font-size: 1.9em; font-variant-numeric: tabular-nums; box-shadow: inset 0 -0.08em 0 rgba(0, 0, 0, 0.12); }
+.lt-cell.hit { background: radial-gradient(circle at 35% 30%, #E8424F, var(--red) 55%, var(--red-deep)); color: var(--gold-light); box-shadow: 0 0 0 2px var(--gold), inset 0 0 0.3em rgba(0, 0, 0, 0.25); }
+.lt-cell.last { animation: ltpulse 0.9s ease-in-out 3; }
+.lt-row .kinh { position: absolute; right: -0.3em; top: -0.75em; padding: 0.1em 0.55em; border-radius: 9999px; background: var(--red-deep); color: var(--gold-light); font-size: 0.8em; font-weight: 800; letter-spacing: 0.08em; box-shadow: 0 0 0 2px var(--gold); animation: pop 0.4s ease; }
+.lt-grid.compact { gap: 0.2em; font-size: 0.55em; }
+.lt-grid.compact .lt-row { padding: 0.15em; gap: 0.2em; }
+.lt-grid.compact .lt-row .kinh { display: none; }
+@keyframes ltpulse { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.15); box-shadow: 0 0 0 3px var(--gold-light), 0 0 22px rgba(255, 220, 120, 0.95); } }
+
+/* Bảng 31 số trên TV */
+.board { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.4em; }
+.bn { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border-radius: 9999px; background: rgba(0, 0, 0, 0.25); color: rgba(255, 246, 220, 0.55); font-weight: 800; font-size: 1.15em; font-variant-numeric: tabular-nums; }
+.bn.hit { background: radial-gradient(circle at 32% 28%, #fff 0, var(--gold-light) 35%, var(--gold) 100%); color: var(--red-deep); }
+.bn.last { box-shadow: 0 0 0 3px var(--cream), 0 0 20px rgba(255, 220, 120, 0.9); animation: ltpulse 0.9s ease-in-out 3; }
+
+/* Bậc giải */
+.ladder { list-style: none; display: flex; flex-direction: column; gap: 0.45em; }
+.ladder li { display: flex; align-items: center; gap: 0.7em; padding: 0.5em 0.8em; border-radius: 14px; background: rgba(0, 0, 0, 0.22); text-align: left; }
+.ladder li .han { font-size: 1.7em; color: var(--gold-light); line-height: 1; flex: none; width: 1.6em; text-align: center; }
+.ladder li b { color: var(--gold-light); }
+.ladder li small { display: block; opacity: 0.8; font-size: 0.8em; }
+.ladder li .who { margin-top: 2px; font-weight: 700; font-size: 0.9em; }
+.ladder li.now { box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(255, 210, 100, 0.45); background: rgba(255, 226, 154, 0.12); }
+.ladder li.done { opacity: 0.85; }
+.ladder li.done b::after { content: ' ✓'; }
