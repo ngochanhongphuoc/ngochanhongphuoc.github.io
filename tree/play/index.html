@@ -62,6 +62,8 @@
     avatarHtml, avatarPickerHtml, DEFAULT_AVATARS,
   } from '../../shared/live.js';
   import { ROUNDS, MAX_SHAKES, COUPLE, overallTop, winnersOf, randomWish, howToHtml, showHelp } from '../tree.js';
+  import { L, initLang, onLangChange } from '../../shared/i18n.js';
+  initLang();
   const BASE = tidyUrl();
 
   const app = document.getElementById('app');
@@ -81,7 +83,7 @@
   let lastSent = -1;
 
   if (!CONFIGURED) {
-    app.innerHTML = '<div class="screen"><div class="center"><h1>Game chưa sẵn sàng</h1></div></div>';
+    app.innerHTML = `<div class="screen"><div class="center"><h1>${L('Game chưa sẵn sàng', 'The game is not ready yet')}</h1></div></div>`;
   } else {
     start();
   }
@@ -89,34 +91,36 @@
   async function start() {
     app.innerHTML = '<div class="screen"><div class="center"><div class="spinner"></div></div></div>';
     try { uid = await signIn(); } catch (e) {
-      app.innerHTML = `<div class="screen"><div class="center"><h1>Không kết nối được 😢</h1><p class="sub">${escapeHtml(e.message)}</p></div></div>`;
+      app.innerHTML = `<div class="screen"><div class="center"><h1>${L('Không kết nối được 😢', 'Could not connect 😢')}</h1><p class="sub">${escapeHtml(e.message)}</p></div></div>`;
       return;
     }
     watchServerTime();
     if (pin) openRoom(); else renderPinForm();
   }
 
+  let lastPinError = '';
   function renderPinForm(error = '') {
+    lastPinError = error;
     view = 'pin';
     app.innerHTML = `<div class="screen"><div class="center">
       <div class="brand couple stack">${COUPLE}</div>
-      <h1>🌳 Rung Cây, Rinh Quà 🧧</h1>
+      <h1>${L('🌳 Rung Cây, Rinh Quà 🧧', '🌳 Shake the Tree 🧧')}</h1>
       <div class="card">
-        <label for="pinInput">Mã phòng (6 số trên màn hình lớn)</label>
+        <label for="pinInput">${L('Mã phòng (6 số trên màn hình lớn)', 'Room code (6 digits on the big screen)')}</label>
         <input class="input pin-input" id="pinInput" inputmode="numeric" maxlength="6" autocomplete="off" value="${pin}">
         <div class="err">${escapeHtml(error)}</div>
         <button class="btn" id="goBtn">Vào phòng</button>
       </div>
     </div></div>`;
     const input = document.getElementById('pinInput');
-    const go = () => { pin = input.value.replace(/\D/g, ''); if (pin.length === 6) openRoom(); else renderPinForm('Mã phòng gồm 6 chữ số nha'); };
+    const go = () => { pin = input.value.replace(/\D/g, ''); if (pin.length === 6) openRoom(); else renderPinForm(L('Mã phòng gồm 6 chữ số nha', 'The room code has 6 digits')); };
     document.getElementById('goBtn').onclick = go;
     input.onkeydown = (e) => { if (e.key === 'Enter') go(); };
   }
 
   async function openRoom() {
     const r = (await get(roomRef(pin))).val();
-    if (!r) { renderPinForm('Không tìm thấy phòng, kiểm tra lại mã nha'); return; }
+    if (!r) { renderPinForm(L('Không tìm thấy phòng, kiểm tra lại mã nha', 'Room not found, please check the code')); return; }
     // Mã của game khác: trang nhập mã chung sẽ chuyển tới đúng game
     if (r.type !== 'tree') { location.replace(new URL('../../quiz/join/', BASE).href + `?pin=${pin}${EMU ? '&emu=1' : ''}`); return; }
     const url = new URL(location.href);
@@ -133,16 +137,16 @@
     const nameValue = document.getElementById('nameInput')?.value || localStorage.getItem('kh_name') || '';
     app.innerHTML = `<div class="screen"><div class="center">
       <div class="brand couple stack">${COUPLE}</div>
-      <h1>🌳 Rung Cây, Rinh Quà 🧧</h1>
+      <h1>${L('🌳 Rung Cây, Rinh Quà 🧧', '🌳 Shake the Tree 🧧')}</h1>
       <div class="card">
-        <label for="nameInput">Tên hiển thị</label>
-        <input class="input" id="nameInput" maxlength="20" autocomplete="off" placeholder="VD: Tuấn bàn 5" value="${escapeHtml(nameValue)}">
-        <label style="margin-top:12px">Chọn avatar</label>
+        <label for="nameInput">${L('Tên hiển thị', 'Display name')}</label>
+        <input class="input" id="nameInput" maxlength="20" autocomplete="off" placeholder="${L('VD: Tuấn bàn 5', 'e.g. Tom table 5')}" value="${escapeHtml(nameValue)}">
+        <label style="margin-top:12px">${L('Chọn avatar', 'Choose an avatar')}</label>
         ${avatarPickerHtml(chosenAnimal)}
         <div class="err" id="joinErr">${escapeHtml(error)}</div>
-        <button class="btn" id="joinBtn">Vào rung cây 🧧</button>
+        <button class="btn" id="joinBtn">${L('Vào rung cây 🧧', 'Join the shake 🧧')}</button>
       </div>
-      <button class="help-btn" data-help>❓ Cách chơi</button>
+      <button class="help-btn" data-help>${L('❓ Cách chơi', '❓ How to play')}</button>
     </div></div>`;
     app.querySelectorAll('.animal').forEach((b) => {
       b.onclick = () => { chosenAnimal = b.dataset.a; app.querySelectorAll('.animal').forEach((x) => x.classList.toggle('on', x === b)); };
@@ -154,9 +158,9 @@
     unlockAudio();
     const name = document.getElementById('nameInput').value.trim().replace(/\s+/g, ' ');
     const errEl = document.getElementById('joinErr');
-    if (!name) { errEl.textContent = 'Nhập tên đã nha!'; return; }
+    if (!name) { errEl.textContent = L('Nhập tên đã nha!', 'Please enter your name!'); return; }
     if (Object.values(room.players || {}).some((p) => p.name.toLowerCase() === name.toLowerCase())) {
-      errEl.textContent = 'Tên này có người dùng rồi, thêm chút gì cho khác nha 😄';
+      errEl.textContent = L('Tên này có người dùng rồi, thêm chút gì cho khác nha 😄', 'That name is taken, try adding something to it 😄');
       return;
     }
     const btn = document.getElementById('joinBtn');
@@ -168,8 +172,8 @@
     } catch (e) {
       btn.disabled = false;
       errEl.textContent = e.code === 'PERMISSION_DENIED'
-        ? 'Game chưa được cập nhật luật Firebase. Báo cô dâu chú rể nha!'
-        : 'Không vào được phòng, thử lại nha!';
+        ? L('Game chưa được cập nhật luật Firebase. Báo cô dâu chú rể nha!', 'The game is not set up correctly. Please tell the bride and groom!')
+        : L('Không vào được phòng, thử lại nha!', 'Could not join, please try again!');
     }
   }
 
@@ -252,7 +256,7 @@
   }
 
   // ---------- Giao diện ----------
-  const topBar = (me) => `<div class="top"><span class="me"><span class="ani">${avatarHtml(me.animal)}</span>${escapeHtml(me.name)}</span><button class="help-btn" data-help>❓ Cách chơi</button></div>`;
+  const topBar = (me) => `<div class="top"><span class="me"><span class="ani">${avatarHtml(me.animal)}</span>${escapeHtml(me.name)}</span><button class="help-btn" data-help>${L('❓ Cách chơi', '❓ How to play')}</button></div>`;
   const screen = (me, inner) => `<div class="screen">${topBar(me)}<div class="center">${inner}</div></div>`;
 
   document.addEventListener('click', (e) => { if (e.target.closest('[data-help]')) showHelp(); });
@@ -277,18 +281,26 @@
       if (el && el.textContent !== s) { el.textContent = s; sfx.tick(true); if (navigator.vibrate) navigator.vibrate(60); }
     } else if (p === 'go') {
       const el = document.getElementById('left');
-      if (el) el.textContent = `⏱ còn ${Math.ceil((room.endAt - serverNow()) / 1000)} giây`;
+      if (el) el.textContent = L(`⏱ còn ${Math.ceil((room.endAt - serverNow()) / 1000)} giây`, `⏱ ${Math.ceil((room.endAt - serverNow()) / 1000)}s left`);
     }
   }
 
   // Lộc của mình qua các vòng
   const myWins = () => Object.entries(room.results || {}).flatMap(([r, res]) => winnersOf(res).filter((w) => w.uid === uid).map((w) => ({ ...w, r: Number(r) })));
 
+  // Đổi ngôn ngữ: vẽ lại màn hình đang xem (form nhập tên giữ chữ đang gõ)
+  onLangChange(() => {
+    if (!room) { if (view === 'pin') renderPinForm(lastPinError); return; }
+    if (view === 'join') { renderJoin(); return; }
+    view = '';
+    render();
+  });
+
   function render() {
-    if (!room) { app.innerHTML = '<div class="screen"><div class="center"><h1>Phòng đã bị xóa</h1><p class="sub">Quét mã QR mới trên màn hình nha!</p></div></div>'; return; }
+    if (!room) { app.innerHTML = `<div class="screen"><div class="center"><h1>${L('Phòng đã bị xóa', 'This room was removed')}</h1><p class="sub">${L('Quét mã QR mới trên màn hình nha!', 'Scan the new QR code on the screen!')}</p></div></div>`; return; }
     const me = room.players && room.players[uid];
     if (!me) {
-      if (room.status === 'final') { app.innerHTML = '<div class="screen"><div class="center"><h1>Game đã kết thúc 🎉</h1></div></div>'; return; }
+      if (room.status === 'final') { app.innerHTML = `<div class="screen"><div class="center"><h1>${L('Game đã kết thúc 🎉', 'The game has ended 🎉')}</h1></div></div>`; return; }
       if (view !== 'join') renderJoin();
       return;
     }
@@ -299,20 +311,20 @@
     phase = p;
 
     if (!sensorOn) {
-      app.innerHTML = screen(me, `<div class="icon-big wiggle">📱</div><h1>Bật cảm biến lắc</h1>
-        <p class="sub">Game đếm số lần bạn lắc điện thoại. Bấm nút dưới và cho phép truy cập chuyển động nếu máy hỏi nha.</p>
-        <button class="btn btn-big" id="sensorBtn">Bật lắc 🧧</button>`);
+      app.innerHTML = screen(me, `<div class="icon-big wiggle">📱</div><h1>${L('Bật cảm biến lắc', 'Enable shaking')}</h1>
+        <p class="sub">${L('Game đếm số lần bạn lắc điện thoại. Bấm nút dưới và cho phép truy cập chuyển động nếu máy hỏi nha.', 'The game counts how many times you shake your phone. Tap the button below and allow motion access if asked.')}</p>
+        <button class="btn btn-big" id="sensorBtn">${L('Bật lắc 🧧', 'Enable shaking 🧧')}</button>`);
       document.getElementById('sensorBtn').onclick = enableSensor;
       return;
     }
-    const tapNote = mode === 'tap' ? '<div class="warn">Máy bạn không đo được chuyển động, nên sẽ <b>bấm liên tục vào nút tròn</b> thay cho lắc nha.</div>' : '';
+    const tapNote = mode === 'tap' ? `<div class="warn">${L('Máy bạn không đo được chuyển động, nên sẽ <b>bấm liên tục vào nút tròn</b> thay cho lắc nha.', 'Your phone cannot detect motion, so <b>keep tapping the round button</b> instead of shaking.')}</div>` : '';
     const practiceBox = mode === 'tap'
-      ? `${tapNote}<button class="tap" id="tapBtn">Bấm thử!</button><div class="practice">Bấm thử: <b id="practice">${practice}</b></div>`
-      : `<div class="practice">📱 Lắc thử xem cảm biến chạy chưa: <b id="practice">${practice}</b></div>`;
+      ? `${tapNote}<button class="tap" id="tapBtn">${L('Bấm thử!', 'Try it!')}</button><div class="practice">${L('Bấm thử', 'Practice taps')}: <b id="practice">${practice}</b></div>`
+        : `<div class="practice">${L('📱 Lắc thử xem cảm biến chạy chưa', '📱 Give it a practice shake')}: <b id="practice">${practice}</b></div>`;
 
     if (p === 'lobby') {
       app.innerHTML = screen(me, `<div class="icon-big"><span class="lixi">🧧</span>🌳<span class="lixi">🧧</span></div>
-        <h1>Bạn đã vào phòng!</h1><p class="sub">Chờ MC bắt đầu nha. Trong lúc chờ, đọc nhanh cách chơi nè:</p>
+        <h1>${L('Bạn đã vào phòng!', 'You\'re in!')}</h1><p class="sub">${L('Chờ MC bắt đầu nha. Trong lúc chờ, đọc nhanh cách chơi nè:', 'Wait for the MC to start. Meanwhile, here is how to play:')}</p>
         <div style="width:100%;max-width:420px">${howToHtml()}</div>${practiceBox}`);
       bindTap();
       return;
@@ -322,41 +334,41 @@
       const mine = room.shakes && room.shakes[room.round] ? (room.shakes[room.round][uid] || 0) : 0;
       const won = winnersOf(res).find((w) => w.uid === uid);
       app.innerHTML = screen(me, won
-        ? `<div class="icon-big lixi">🧧</div><h1>BẠN TRÚNG LỘC VÒNG ${room.round + 1}! 🎉</h1>
-           <div class="win-card"><b>🧧 ${escapeHtml(won.wish)}</b><p style="margin-top:8px">Lên nhận quà từ cô dâu chú rể nha!</p></div>`
-        : `<div class="icon-big">🌳</div><h1>Vòng ${room.round + 1}: bạn lắc được ${mine} lần</h1>
-           <p class="sub">${winnersOf(res).length ? 'Chưa vào top lắc nhiều nhất, vòng sau lắc mạnh hơn nha! 💪' : 'Đang chờ công bố người lắc nhiều nhất...'}</p>`);
+        ? `<div class="icon-big lixi">🧧</div><h1>${L(`BẠN TRÚNG LỘC VÒNG ${room.round + 1}! 🎉`, `YOU WON ROUND ${room.round + 1}! 🎉`)}</h1>
+           <div class="win-card"><b>🧧 ${escapeHtml(L(won.wish, won.wishEn || won.wish))}</b><p style="margin-top:8px">${L('Lên nhận quà từ cô dâu chú rể nha!', 'Come up to get your gift from the bride and groom!')}</p></div>`
+        : `<div class="icon-big">🌳</div><h1>${L(`Vòng ${room.round + 1}: bạn lắc được ${mine} lần`, `Round ${room.round + 1}: you shook ${mine} times`)}</h1>
+           <p class="sub">${winnersOf(res).length ? L('Chưa vào top lắc nhiều nhất, vòng sau lắc mạnh hơn nha! 💪', 'Not the top shaker this time, shake harder next round! 💪') : L('Đang chờ công bố người lắc nhiều nhất...', 'Waiting for the top shaker to be announced...')}</p>`);
       if (won) { sfx.fanfare(); burst(['🧧', '🎉', '🌼', '✨'], 50); if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
       return;
     }
     if (p === 'pre') {
       if (countRound !== room.round) { countRound = room.round; count = 0; lastSent = -1; }
-      app.innerHTML = screen(me, `<h1>Vòng ${room.round + 1}/${ROUNDS} · Chuẩn bị!</h1>
+      app.innerHTML = screen(me, `<h1>${L(`Vòng ${room.round + 1}/${ROUNDS} · Chuẩn bị!`, `Round ${room.round + 1}/${ROUNDS} · Get ready!`)}</h1>
         <div class="big" id="pre">${Math.max(1, Math.ceil((room.startAt - serverNow()) / 1000))}</div>
-        <p class="sub">${mode === 'tap' ? 'Đặt ngón tay lên nút tròn...' : 'Cầm chắc điện thoại, đừng để rơi nha! 😆'}</p>`);
+        <p class="sub">${mode === 'tap' ? L('Đặt ngón tay lên nút tròn...', 'Put your finger on the round button...') : L('Cầm chắc điện thoại, đừng để rơi nha! 😆', 'Hold your phone tight, don\'t drop it! 😆')}</p>`);
       return;
     }
     if (p === 'go') {
-      app.innerHTML = screen(me, `<h1>${mode === 'tap' ? '👆 BẤM BẤM BẤM!' : '<span class="wiggle">📱</span> RUNG CÂY NÀO!'}</h1>
+      app.innerHTML = screen(me, `<h1>${mode === 'tap' ? L('👆 BẤM BẤM BẤM!', '👆 TAP TAP TAP!') : `<span class="wiggle">📱</span> ${L('RUNG CÂY NÀO!', 'SHAKE IT!')}`}</h1>
         <div class="count" id="myCount">${count}</div>
         <div class="timer" id="left"></div>
-        ${mode === 'tap' ? '<button class="tap" id="tapBtn">BẤM!</button>' : '<p class="sub">Ai lắc nhiều nhất sẽ trúng lộc!</p>'}`);
+        ${mode === 'tap' ? `<button class="tap" id="tapBtn">${L('BẤM!', 'TAP!')}</button>` : `<p class="sub">${L('Ai lắc nhiều nhất sẽ trúng lộc!', 'Whoever shakes the most wins!')}</p>`}`);
       bindTap();
       if (navigator.vibrate) navigator.vibrate(300);
       return;
     }
     if (p === 'wait') {
-      app.innerHTML = screen(me, `<div class="spinner"></div><h1>Hết giờ! Bạn lắc được ${count} lần</h1><p class="sub">Nhìn lên màn hình lớn xem ai trúng lộc nha...</p>`);
+      app.innerHTML = screen(me, `<div class="spinner"></div><h1>${L(`Hết giờ! Bạn lắc được ${count} lần`, `Time's up! You shook ${count} times`)}</h1><p class="sub">${L('Nhìn lên màn hình lớn xem ai trúng lộc nha...', 'Watch the big screen to see who won...')}</p>`);
       return;
     }
     if (p === 'final') {
       const wins = myWins();
       const mine = overallTop(room).find((x) => x.uid === uid);
       app.innerHTML = screen(me, `<div class="icon-big"><span class="lixi">🧧</span>🌳<span class="lixi">🧧</span></div>
-        <h1>${wins.length ? `Bạn trúng lộc ${wins.length} lần! 🎉` : 'Lộc đã chia xong!'}</h1>
-        ${wins.map((w) => `<div class="win-card"><b>Vòng ${w.r + 1}: 🧧 ${escapeHtml(w.wish)}</b></div>`).join('')}
-        <p class="sub">Bạn lắc tổng cộng <b>${mine ? mine.count : 0}</b> lần. Cảm ơn bạn đã chơi cùng Ngọc Hân &amp; Hồng Phước 💕</p>
-        <a class="btn" href="${new URL('../../', BASE).href}">Xem thiệp cưới</a>`);
+        <h1>${wins.length ? L(`Bạn trúng lộc ${wins.length} lần! 🎉`, `You won ${wins.length} time${wins.length > 1 ? 's' : ''}! 🎉`) : L('Lộc đã chia xong!', 'All prizes are given out!')}</h1>
+        ${wins.map((w) => `<div class="win-card"><b>${L('Vòng', 'Round')} ${w.r + 1}: 🧧 ${escapeHtml(L(w.wish, w.wishEn || w.wish))}</b></div>`).join('')}
+        <p class="sub">${L(`Bạn lắc tổng cộng <b>${mine ? mine.count : 0}</b> lần. Cảm ơn bạn đã chơi cùng Ngọc Hân &amp; Hồng Phước 💕`, `You shook <b>${mine ? mine.count : 0}</b> times in total. Thanks for playing with Ngọc Hân &amp; Hồng Phước 💕`)}</p>
+      <a class="btn" href="${new URL('../../', BASE).href}">${L('Xem thiệp cưới', 'View the invitation')}</a>`);
     }
   }
 

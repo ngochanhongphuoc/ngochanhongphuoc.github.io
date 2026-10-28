@@ -77,6 +77,8 @@
     tidyUrl,
     avatarHtml, avatarPickerHtml, DEFAULT_AVATARS,
   } from '../../shared/live.js';
+  import { L, initLang, onLangChange } from '../../shared/i18n.js';
+  initLang();
   const BASE = tidyUrl();
 
   const app = document.getElementById('app');
@@ -91,7 +93,7 @@
   const pendingAnswer = {};
 
   // Nút vào phòng khác (khi phòng cũ bị xóa / bị mời ra)
-  const NEW_ROOM_BTN = '<div class="links"><button class="btn" id="newRoomBtn">🎮 Vào phòng mới</button></div>';
+  const NEW_ROOM_BTN = () => `<div class="links"><button class="btn" id="newRoomBtn">${L('🎮 Vào phòng mới', '🎮 Join the new room')}</button></div>`;
   let movedTo = null; // MC đã chuyển sang phòng mới (mã phòng mới)
   function bindNewRoom() {
     const b = document.getElementById('newRoomBtn');
@@ -103,7 +105,7 @@
   const setMood = (mood) => { document.body.className = 'live' + (mood ? ' ' + mood : ''); };
 
   if (!CONFIGURED) {
-    app.innerHTML = '<div class="screen"><div class="center"><div class="big-icon">🛠️</div><h1>Game chưa sẵn sàng</h1><p class="sub">Cô dâu chú rể chưa cấu hình xong, quay lại sau nhé!</p></div></div>';
+    app.innerHTML = `<div class="screen"><div class="center"><div class="big-icon">🛠️</div><h1>${L('Game chưa sẵn sàng', 'The game is not ready yet')}</h1><p class="sub">${L('Cô dâu chú rể chưa cấu hình xong, quay lại sau nhé!', 'Please check back a little later!')}</p></div></div>`;
   } else {
     petals(6);
     start();
@@ -114,28 +116,31 @@
     try {
       uid = await signIn();
     } catch (e) {
-      app.innerHTML = `<div class="screen"><div class="center"><h1>Không kết nối được 😢</h1><p class="sub">${escapeHtml(e.message)}</p></div></div>`;
+      app.innerHTML = `<div class="screen"><div class="center"><h1>${L('Không kết nối được 😢', 'Could not connect 😢')}</h1><p class="sub">${escapeHtml(e.message)}</p></div></div>`;
       return;
     }
     watchServerTime();
     if (pin) openRoom(); else renderPinForm();
   }
 
+  let lastPinError = '';
   function renderPinForm(error = '') {
+    lastPinError = error;
+    viewKey = 'pin';
     setMood('');
     app.innerHTML = `<div class="screen"><div class="center">
       <div class="brand couple stack"><span class="nm">Ngọc Hân</span> <span class="amp">&amp;</span> <span class="nm">Hồng Phước</span></div>
-      <h1>Nhập mã phòng 🎮</h1>
+      <h1>${L('Nhập mã phòng 🎮', 'Enter the room code 🎮')}</h1>
       <div class="card">
-        <label for="pinInput">Mã phòng (6 số trên màn hình lớn)</label>
+        <label for="pinInput">${L('Mã phòng (6 số trên màn hình lớn)', 'Room code (6 digits on the big screen)')}</label>
         <input class="input pin-input" id="pinInput" inputmode="numeric" maxlength="6" autocomplete="off" value="${pin}">
         <div class="err">${escapeHtml(error)}</div>
-        <button class="btn" id="goBtn">Vào phòng</button>
+        <button class="btn" id="goBtn">${L('Vào phòng', 'Join')}</button>
       </div>
     </div></div>`;
     const input = document.getElementById('pinInput');
     input.focus();
-    const go = () => { pin = input.value.replace(/\D/g, ''); if (pin.length === 6) openRoom(); else renderPinForm('Mã phòng gồm 6 chữ số nha'); };
+    const go = () => { pin = input.value.replace(/\D/g, ''); if (pin.length === 6) openRoom(); else renderPinForm(L('Mã phòng gồm 6 chữ số nha', 'The room code has 6 digits')); };
     document.getElementById('goBtn').onclick = go;
     input.onkeydown = (e) => { if (e.key === 'Enter') go(); };
   }
@@ -143,7 +148,7 @@
   async function openRoom() {
     const snap = await get(roomRef(pin));
     const r = snap.val();
-    if (!r || r.status === 'ended') { renderPinForm(r ? 'Phòng này đã kết thúc rồi 😅' : 'Không tìm thấy phòng, kiểm tra lại mã nha'); return; }
+    if (!r || r.status === 'ended') { renderPinForm(r ? L('Phòng này đã kết thúc rồi 😅', 'This room has already ended 😅') : L('Không tìm thấy phòng, kiểm tra lại mã nha', 'Room not found, please check the code')); return; }
     // Mã của phòng Loto: chuyển sang trang vé số
     if (r.type === 'lottery') { location.replace(new URL('../../lottery/ticket/', BASE).href + `?pin=${pin}${EMU ? '&emu=1' : ''}`); return; }
     // Rung Cây, Rinh Quà: chuyển sang trang chơi của game đó
@@ -161,14 +166,14 @@
     const nameValue = document.getElementById('nameInput')?.value || localStorage.getItem('kh_name') || '';
     app.innerHTML = `<div class="screen"><div class="center">
       <div class="brand couple stack"><span class="nm">Ngọc Hân</span> <span class="amp">&amp;</span> <span class="nm">Hồng Phước</span></div>
-      <h1>Chọn tên &amp; avatar của bạn</h1>
+      <h1>${L('Chọn tên &amp; avatar của bạn', 'Pick your name &amp; avatar')}</h1>
       <div class="card">
-        <label for="nameInput">Tên hiển thị</label>
-        <input class="input" id="nameInput" maxlength="20" autocomplete="off" placeholder="VD: Tuấn bàn 5" value="${escapeHtml(nameValue)}">
-        <label style="margin-top:14px">Chọn avatar</label>
+        <label for="nameInput">${L('Tên hiển thị', 'Display name')}</label>
+        <input class="input" id="nameInput" maxlength="20" autocomplete="off" placeholder="${L('VD: Tuấn bàn 5', 'e.g. Tom table 5')}" value="${escapeHtml(nameValue)}">
+        <label style="margin-top:14px">${L('Chọn avatar', 'Choose an avatar')}</label>
         ${avatarPickerHtml(chosenAnimal)}
         <div class="err" id="joinErr">${escapeHtml(error)}</div>
-        <button class="btn" id="joinBtn">Vào chơi 🚀</button>
+        <button class="btn" id="joinBtn">${L('Vào chơi 🚀', 'Let\'s play 🚀')}</button>
       </div>
     </div></div>`;
     app.querySelectorAll('.animal').forEach((b) => {
@@ -184,9 +189,9 @@
     unlockAudio();
     const name = document.getElementById('nameInput').value.trim().replace(/\s+/g, ' ');
     const errEl = document.getElementById('joinErr');
-    if (!name) { errEl.textContent = 'Nhập tên đã nha!'; return; }
+    if (!name) { errEl.textContent = L('Nhập tên đã nha!', 'Please enter your name!'); return; }
     const taken = Object.values(room.players || {}).some((p) => p.name.toLowerCase() === name.toLowerCase());
-    if (taken) { errEl.textContent = 'Tên này có người dùng rồi, thêm chút gì cho khác nha 😄'; return; }
+    if (taken) { errEl.textContent = L('Tên này có người dùng rồi, thêm chút gì cho khác nha 😄', 'That name is taken, try adding something to it 😄'); return; }
     const btn = document.getElementById('joinBtn');
     btn.disabled = true;
     try {
@@ -195,7 +200,7 @@
       sfx.join();
     } catch (e) {
       btn.disabled = false;
-      errEl.textContent = 'Không vào được phòng, thử lại nha!';
+      errEl.textContent = L('Không vào được phòng, thử lại nha!', 'Could not join, please try again!');
     }
   }
 
@@ -212,7 +217,7 @@
     if (room && room.movedTo) movedTo = room.movedTo;
     if (!room || room.movedTo) {
       setMood('');
-      app.innerHTML = `<div class="screen"><div class="center"><div class="big-icon">👋</div><h1>Phòng đã đóng</h1><p class="sub">MC đã tạo game mới. Quét mã QR mới trên màn hình hoặc nhập mã phòng mới nha!</p>${NEW_ROOM_BTN}</div></div>`;
+      app.innerHTML = `<div class="screen"><div class="center"><div class="big-icon">👋</div><h1>${L('Phòng đã đóng', 'This room is closed')}</h1><p class="sub">${L('MC đã tạo game mới. Quét mã QR mới trên màn hình hoặc nhập mã phòng mới nha!', 'The MC started a new game. Scan the new QR code on the screen or enter the new room code!')}</p>${NEW_ROOM_BTN()}</div></div>`;
       bindNewRoom();
       viewKey = '';
       return;
@@ -222,7 +227,7 @@
       if (wasJoined || (room.banned && room.banned[uid])) {
         setMood('');
         viewKey = 'kicked';
-        app.innerHTML = '<div class="screen"><div class="center"><div class="big-icon">😅</div><h1>Bạn đã được MC mời ra khỏi phòng</h1><p class="sub">Có thể do trùng tên hoặc tên chưa phù hợp. Hỏi MC nếu muốn vào lại nha!</p>' + NEW_ROOM_BTN + '</div></div>';
+        app.innerHTML = `<div class="screen"><div class="center"><div class="big-icon">😅</div><h1>${L('Bạn đã được MC mời ra khỏi phòng', 'The MC removed you from the room')}</h1><p class="sub">${L('Có thể do trùng tên hoặc tên chưa phù hợp. Hỏi MC nếu muốn vào lại nha!', 'Maybe the name was taken or not suitable. Ask the MC if you want to rejoin!')}</p>${NEW_ROOM_BTN()}</div></div>`;
         bindNewRoom();
         return;
       }
@@ -249,8 +254,8 @@
     app.innerHTML = `<div class="screen">${topBar()}<div class="center">
       <div class="avatar">${avatarHtml(me.animal)}</div>
       <div class="name">${escapeHtml(me.name)}</div>
-      <h1>Bạn đã vào phòng! 🎉</h1>
-      <p class="sub">Nhìn lên màn hình lớn và chờ MC bắt đầu nhé. Trả lời càng nhanh càng được nhiều điểm!</p>
+      <h1>${L('Bạn đã vào phòng! 🎉', 'You\'re in! 🎉')}</h1>
+      <p class="sub">${L('Nhìn lên màn hình lớn và chờ MC bắt đầu nhé. Trả lời càng nhanh càng được nhiều điểm!', 'Watch the big screen and wait for the MC to start. The faster you answer, the more points you get!')}</p>
       <div class="pill" id="lobbyCount"></div>
     </div></div>`;
     updateLobbyCount();
@@ -258,27 +263,28 @@
 
   function updateLobbyCount() {
     const el = document.getElementById('lobbyCount');
-    if (el) el.textContent = `👥 ${Object.keys(room.players || {}).length} người đang chờ`;
+    if (el) el.textContent = `👥 ${Object.keys(room.players || {}).length} ${L('người đang chờ', 'players waiting')}`;
   }
 
   function renderQuestion(a) {
     setMood('');
     const cur = room.current || { options: [] };
-    const optText = (i) => escapeHtml((cur.options && cur.options[i]) || '');
-    const head = `<div class="q-title">Câu ${room.q + 1}/${room.total}</div><div class="timebar"><div id="timebar" style="width:100%"></div></div>`;
-    const qCard = `<div class="q-card"><div class="q-emoji">${cur.emoji || '❓'}</div><p>${escapeHtml(cur.q || '')}</p></div>`;
+    const opts = L(cur.options, cur.optionsEn || cur.options) || [];
+    const optText = (i) => escapeHtml(opts[i] || '');
+    const head = `<div class="q-title">${L('Câu', 'Question')} ${room.q + 1}/${room.total}</div><div class="timebar"><div id="timebar" style="width:100%"></div></div>`;
+    const qCard = `<div class="q-card"><div class="q-emoji">${cur.emoji || '❓'}</div><p>${escapeHtml(L(cur.q, cur.qEn || cur.q) || '')}</p></div>`;
     if (a) {
       const c = CHOICES[a.choice];
-      const time = a.at && room.qStartAt ? `⏱ Bạn chốt sau ${fmtSec(Math.max(0, a.at - room.qStartAt))}` : 'Đang gửi...';
-      app.innerHTML = `<div class="screen">${topBar(`${fmtScore(me.score)} điểm`)}${head}${qCard}<div class="center">
+      const time = a.at && room.qStartAt ? `⏱ ${L('Bạn chốt sau', 'Locked in after')} ${fmtSec(Math.max(0, a.at - room.qStartAt))}` : L('Đang gửi...', 'Sending...');
+      app.innerHTML = `<div class="screen">${topBar(`${fmtScore(me.score)} ${L('điểm', 'pts')}`)}${head}${qCard}<div class="center">
         <div class="chosen" style="background:${c.color}"><span class="shape">${c.shape}</span><span><b>${c.letter}.</b> ${optText(a.choice)}</span></div>
-        <h1>Đã chốt đáp án!</h1>
+        <h1>${L('Đã chốt đáp án!', 'Answer locked in!')}</h1>
         <div class="pill">${time}</div>
-        <p class="sub">Chờ mọi người trả lời xong nhé 🤞</p>
+        <p class="sub">${L('Chờ mọi người trả lời xong nhé 🤞', 'Waiting for everyone else 🤞')}</p>
       </div></div>`;
       return;
     }
-    app.innerHTML = `<div class="screen">${topBar(`${fmtScore(me.score)} điểm`)}${head}${qCard}
+    app.innerHTML = `<div class="screen">${topBar(`${fmtScore(me.score)} ${L('điểm', 'pts')}`)}${head}${qCard}
       <div class="answers">${CHOICES.map((c, i) => `<button class="ans" data-i="${i}" style="background:${c.color}"><span class="shape">${c.shape}</span><span><b>${c.letter}.</b> ${optText(i)}</span></button>`).join('')}</div>
     </div>`;
     app.querySelectorAll('.ans').forEach((b) => { b.onclick = () => answer(Number(b.dataset.i)); });
@@ -299,7 +305,7 @@
       // Bị từ chối: hết giờ hoặc câu hỏi đã đóng
       delete pendingAnswer[q];
       viewKey = '';
-      app.innerHTML = `<div class="screen">${topBar()}<div class="center"><div class="big-icon">⏰</div><h1>Hết giờ mất rồi!</h1><p class="sub">Câu trả lời không kịp gửi đi.</p></div></div>`;
+      app.innerHTML = `<div class="screen">${topBar()}<div class="center"><div class="big-icon">⏰</div><h1>${L('Hết giờ mất rồi!', 'Time\'s up!')}</h1><p class="sub">${L('Câu trả lời không kịp gửi đi.', 'Your answer didn\'t make it in time.')}</p></div></div>`;
       return;
     }
     render();
@@ -315,18 +321,18 @@
 
   function rankLine() {
     const total = Object.keys(room.players || {}).length;
-    return me.rank ? `Hạng ${me.rank}/${total} · ${fmtScore(me.score)} điểm` : `${fmtScore(me.score)} điểm`;
+    return me.rank ? `${L('Hạng', 'Rank')} ${me.rank}/${total} · ${fmtScore(me.score)} ${L('điểm', 'pts')}` : `${fmtScore(me.score)} ${L('điểm', 'pts')}`;
   }
 
   function renderResult(prevStatus) {
     if (room.status === 'reveal' && !room.reveal) {
       setMood('');
-      app.innerHTML = `<div class="screen">${topBar()}<div class="center"><div class="spinner"></div><h1>Đang chấm điểm...</h1></div></div>`;
+      app.innerHTML = `<div class="screen">${topBar()}<div class="center"><div class="spinner"></div><h1>${L('Đang chấm điểm...', 'Scoring...')}</h1></div></div>`;
       return;
     }
     if (me.lastQ !== room.q) {
       setMood('');
-      app.innerHTML = `<div class="screen">${topBar()}<div class="center"><div class="avatar">${avatarHtml(me.animal)}</div><h1>Bạn vào hơi trễ câu này</h1><p class="sub">Chuẩn bị cho câu tiếp theo nha!</p></div></div>`;
+      app.innerHTML = `<div class="screen">${topBar()}<div class="center"><div class="avatar">${avatarHtml(me.animal)}</div><h1>${L('Bạn vào hơi trễ câu này', 'You joined a bit late for this one')}</h1><p class="sub">${L('Chuẩn bị cho câu tiếp theo nha!', 'Get ready for the next question!')}</p></div></div>`;
       return;
     }
     const res = me.lastResult;
@@ -335,18 +341,20 @@
       if (res === 'right') sfx.correct(); else sfx.wrong();
       if (navigator.vibrate) navigator.vibrate(res === 'right' ? [60, 40, 60] : 200);
     }
-    const streak = me.streak >= 2 ? `<div class="streak">🔥 Chuỗi ${me.streak} câu đúng${me.lastBonus ? ` (+${fmtScore(me.lastBonus)})` : ''}</div>` : '';
+    const streak = me.streak >= 2 ? `<div class="streak">🔥 ${L(`Chuỗi ${me.streak} câu đúng`, `${me.streak} in a row`)}${me.lastBonus ? ` (+${fmtScore(me.lastBonus)})` : ''}</div>` : '';
     const body = res === 'right'
-      ? `<div class="big-icon">✅</div><h1>Chính xác!</h1><div class="gain">+${fmtScore(me.lastGain)}</div>${streak}<div class="pill">⏱ ${fmtSec(me.lastMs)}</div>`
+      ? `<div class="big-icon">✅</div><h1>${L('Chính xác!', 'Correct!')}</h1><div class="gain">+${fmtScore(me.lastGain)}</div>${streak}<div class="pill">⏱ ${fmtSec(me.lastMs)}</div>`
       : res === 'wrong'
-        ? '<div class="big-icon">❌</div><h1>Sai mất rồi!</h1><p class="sub">Câu sau gỡ lại nha 💪</p>'
-        : '<div class="big-icon">⏰</div><h1>Hết giờ!</h1><p class="sub">Bạn chưa kịp chọn đáp án.</p>';
-    const fastest = room.reveal && room.reveal.fastest && room.reveal.fastest.uid === uid ? '<div class="pill">⚡ Bạn nhanh tay nhất câu này!</div>' : '';
+        ? `<div class="big-icon">❌</div><h1>${L('Sai mất rồi!', 'Wrong!')}</h1><p class="sub">${L('Câu sau gỡ lại nha 💪', 'Get it back on the next one 💪')}</p>`
+        : `<div class="big-icon">⏰</div><h1>${L('Hết giờ!', 'Time\'s up!')}</h1><p class="sub">${L('Bạn chưa kịp chọn đáp án.', 'You didn\'t pick an answer in time.')}</p>`;
+    const fastest = room.reveal && room.reveal.fastest && room.reveal.fastest.uid === uid ? `<div class="pill">⚡ ${L('Bạn nhanh tay nhất câu này!', 'You were the fastest!')}</div>` : '';
     const rv = room.reveal || {};
     const cur = room.current || {};
     const ansIdx = rv.answer;
-    const answerCard = typeof ansIdx === 'number' && cur.options
-      ? `<div class="answer-card"><div class="lbl">Đáp án đúng</div><b>${CHOICES[ansIdx].shape} ${CHOICES[ansIdx].letter}.</b> ${escapeHtml(cur.options[ansIdx])}${rv[res === 'right' ? 'right' : 'wrong'] ? `<div style="margin-top:6px;opacity:0.8">💬 ${escapeHtml(rv[res === 'right' ? 'right' : 'wrong'])}</div>` : ''}</div>`
+    const opts = L(cur.options, cur.optionsEn || cur.options);
+    const comment = res === 'right' ? L(rv.right, rv.rightEn || rv.right) : L(rv.wrong, rv.wrongEn || rv.wrong);
+    const answerCard = typeof ansIdx === 'number' && opts
+      ? `<div class="answer-card"><div class="lbl">${L('Đáp án đúng', 'Correct answer')}</div><b>${CHOICES[ansIdx].shape} ${CHOICES[ansIdx].letter}.</b> ${escapeHtml(opts[ansIdx])}${comment ? `<div style="margin-top:6px;opacity:0.8">💬 ${escapeHtml(comment)}</div>` : ''}</div>`
       : '';
     app.innerHTML = `<div class="screen">${topBar()}<div class="center">${body}${fastest}${answerCard}<div class="pill">🏆 ${rankLine()}</div></div></div>`;
   }
@@ -355,24 +363,30 @@
     setMood('');
     const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
     const medal = medals[me.rank] || avatarHtml(me.animal);
-    const title = me.rank === 1 ? 'Vô địch rồi!!! 👑' : me.rank <= 3 ? 'Lên bục vinh quang! 🎉' : 'Cảm ơn bạn đã chơi!';
-    const record = room.record && room.record.uid === uid ? `<div class="pill">⚡ Kỷ lục nhanh tay nhất game: ${fmtSec(room.record.ms)}</div>` : '';
+    const title = me.rank === 1 ? L('Vô địch rồi!!! 👑', 'Champion!!! 👑') : me.rank <= 3 ? L('Lên bục vinh quang! 🎉', 'You made the podium! 🎉') : L('Cảm ơn bạn đã chơi!', 'Thanks for playing!');
+    const record = room.record && room.record.uid === uid ? `<div class="pill">⚡ ${L('Kỷ lục nhanh tay nhất game', 'Fastest answer of the game')}: ${fmtSec(room.record.ms)}</div>` : '';
     app.innerHTML = `<div class="screen">${topBar()}<div class="center">
       <div class="medal">${medal}</div>
       <h1>${title}</h1>
       <div class="pill">🏆 ${rankLine()}</div>
       ${record}
       <div class="links">
-        <a class="btn" href="../../#rsvp">💌 Xác nhận dự tiệc</a>
-        <a class="btn btn-ghost" href="../../">Xem thiệp cưới</a>
+        <a class="btn" href="../../#rsvp">${L('💌 Xác nhận dự tiệc', '💌 RSVP')}</a>
+        <a class="btn btn-ghost" href="../../">${L('Xem thiệp cưới', 'View the invitation')}</a>
       </div>
     </div></div>`;
     if (prevStatus !== 'podium' && me.rank <= 3) setTimeout(() => { sfx.fanfare(); burst(['🎉', '✨', '🌸', '🏆'], 40); }, 2400);
   }
 
+  onLangChange(() => {
+    if (!room) { if (viewKey === 'pin') renderPinForm(lastPinError); return; }
+    viewKey = '';
+    render();
+  });
+
   function renderEnded() {
     setMood('');
-    app.innerHTML = '<div class="screen"><div class="center"><div class="big-icon">💗</div><h1>Game đã kết thúc</h1><p class="sub">Cảm ơn bạn đã chơi cùng Ngọc Hân &amp; Hồng Phước!</p><div class="links"><a class="btn" href="../../">Xem thiệp cưới</a></div></div></div>';
+    app.innerHTML = `<div class="screen"><div class="center"><div class="big-icon">💗</div><h1>${L('Game đã kết thúc', 'The game has ended')}</h1><p class="sub">${L('Cảm ơn bạn đã chơi cùng Ngọc Hân &amp; Hồng Phước!', 'Thanks for playing with Ngọc Hân &amp; Hồng Phước!')}</p><div class="links"><a class="btn" href="../../">${L('Xem thiệp cưới', 'View the invitation')}</a></div></div></div>`;
   }
 </script>
 </body>

@@ -163,8 +163,8 @@
         <div class="big-num">${players.length}</div>
         <div class="chips">${players.map((p) => chip(p)).join('') || '<span class="muted">Đang chờ khách quét mã trên TV...</span>'}</div>
       </div>
-      <div class="card"><h2>4 giải</h2>${ladder()}</div>
-      <div class="card"><p class="muted">🎟️ Mỗi khách 1 vé 3 hàng × 3 số (0–30), giữ nguyên đến hết game. Khách vào trễ vẫn được phát vé.</p></div>
+      <div class="card"><h2>3 vòng · 3 giải</h2>${ladder()}</div>
+      <div class="card"><p class="muted">🎟️ Mỗi khách 1 vé 3 hàng × 3 số (0–30), giữ nguyên cả 3 vòng. Mỗi vòng ai KINH (đủ 1 hàng ngang hoặc 1 cột dọc) đầu tiên trúng giải, sang vòng mới thì xóa số quay lại từ đầu.</p></div>
       <div class="actions">
         <button class="btn btn-main" data-act="deal" ${players.length ? '' : 'disabled'}>🎟️ Phát vé</button>
         ${common}
@@ -180,7 +180,7 @@
     const waiting = waitingList(room, called);
     const spinning = Boolean(room.spinning);
     return `<div class="card">
-        <h2><span class="han">${P.han}</span> Đang tìm ${P.name} · ${ROW_TEXT[P.rows]}</h2>
+        <h2><span class="han">${P.han}</span> Vòng ${stage + 1}/${PRIZES.length} · ${P.name} · ai KINH đầu tiên</h2>
         <div class="draw-row">
           <div class="ballbig ${spinning ? 'rolling' : ''}">${spinning ? '?' : (last === null ? '?' : last)}</div>
           <div><div class="big-num">${calls.length}<span style="font-size:1rem">/${ALL_NUMS.length}</span></div><div class="muted">số đã quay</div></div>
@@ -188,7 +188,7 @@
         <div style="margin-top:10px;font-size:0.8rem">${boardHtml(calls, last)}</div>
       </div>
       <div class="card">
-        <h2>⏳ Đang chờ ${P.short}: ${waiting.length} người</h2>
+        <h2>⏳ Đang chờ KINH: ${waiting.length} người</h2>
         <div class="chips">${waiting.slice(0, 30).map((p) => chip(p, ` · chờ ${p.waiting.join(', ')}`)).join('') || '<span class="muted">Chưa ai chỉ còn thiếu 1 số</span>'}</div>
       </div>
       <div class="card"><h2>Bậc giải</h2>${ladder()}</div>
@@ -211,7 +211,7 @@
       </div>
       <div class="card"><h2>Bậc giải</h2>${ladder()}</div>
       <div class="actions">
-        <button class="btn btn-main" data-act="next">${done ? 'Xem tổng kết 🏆' : '▶ Quay tiếp'}</button>
+        <button class="btn btn-main" data-act="next">${done ? 'Xem tổng kết 🏆' : `▶ Vòng ${stageOf(room) + 1}: quay lại từ đầu`}</button>
         ${common}
         ${newRoomBtn}
       </div>`;

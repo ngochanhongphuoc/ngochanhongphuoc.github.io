@@ -412,7 +412,8 @@
     const item = QUESTIONS[i];
     await update(roomRef(pin), {
       status: 'question', q: i, qKey: String(i), qStartAt: serverTimestamp(), reveal: null,
-      current: { emoji: item.emoji, q: item.q, options: item.options },
+      // Kèm bản tiếng Anh cho điện thoại người chơi chọn EN (màn TV vẫn hiện tiếng Việt)
+      current: { emoji: item.emoji, q: item.q, options: item.options, qEn: item.qEn || null, optionsEn: item.optionsEn || null },
     });
   }
 
@@ -456,7 +457,7 @@
     }
     rankPlayers(next).forEach((p, idx) => { updates[`players/${p.uid}/rank`] = idx + 1; });
     const answered = Object.keys(answers).filter((k) => players[k]).length;
-    updates.reveal = { counts, fastest, answered, answer: item.answer, right: item.right, wrong: item.wrong };
+    updates.reveal = { counts, fastest, answered, answer: item.answer, right: item.right, wrong: item.wrong, rightEn: item.rightEn || null, wrongEn: item.wrongEn || null };
     if (fastest && (!room.record || fastest.ms < room.record.ms)) updates.record = { ...fastest, q: i };
     await update(roomRef(pin), updates);
   }

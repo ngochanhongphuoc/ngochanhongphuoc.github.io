@@ -3,6 +3,8 @@
 // Không bốc thăm, không nhường: mỗi vòng tính lại từ đầu, đã thắng vòng trước vẫn thắng tiếp nếu lắc nhiều nhất.
 // Số lần lắc lưu ở rooms/<pin>/shakes (luật Firebase có sẵn cho đường này).
 
+import { L } from '../shared/i18n.js'; // TV/MC không bật song ngữ nên luôn là tiếng Việt
+
 export const DURATION = 20000;  // thời gian lắc mỗi vòng
 export const COUNTDOWN = 4000;  // đếm ngược trước khi lắc
 export const ROUNDS = 3;        // số vòng rung cây
@@ -12,20 +14,23 @@ export const PER_PERSON = 60;   // mỗi người lắc chừng này lần thì 
 
 export const COUPLE = '<span class="nm">Ngọc Hân</span> <span class="amp">&amp;</span> <span class="nm">Hồng Phước</span>';
 
-// Lời chúc trong bao lì xì (người trúng lộc và lì xì ảo rơi trên điện thoại)
+// Lời chúc trong bao lì xì (người trúng lộc và lì xì ảo rơi trên điện thoại): [tiếng Việt, tiếng Anh]
 export const WISHES = [
-  'Năm sau tới lượt bạn lên xe hoa! 💍',
-  'Tiền vô như nước, tiền ra nhỏ giọt 💸',
-  'Ăn hoài không mập, ngủ hoài vẫn đẹp 😴',
-  'Đi đâu cũng gặp người thương 💘',
-  'Sếp khen, lương tăng, thưởng Tết dày cộm 🧧',
-  'Vạn sự như ý, tỷ sự như mơ ✨',
-  'Hay ăn chóng lớn, sớm có người yêu 🥰',
-  'Lắc tay ra lộc, lắc chân ra tài 💃',
-  'Một vợ một chồng, cả đời hạnh phúc 💑',
-  'Mua gì cũng trúng sale, đi đâu cũng có chỗ đậu xe 🚗',
+  ['Năm sau tới lượt bạn lên xe hoa! 💍', 'Your wedding is next! 💍'],
+  ['Tiền vô như nước, tiền ra nhỏ giọt 💸', 'Money flows in, barely trickles out 💸'],
+  ['Ăn hoài không mập, ngủ hoài vẫn đẹp 😴', 'Eat all you want, never gain a pound 😴'],
+  ['Đi đâu cũng gặp người thương 💘', 'Love finds you wherever you go 💘'],
+  ['Sếp khen, lương tăng, thưởng Tết dày cộm 🧧', 'Praise from the boss, a raise and a fat bonus 🧧'],
+  ['Vạn sự như ý, tỷ sự như mơ ✨', 'May everything go just as you wish ✨'],
+  ['Hay ăn chóng lớn, sớm có người yêu 🥰', 'Grow happy and find your sweetheart soon 🥰'],
+  ['Lắc tay ra lộc, lắc chân ra tài 💃', 'Shake your hands for luck, your feet for fortune 💃'],
+  ['Một vợ một chồng, cả đời hạnh phúc 💑', 'One love, a lifetime of happiness 💑'],
+  ['Mua gì cũng trúng sale, đi đâu cũng có chỗ đậu xe 🚗', 'Always on sale, always a parking spot 🚗'],
 ];
-export const randomWish = () => WISHES[Math.floor(Math.random() * WISHES.length)];
+// Lời chúc theo ngôn ngữ đang dùng (lì xì ảo trên điện thoại)
+export const randomWish = () => { const w = WISHES[Math.floor(Math.random() * WISHES.length)]; return L(w[0], w[1]); };
+// Lời chúc lưu cho người trúng: TV hiện tiếng Việt, điện thoại chọn EN thì hiện wishEn
+const pickWish = () => { const w = WISHES[Math.floor(Math.random() * WISHES.length)]; return { wish: w[0], wishEn: w[1] }; };
 
 export const shakesOf = (room, r) => (room.shakes && room.shakes[r]) || {};
 export const totalOf = (room, r) => Object.values(shakesOf(room, r)).reduce((s, c) => s + (c || 0), 0);
@@ -60,7 +65,7 @@ export function pastWinners(room, beforeRound = ROUNDS) {
 export function drawWinners(room, r, k = WINNERS) {
   return topOf(room, r)
     .slice(0, k)
-    .map((p) => ({ uid: p.uid, name: p.name, animal: p.animal, count: p.count, wish: randomWish() }));
+    .map((p) => ({ uid: p.uid, name: p.name, animal: p.animal, count: p.count, ...pickWish() }));
 }
 
 // Tổng số lần lắc của mỗi người qua các vòng (để tìm "Tay rung vàng")
@@ -76,20 +81,20 @@ export const isOver = (room) => played(room) >= ROUNDS;
 
 // Hướng dẫn cách chơi (TV và điện thoại)
 export const HOW_TO = [
-  ['📱', 'Quét mã QR, nhập tên, chọn avatar rồi bấm <b>Bật lắc</b> (iPhone sẽ hỏi quyền cảm biến).'],
-  ['🌳', 'Đếm 3-2-1 là cả phòng <b>cùng lắc thật mạnh 20 giây</b> để rung cây may mắn trên TV.'],
-  ['🧧', `Hết giờ, <b>${WINNERS > 1 ? `${WINNERS} người` : 'người'} lắc nhiều nhất trúng lộc</b>. Không bốc thăm, chỉ tính số lần lắc!`],
-  ['🎁', 'Mỗi vòng tính lại từ đầu, vòng nào cũng có cơ hội. Lên nhận quà từ cô dâu chú rể nha!'],
+  ['📱', 'Quét mã QR, nhập tên, chọn avatar rồi bấm <b>Bật lắc</b> (iPhone sẽ hỏi quyền cảm biến).', 'Scan the QR code, enter your name, pick an avatar and tap <b>Enable shaking</b> (iPhone will ask for motion access).'],
+  ['🌳', 'Đếm 3-2-1 là cả phòng <b>cùng lắc thật mạnh 20 giây</b> để rung cây may mắn trên TV.', 'After 3-2-1 the whole room <b>shakes hard for 20 seconds</b> to shake the lucky tree on the TV.'],
+  ['🧧', `Hết giờ, <b>${WINNERS > 1 ? `${WINNERS} người` : 'người'} lắc nhiều nhất trúng lộc</b>. Không bốc thăm, chỉ tính số lần lắc!`, `When time is up, <b>the ${WINNERS > 1 ? `${WINNERS} people who shake` : 'person who shakes'} the most win</b>. No lucky draw, only shakes count!`],
+  ['🎁', 'Mỗi vòng tính lại từ đầu, vòng nào cũng có cơ hội. Lên nhận quà từ cô dâu chú rể nha!', 'Each round starts fresh, so everyone has a chance. Come up to get your gift from the bride and groom!'],
 ];
-export const howToHtml = () => `<ol class="howto">${HOW_TO.map(([icon, text]) => `<li><span class="ic">${icon}</span><span>${text}</span></li>`).join('')}</ol>`;
+export const howToHtml = () => `<ol class="howto">${HOW_TO.map(([icon, vi, en]) => `<li><span class="ic">${icon}</span><span>${L(vi, en)}</span></li>`).join('')}</ol>`;
 
 // Bảng cách chơi bật lên giữa màn hình (gắn ngoài #app để không mất khi vẽ lại)
 export function showHelp(extraClass = '') {
   if (document.querySelector('.help-modal')) return;
   const box = document.createElement('div');
   box.className = `help-modal ${extraClass}`;
-  box.innerHTML = `<div class="box"><h2>🌳 Cách chơi Rung Cây, Rinh Quà</h2>${howToHtml()}
-    <button class="btn" id="helpClose">Đã hiểu, rung thôi! 🧧</button></div>`;
+  box.innerHTML = `<div class="box"><h2>${L('🌳 Cách chơi Rung Cây, Rinh Quà', '🌳 How to play Shake the Tree')}</h2>${howToHtml()}
+    <button class="btn" id="helpClose">${L('Đã hiểu, rung thôi! 🧧', 'Got it, let\'s shake! 🧧')}</button></div>`;
   document.body.appendChild(box);
   const close = () => box.remove();
   box.querySelector('#helpClose').onclick = close;

@@ -138,3 +138,9 @@ body.xs {
 .ladder li.now { box-shadow: 0 0 0 2px var(--gold), 0 0 18px rgba(255, 210, 100, 0.45); background: rgba(255, 226, 154, 0.12); }
 .ladder li.done { opacity: 0.85; }
 .ladder li.done b::after { content: ' ✓'; }
+/* KINH theo cột dọc: ô trong cột sáng vàng, nhãn "KINH ↓" phía trên cột */
+.lt-cell.col-done { box-shadow: 0 0 0 3px var(--gold-light), 0 0 16px rgba(255, 210, 100, 0.9); background: linear-gradient(180deg, var(--gold-light), var(--gold)); color: var(--red-deep); }
+.lt-colbadges { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.4em; padding: 0 0.35em; margin-bottom: -0.2em; }
+.lt-colbadges span { justify-self: center; min-height: 1.2em; }
+.lt-colbadges span:not(:empty) { padding: 0.05em 0.55em; border-radius: 9999px; background: var(--red-deep); color: var(--gold-light); font-size: 0.75em; font-weight: 800; letter-spacing: 0.06em; box-shadow: 0 0 0 2px var(--gold); animation: pop 0.4s ease; }
+.lt-grid.compact .lt-colbadges { display: none; }

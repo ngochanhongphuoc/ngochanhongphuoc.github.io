@@ -10,7 +10,7 @@ Web tĩnh (HTML/CSS/JS thuần, không có bước build), tự động deploy l
 - Đếm ngược, lịch tháng 11, thêm vào Google Calendar, bản đồ chỉ đường
 - Xác nhận tham dự (RSVP) và sổ lưu bút
 - Giao diện riêng cho điện thoại và máy tính
-- 3 mini game chơi chung trong tiệc: Ai Là Triệu Phú, Lô tô (vé 3×3 kiểu Việt Nam), Rung Cây Rinh Quà (10 phần quà)
+- 3 mini game chơi chung trong tiệc: Ai Là Triệu Phú, Lô tô (vé 3×3 kiểu Việt Nam), Rung Cây Rinh Quà (9 phần quà)
 
 ## Các trang
 
@@ -44,7 +44,7 @@ ngochanhongphuoc/
 │   ├── join/             #   Khách nhập mã phòng (dùng chung cho mọi game)
 │   ├── host/             #   MC điều khiển bằng điện thoại
 │   └── questions.js      #   Bộ 15 câu hỏi
-├── lottery/              # Game Lô tô (vé 3 hàng × 3 số 0–30 giữ cả game, 4 giải): index.html · ticket/ · host/ · lottery.js · lottery.css · sound.js
+├── lottery/              # Game Lô tô (vé 3 hàng × 3 số 0–30 giữ cả game, 3 vòng × 1 giải, ai KINH đầu tiên): index.html · ticket/ · host/ · lottery.js · lottery.css · sound.js
 ├── tree/                 # Game Rung Cây, Rinh Quà (ai lắc nhiều nhất thắng): index.html · play/ · host/ · tree.js · tree.css
 ├── shared/               # Code chung cho các game
 │   └── firebase-config.js · database.rules.json · live.js · live.css · remote.js · shake.css · yt-music.js (nhạc YouTube dự phòng)

@@ -1,6 +1,7 @@
 // Bộ câu hỏi cho game Ai Là Triệu Phú (chơi chung kiểu Kahoot, /quiz).
 // Phần 1: chuyện tình trong thiệp (docs/love-story.md) · Phần 2: thiệp cưới · Phần 3: chuyện vui sau cưới.
 // "answer" là vị trí đáp án đúng: 0 = A, 1 = B, 2 = C, 3 = D
+// qEn, optionsEn, rightEn, wrongEn: bản tiếng Anh cho điện thoại người chơi chọn EN (TV luôn hiện tiếng Việt)
 window.QUESTIONS = [
   // ---------- Phần 1: Chuyện tình ----------
   {
@@ -10,6 +11,10 @@ window.QUESTIONS = [
     answer: 1,
     right: 'Chuẩn! Một quán cà phê nhỏ là nơi mọi chuyện bắt đầu ☕💘',
     wrong: 'Sai rồi! Hai người gặp nhau lần đầu ở một quán cà phê đó.',
+    qEn: "Where did the bride and groom first meet?",
+    optionsEn: ["In a university lecture hall","At a coffee shop","On a dating app","At a friend's wedding"],
+    rightEn: "Correct! A little coffee shop is where it all began ☕💘",
+    wrongEn: "Wrong! They first met at a coffee shop.",
   },
   {
     emoji: '🗓️',
@@ -18,6 +23,10 @@ window.QUESTIONS = [
     answer: 2,
     right: 'Đúng rồi! Năm 2019, trước khi cả thế giới phải ở nhà 🌏',
     wrong: 'Trật rồi! Hai người gặp nhau năm 2019.',
+    qEn: "What year did they first meet?",
+    optionsEn: ["2017","2018","2019","2021"],
+    rightEn: "Right! 2019, just before the whole world had to stay home 🌏",
+    wrongEn: "Not quite! They met in 2019.",
   },
   {
     emoji: '🤝',
@@ -26,6 +35,10 @@ window.QUESTIONS = [
     answer: 1,
     right: 'Chính xác! Cảm ơn người bạn chung đã "se duyên" 🙏',
     wrong: 'Hông phải! Là một người bạn chung giới thiệu đó.',
+    qEn: "Who introduced the bride and groom?",
+    optionsEn: ["Their parents","A mutual friend","A boss at work","The Facebook algorithm"],
+    rightEn: "Exactly! Thanks to the mutual friend who played matchmaker 🙏",
+    wrongEn: "Nope! It was a mutual friend.",
   },
   {
     emoji: '🎮',
@@ -34,6 +47,10 @@ window.QUESTIONS = [
     answer: 2,
     right: 'Chuẩn! Những đêm "nhảy dù" PUBG bất kể ngày đêm 🪂',
     wrong: 'Sai rồi! Hai người cùng chơi PUBG thâu đêm suốt sáng.',
+    qEn: "During the COVID lockdown, what kept them up all night together?",
+    optionsEn: ["Binge-watching K-dramas","Online classes","Playing PUBG","Cooking over video calls"],
+    rightEn: "Correct! Endless nights of PUBG drops 🪂",
+    wrongEn: "Wrong! They played PUBG all night long.",
   },
   {
     emoji: '🪂',
@@ -42,6 +59,10 @@ window.QUESTIONS = [
     answer: 1,
     right: 'Đúng rồi! Đồng đội trong game, giờ thành bạn đời ngoài đời 💑',
     wrong: 'Hông phải! Hai người là đồng đội đó, giờ thành bạn đời luôn rồi.',
+    qEn: "In the game, what were the bride and groom to each other?",
+    optionsEn: ["Sworn enemies","Teammates","Random matchmates","Livestream viewers"],
+    rightEn: "Right! Teammates in the game, life partners in real life 💑",
+    wrongEn: "Nope! They were teammates, and now they're life partners.",
   },
   {
     emoji: '💔',
@@ -50,6 +71,10 @@ window.QUESTIONS = [
     answer: 1,
     right: 'Chuẩn! Thua nhiều hơn số trận PUBG, nhưng không bỏ cuộc 💪',
     wrong: 'Sai rồi! Là nhiều hơn cả số trận PUBG đã chơi đó 😅',
+    qEn: "According to the invitation, the groom's failed attempts to woo her probably outnumbered…",
+    optionsEn: ["The cups of coffee they drank","The PUBG matches they played","The messages he sent","The times he went hungry"],
+    rightEn: "Correct! More losses than PUBG matches, but he never gave up 💪",
+    wrongEn: "Wrong! More than all the PUBG matches they played 😅",
   },
   {
     emoji: '🍀',
@@ -58,6 +83,10 @@ window.QUESTIONS = [
     answer: 2,
     right: 'Quá chuẩn! "Anh gặp em là hết may mắn!", đi vào lòng đất nhưng sống mãi trong lòng cô dâu 😂',
     wrong: 'Trật rồi! Câu đó là "Anh gặp em là hết may mắn!" 🙈',
+    qEn: "What is the groom's legendary line?",
+    optionsEn: ["\"I used up all my luck to meet you\"","\"You are my lucky charm\"","\"Meeting you used up all my luck!\"","\"I'm the luckiest man alive\""],
+    rightEn: "Spot on! \"Meeting you used up all my luck!\" It fell flat, yet lives forever in the bride's heart 😂",
+    wrongEn: "Not quite! The line is \"Meeting you used up all my luck!\" 🙈",
   },
   {
     emoji: '⏳',
@@ -66,6 +95,10 @@ window.QUESTIONS = [
     answer: 2,
     right: 'Đúng rồi! Hơn sáu năm bên nhau mới về chung một nhà 💕',
     wrong: 'Hông phải! Hai người đã yêu nhau hơn sáu năm đó.',
+    qEn: "How long were they together before the proposal?",
+    optionsEn: ["Over 1 year","Over 3 years","Over 6 years","Over 10 years"],
+    rightEn: "Right! More than six years together before becoming one family 💕",
+    wrongEn: "Nope! They were together for more than six years.",
   },
   {
     emoji: '💍',
@@ -74,6 +107,10 @@ window.QUESTIONS = [
     answer: 2,
     right: 'Chính xác! Cầu hôn ngay giữa tiệc cưới của anh đồng nghiệp 🎉',
     wrong: 'Sai rồi! Chú rể cầu hôn tại tiệc cưới của một anh đồng nghiệp.',
+    qEn: "Where did the groom propose?",
+    optionsEn: ["On a beach at sunset","At the first coffee shop","At a colleague's wedding","During a PUBG match"],
+    rightEn: "Exactly! Right in the middle of a colleague's wedding 🎉",
+    wrongEn: "Wrong! He proposed at a colleague's wedding.",
   },
   {
     emoji: '🚚',
@@ -82,6 +119,10 @@ window.QUESTIONS = [
     answer: 1,
     right: 'Chuẩn! Dàn diễn viên hạng A đến từ xe tải HINO 🚚✨',
     wrong: 'Hông phải! Dàn diễn viên đến từ xe tải HINO đó.',
+    qEn: "Where did the proposal's \"A-list cast\" come from?",
+    optionsEn: ["A theatre troupe","HINO trucks","The wedding band","The PUBG squad"],
+    rightEn: "Correct! The A-list cast came from HINO trucks 🚚✨",
+    wrongEn: "Nope! The cast came from HINO trucks.",
   },
   {
     emoji: '💐',
@@ -90,6 +131,10 @@ window.QUESTIONS = [
     answer: 2,
     right: 'Đúng rồi! Một bó cẩm tú cầu xinh xắn 💐',
     wrong: 'Trật rồi! Là hoa cẩm tú cầu nha.',
+    qEn: "What flowers were in the proposal bouquet?",
+    optionsEn: ["Red roses","Sunflowers","Hydrangeas","Tulips"],
+    rightEn: "Right! A lovely bouquet of hydrangeas 💐",
+    wrongEn: "Not quite! They were hydrangeas.",
   },
   // ---------- Phần 2: Thiệp cưới ----------
   {
@@ -99,6 +144,10 @@ window.QUESTIONS = [
     answer: 0,
     right: 'Chuẩn! Bạn đang ngồi ở 118 Trường Chinh, Gò Dầu đó 😄',
     wrong: 'Ủa? Mình đang ở 118 Trường Chinh, Gò Dầu mà!',
+    qEn: "Where is today's wedding reception?",
+    optionsEn: ["118 Truong Chinh, Go Dau","Downtown Saigon","Hoa Thanh, Tay Ninh","On a cruise ship"],
+    rightEn: "Correct! You're sitting at 118 Truong Chinh, Go Dau 😄",
+    wrongEn: "Huh? We're at 118 Truong Chinh, Go Dau!",
   },
   // ---------- Phần 3: Chuyện vui sau cưới ----------
   {
@@ -108,6 +157,10 @@ window.QUESTIONS = [
     answer: 1,
     right: 'Chuẩn không cần chỉnh! Vợ là nóc nhà, chồng chỉ là… cột nhà 😂',
     wrong: 'Ủa? Nóc nhà là cô dâu chứ ai, chú rể nghe chưa 🙈',
+    qEn: "After the wedding, who will officially be the boss of the house?",
+    optionsEn: ["The groom, the pillar of the family","The bride, no question","The cat","The air conditioner"],
+    rightEn: "Absolutely! The wife is the boss, the husband just holds up the roof 😂",
+    wrongEn: "Huh? The bride is the boss, did the groom hear that? 🙈",
   },
   {
     emoji: '🙇',
@@ -116,6 +169,10 @@ window.QUESTIONS = [
     answer: 0,
     right: 'Quá chuẩn! "Dạ, em nói đúng!", bí kíp giữ lửa hôn nhân 🔥',
     wrong: 'Nói vậy là ngủ sofa đó! Đáp án đúng: "Dạ, em nói đúng!" 🛋️',
+    qEn: "After the wedding, what will the groom say most every day?",
+    optionsEn: ["\"Yes dear, you're right!\"","\"Let me think about it\"","\"I'm going out to game tonight\"","\"I make the decisions here\""],
+    rightEn: "Spot on! \"Yes dear, you're right!\", the secret to a happy marriage 🔥",
+    wrongEn: "Say that and you'll sleep on the sofa! The answer: \"Yes dear, you're right!\" 🛋️",
   },
   {
     emoji: '🏆',
@@ -124,5 +181,9 @@ window.QUESTIONS = [
     answer: 1,
     right: 'Chính xác! Không top 1 nào bằng cái gật đầu của cô dâu 💍',
     wrong: 'Hông phải! Chiến thắng lớn nhất là được cô dâu gật đầu đồng ý.',
+    qEn: "According to the groom, what is the greatest victory of his life?",
+    optionsEn: ["Top 1 in PUBG","The bride saying yes","Winning the jackpot","Winning a coffee bet"],
+    rightEn: "Exactly! No Top 1 beats the bride's yes 💍",
+    wrongEn: "Nope! His greatest victory was the bride saying yes.",
   },
 ];

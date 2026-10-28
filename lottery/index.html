@@ -330,32 +330,25 @@
     renderDraw();
     await rollBall(ALL_NUMS.map(String), String(n), P);
 
-    // Xét giải sau số vừa quay: có thể trúng nhiều giải liền (vd 2 người cùng KINH -> 2 Giải Lộc)
+    // Xét giải của vòng đang chơi: người KINH đầu tiên thắng, nhiều người cùng KINH thì bốc thăm
     const calls = callsOf(room).concat(n);
     const called = new Set(calls);
-    const wonNow = [];
-    const wonUids = new Set();
-    let st = stage;
-    let tie = false;
-    while (st < PRIZES.length) {
-      const list = candidates(room, st, called, wonUids);
-      if (!list.length) break;
-      let pick = list[0];
-      if (list.length > 1) {
-        tie = true;
-        pick = list[Math.floor(Math.random() * list.length)];
-        await rollBall(list.map((p) => `${avatarText(p.animal)} ${p.name}`), `${avatarText(pick.animal)} ${pick.name}`, { ...PRIZES[st], spinMs: 2600, suspense: Math.max(1, PRIZES[st].suspense) }, { names: true });
-      }
-      wonNow.push({ stage: st, uid: pick.uid });
-      wonUids.add(pick.uid);
-      st++;
+    const list = candidates(room, stage, called);
+    let pick = list[0] || null;
+    const tie = list.length > 1;
+    if (tie) {
+      pick = list[Math.floor(Math.random() * list.length)];
+      await rollBall(list.map((p) => `${avatarText(p.animal)} ${p.name}`), `${avatarText(pick.animal)} ${pick.name}`, { ...PRIZES[stage], spinMs: 2600, suspense: Math.max(1, PRIZES[stage].suspense) }, { names: true });
     }
     rolling = null;
-    const upd = { spinning: null, calls: calls.join(','), round: calls.length, stage: st, last: n };
-    if (wonNow.length) {
+    const upd = { spinning: null, calls: calls.join(','), round: calls.length, last: n };
+    if (pick) {
+      // Giữ lại các số của vòng này để xem lại; vòng sau quay lại từ đầu
       upd.status = 'won';
-      upd.lastWin = { n, stages: wonNow.map((w) => w.stage), tie };
-      wonNow.forEach((w) => { upd[`winners/${w.stage}/${w.uid}`] = true; });
+      upd.stage = stage + 1;
+      upd.lastWin = { n, stages: [stage], tie };
+      upd[`winners/${stage}/${pick.uid}`] = true;
+      upd[`history/${stage}`] = calls.join(',');
     } else {
       snd.gong();
       duck(false);
@@ -365,7 +358,9 @@
 
   function next(remote = false) {
     if (room.status !== 'won') return;
-    update(roomRef(pin), { status: stageOf(room) >= PRIZES.length ? 'ended' : 'drawing', lastWin: null });
+    // Vòng mới: xóa hết số đã quay, quay lại từ đầu (vé giữ nguyên)
+    if (stageOf(room) >= PRIZES.length) update(roomRef(pin), { status: 'ended', lastWin: null });
+    else update(roomRef(pin), { status: 'drawing', lastWin: null, calls: '', round: 0, last: null });
   }
 
   function setAuto(on) {
@@ -463,7 +458,7 @@
   function renderLobby() {
     app.innerHTML = `<div class="screen">
       ${topbar()}
-      <div class="title"><div class="han gold-text">囍</div><h1 class="gold-text">LÔ TÔ</h1><div class="sub">Quét mã nhận vé · 3 hàng × 3 số · giữ vé đến hết game 🧧</div></div>
+      <div class="title"><div class="han gold-text">囍</div><h1 class="gold-text">LÔ TÔ</h1><div class="sub">Quét mã nhận vé · 3 hàng × 3 số · 3 vòng, ai KINH đầu tiên mỗi vòng trúng giải 🧧</div></div>
       <div class="lobby">
         <div class="side"><h2 id="pcount"></h2><div class="chips" id="plist"></div></div>
         <div class="join-box">
@@ -504,13 +499,13 @@
     const players = Object.keys(room.players || {}).length;
     let note;
     if (rolling) note = waiting.length ? `🥁 ${waiting.length} người đang chờ số... nín thở nào!` : 'Đang quay số... 🥁';
-    else if (!calls.length) note = `Đã phát ${players} vé! Bấm Quay số để bắt đầu 🍀`;
-    else note = `Đã quay ${calls.length}/${ALL_NUMS.length} số · đang tìm <b>${P.short}</b> (${ROW_TEXT[P.rows]})`;
+    else if (!calls.length) note = stage ? `Vòng ${stage + 1}: đã xóa số cũ, quay lại từ đầu! 🍀` : `Đã phát ${players} vé! Bấm Quay số để bắt đầu 🍀`;
+    else note = `Vòng ${stage + 1}/${PRIZES.length} · đã quay ${calls.length}/${ALL_NUMS.length} số · ai KINH đầu tiên trúng <b>${P.name}</b>`;
     app.innerHTML = `<div class="screen">
       ${topbar()}
       <div class="play">
         <div class="col-ball">
-          <div class="prize-now"><span class="han gold-text">${P.han}</span><div><b>Đang tìm: ${P.name}</b><small>${ROW_TEXT[P.rows]} đầu tiên</small></div></div>
+          <div class="prize-now"><span class="han gold-text">${P.han}</span><div><b>Vòng ${stage + 1}/${PRIZES.length} · ${P.name}</b><small>ai KINH đầu tiên (đủ 1 hàng ngang hoặc dọc)</small></div></div>
           <div class="bigball" id="bigball">${last === null ? '?' : last}</div>
           <div class="recent">${calls.slice(-7).reverse().map((n, i) => `<span class="ball ${i ? '' : 'hit'}">${n}</span>`).join('')}</div>
           <div class="note">${note}</div>
@@ -524,7 +519,7 @@
         <div class="col-side">
           ${ladderHtml(room, avatarHtml, escapeHtml)}
           <div class="waiting">
-            <h3>⏳ Đang chờ ${P.short} <b>${waiting.length}</b></h3>
+            <h3>⏳ Đang chờ KINH <b>${waiting.length}</b></h3>
             <div class="chips">${waiting.slice(0, 18).map((p) => chip(p, ` · chờ ${p.waiting.join(', ')}`)).join('') || '<span style="opacity:0.7">Chưa ai chỉ còn thiếu 1 số</span>'}</div>
           </div>
         </div>
@@ -553,7 +548,7 @@
         </div>`).join('')}</div>
         ${lw.tie ? '<p>🎲 Có nhiều người cùng đạt nên TV đã bốc thăm</p>' : ''}
         <p style="font-size:1.2em">Mời ${cards.length > 1 ? 'các bạn' : 'bạn'} lên nhận quà từ cô dâu chú rể 🧧</p>
-        <button class="btn btn-big" id="mainBtn">${done ? 'Xem tổng kết 🏆' : 'Quay tiếp ▶'}</button>
+        <button class="btn btn-big" id="mainBtn">${done ? 'Xem tổng kết 🏆' : `Vòng ${stageOf(room) + 1}: quay lại từ đầu ▶`}</button>
       </div>
     </div>`;
     bindTop();
@@ -571,7 +566,7 @@
       <div class="center">
         <div class="title"><div class="han gold-text">囍</div><h1 class="gold-text">TỔNG KẾT LÔ TÔ</h1></div>
         <div class="summary">${ladderHtml(room, avatarHtml, escapeHtml)}</div>
-        <p>Đã quay ${callsOf(room).length} số. Cảm ơn mọi người đã chơi cùng Ngọc Hân &amp; Hồng Phước! 💕</p>
+        <p>Cảm ơn mọi người đã chơi cùng Ngọc Hân &amp; Hồng Phước! 💕</p>
         <button class="btn" id="mainBtn">🔁 Chơi lại (phòng mới)</button>
       </div>
     </div>`;
