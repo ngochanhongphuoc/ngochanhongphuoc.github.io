@@ -257,14 +257,14 @@
     }
     if (document.getElementById('countBig')) { renderShake(); playSnd(gong); lastTotal = 0; rate = 0; }
     // Gọi mỗi nhịp: nhạc đang phát thì bỏ qua; bị chặn hoặc trang TV vừa mở lại giữa vòng thì bật lại
-    if (now < room.endAt) startGameMusic();
+    if (now < room.endAt) startGameMusic('shake'); // nhạc lắc chỉ phát lúc đang lắc (sau đếm ngược)
     const left = Math.max(0, room.endAt - now);
     const sec = Math.ceil(left / 1000);
     const timer = document.getElementById('timer');
     if (timer) { timer.textContent = sec; timer.classList.toggle('urgent', sec <= 5); }
     if (sec !== lastSec) { lastSec = sec; if (sec > 0 && sec <= 5) sfx.tick(true); }
     updateShake();
-    if (now > room.endAt + 1500) { stopGameMusic(); finishRound(); }
+    if (now > room.endAt + 1500) { startGameMusic('idle'); finishRound(); }
   }
 
   document.addEventListener('keydown', (e) => {
@@ -303,8 +303,8 @@
     else if (s === 'result') { if (scene !== key) renderResult(); }
     else if (s === 'final') { if (scene !== key) renderFinal(); }
     scene = key;
-    // Nhạc nền: phát từ lúc vào sảnh chờ và suốt lúc lắc; dừng khi công bố kết quả (để nghe trống, cồng)
-    if (s === 'lobby' || s === 'shaking') startGameMusic(); else stopGameMusic();
+    // Nhạc: lúc đang lắc phát nhạc lắc (từ 0:38); còn lại (sảnh chờ, đếm ngược, kết quả, tổng kết) phát nhạc nhẹ của Lô tô
+    startGameMusic(s === 'shaking' && serverNow() >= room.startAt ? 'shake' : 'idle');
   }
 
   function renderLobby() {

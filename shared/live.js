@@ -233,11 +233,16 @@ export function stopLobbyMusic() {
 // Nhạc nền của game theo kịch bản: file trong assets/audio/game/ (xem MUSIC_FILES).
 // File lỗi/rỗng thì dùng bài YouTube cùng vai trò trong yt-music.js, YouTube cũng lỗi thì phát nhạc tổng hợp.
 const GAME_NAME = ['tree'].find((g) => location.pathname.toLowerCase().includes(`/${g}`)) || 'quiz';
+// Mỗi bài: tên file (không đuôi .mp3), hoặc { file, start: giây bắt đầu phát, volume: 0–1 }
 const MUSIC_FILES = {
   quiz: { lobby: 'quiz-intro', question: 'quiz-music' }, // Ai Là Triệu Phú: giới thiệu/sảnh chờ, lúc trả lời
-  tree: { default: 'tree-music' },                        // Rung Cây, Rinh Quà: lúc lắc
+  tree: {
+    idle: { file: 'lottery-music', volume: 0.25 },          // Rung Cây: sảnh chờ, đếm ngược, kết quả: nhạc nhẹ của Lô tô
+    shake: { file: 'tree-music', start: 38, volume: 0.5 },   // lúc cả phòng đang lắc: phát từ giây 0:38
+  },
 };
-const YT_BACKUP = { 'quiz-intro': 'quizIntro', 'quiz-music': 'quizPlay', 'tree-music': 'tree' };
+const trackOf = (entry) => (typeof entry === 'string' ? { file: entry } : entry);
+const YT_BACKUP = { 'quiz-intro': 'quizIntro', 'quiz-music': 'quizPlay', 'tree-music': 'tree', 'lottery-music': 'lottery' };
 const failedFiles = new Set();
 let gameAudio = null;
 let currentFile = null;
@@ -247,20 +252,21 @@ let gameSynthTimer = null;
 let wantMusic = false;
 let waitingForGesture = false;
 
-function getGameAudio() {
-  if (gameAudio) return gameAudio;
-  gameAudio = new Audio();
-  gameAudio.loop = true;
-  gameAudio.volume = 0.5;
-  gameAudio.preload = 'auto';
-  gameAudio.addEventListener('error', () => {
+// Mỗi bài có 1 trình phát riêng, tải 1 lần rồi giữ lại: đổi bài chỉ tạm dừng bài này, phát bài kia (không tải lại)
+const players = {};
+function getGameAudio(name) {
+  if (players[name]) return players[name];
+  const a = new Audio(CUSTOM_DIR + name + '.mp3');
+  a.loop = true;
+  a.volume = 0.5;
+  a.preload = 'auto';
+  a.addEventListener('error', () => {
     // File này lỗi/rỗng: chuyển sang bài dự phòng
-    if (!currentFile) return;
-    failedFiles.add(currentFile);
-    currentFile = null;
-    if (wantMusic && !muted) startGameMusic(lastPhase);
+    failedFiles.add(name);
+    if (currentFile === name) { currentFile = null; gameAudio = null; if (wantMusic && !muted) startGameMusic(lastPhase); }
   });
-  return gameAudio;
+  players[name] = a;
+  return a;
 }
 
 // Trình duyệt chặn phát nhạc khi chưa ai bấm vào trang (MC điều khiển bằng điện thoại thì không ai chạm vào TV).
@@ -284,26 +290,35 @@ export function needGesture(resume) {
   document.addEventListener('keydown', go, true);
 }
 
-// phase: trạng thái phòng ("lobby" / "question") để Ai Là Triệu Phú chọn nhạc giới thiệu hoặc nhạc lúc trả lời
+// phase: chọn bài trong MUSIC_FILES (Ai Là Triệu Phú: "lobby" / "question"; Rung Cây: "idle" / "shake")
 export function startGameMusic(phase) {
   wantMusic = true;
   lastPhase = phase;
   if (muted) return;
   const files = MUSIC_FILES[GAME_NAME];
-  const name = files[phase] || files.default || Object.values(files)[0];
+  const track = trackOf(files[phase] || files.default || Object.values(files)[0]);
+  const name = track.file;
   if (failedFiles.has(name)) {
     if (gameAudio) gameAudio.pause();
+    gameAudio = null;
     if (!ytFailed && playTrack(YT_BACKUP[name], () => { ytFailed = true; if (wantMusic && !muted) startSynthGameMusic(); })) return;
     startSynthGameMusic();
     return;
   }
   if (waitingForGesture) return; // đang chờ bấm vào màn hình
   stopTrack();
-  const audio = getGameAudio();
+  const audio = getGameAudio(name);
   if (currentFile !== name) {
+    // Đổi bài: dừng bài cũ; bài có "start" (vd nhạc lắc 0:38) thì tua về đúng giây đó mỗi lần vào
+    if (gameAudio && gameAudio !== audio) gameAudio.pause();
     currentFile = name;
-    audio.src = CUSTOM_DIR + name + '.mp3'; // đổi bài thì phát từ đầu
+    gameAudio = audio;
+    if (track.start != null) {
+      const seek = () => { try { audio.currentTime = track.start; } catch (e) { /* bỏ qua */ } };
+      if (audio.readyState >= 1) seek(); else audio.addEventListener('loadedmetadata', seek, { once: true });
+    }
   } else if (!audio.paused) return;
+  audio.volume = track.volume ?? 0.5;
   audio.play().catch((e) => {
     if (e && e.name === 'NotAllowedError') {
       // Trình duyệt chặn tự phát nhạc khi chưa có cú bấm nào: hiện dòng nhắc, phát ngay khi bấm vào màn hình

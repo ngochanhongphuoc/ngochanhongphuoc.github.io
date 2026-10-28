@@ -43,6 +43,7 @@ ngochanhongphuoc/
 │   ├── index.html        #   Màn hình TV
 │   ├── join/             #   Khách nhập mã phòng (dùng chung cho mọi game)
 │   ├── host/             #   MC điều khiển bằng điện thoại
+│   ├── questions/        #   Danh sách câu hỏi để tự kiểm tra (link /quiz/questions)
 │   └── questions.js      #   Bộ 15 câu hỏi
 ├── lottery/              # Game Lô tô (vé 3 hàng × 3 số 0–30 giữ cả game, 3 vòng × 1 giải, ai KINH đầu tiên): index.html · ticket/ · host/ · lottery.js · lottery.css · sound.js
 ├── tree/                 # Game Rung Cây, Rinh Quà (ai lắc nhiều nhất thắng): index.html · play/ · host/ · tree.js · tree.css

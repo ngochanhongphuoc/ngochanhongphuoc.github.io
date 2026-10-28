@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#5d1821">
+  <title>Danh sách câu hỏi | Ai Là Triệu Phú</title>
+  <link rel="icon" href="../../assets/icons/quiz.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../../nh/nh.css">
+  <style>
+    /* Trang tự kiểm tra bộ câu hỏi Ai Là Triệu Phú (đọc thẳng từ quiz/questions.js) */
+    .page { width: min(860px, 100%); }
+    .toolbar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 18px; }
+    .mini { min-height: 36px; padding: 6px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--wine); background: var(--paper-light); font-size: 12px; font-weight: 600; cursor: pointer; }
+    .mini[aria-pressed="true"] { color: #fff; border-color: var(--wine); background: var(--wine); }
+    .summary { margin: 0 0 16px; color: var(--muted); font-size: 13px; text-align: center; }
+    .qlist { display: grid; gap: 14px; margin: 0; padding: 0; list-style: none; }
+    .q { padding: 18px 20px; }
+    .q-head { display: flex; align-items: flex-start; gap: 12px; }
+    .q-num { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border-radius: 50%; color: var(--paper-light); background: var(--wine); font-size: 13px; font-weight: 700; }
+    .q-emoji { font-size: 26px; line-height: 1; }
+    .q-text { margin: 0; color: var(--wine); font: 600 19px/1.35 var(--serif); }
+    .en { display: block; margin-top: 3px; color: var(--muted); font: italic 14px/1.4 var(--serif); }
+    .opts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 14px 0 0; padding: 0; list-style: none; }
+    .opt { display: flex; gap: 8px; padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; background: #fffdf8; font-size: 13.5px; line-height: 1.4; }
+    .opt b { flex: none; width: 1.4em; height: 1.4em; display: grid; place-items: center; border-radius: 50%; color: #fff; font-size: 11px; }
+    .opt.correct { border-color: #4f7a4a; background: #e8f1e3; font-weight: 600; }
+    .opt.correct::after { content: "✓"; margin-left: auto; color: #4f7a4a; font-weight: 800; }
+    .why { margin: 12px 0 0; padding: 10px 12px; border-left: 3px solid var(--gold); border-radius: 0 8px 8px 0; background: #fbf4e6; font-size: 13px; line-height: 1.5; }
+    .why p { margin: 0; }
+    .why p + p { margin-top: 4px; }
+    .reveal-btn { display: none; margin-top: 12px; }
+    /* Chế độ tự chơi thử: ẩn đáp án, bấm "Xem đáp án" từng câu */
+    body.quiz-mode .q:not(.open) .opt.correct { border-color: var(--line); background: #fffdf8; font-weight: 400; }
+    body.quiz-mode .q:not(.open) .opt.correct::after { content: none; }
+    body.quiz-mode .q:not(.open) .why { display: none; }
+    body.quiz-mode .q:not(.open) .reveal-btn { display: inline-flex; }
+    body.no-en .en { display: none; }
+    @media (max-width: 560px) { .opts { grid-template-columns: 1fr; } }
+  </style>
+  <script src="../questions.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back-link" href="../../nh/">← Trang quản lý</a>
+    <span class="eyebrow" style="margin:0">🧠 Ai Là Triệu Phú</span>
+  </header>
+  <main class="page">
+    <div class="page-head">
+      <p class="eyebrow">Ngọc Hân &amp; Hồng Phước</p>
+      <h1 class="page-title">Danh sách câu hỏi</h1>
+      <p class="page-lead">Xem lại toàn bộ câu hỏi, đáp án và lời giải thích trước ngày tiệc. Sửa nội dung trong <code>quiz/questions.js</code>.</p>
+    </div>
+    <div class="toolbar">
+      <button class="mini" type="button" id="quizMode" aria-pressed="false">🙈 Ẩn đáp án (tự chơi thử)</button>
+      <button class="mini" type="button" id="showEn" aria-pressed="true">🇬🇧 Hiện bản tiếng Anh</button>
+      <button class="mini" type="button" id="printBtn">🖨️ In / lưu PDF</button>
+    </div>
+    <p class="summary" id="summary"></p>
+    <ol class="qlist" id="list"></ol>
+  </main>
+  <script>
+    const CHOICES = [
+      { letter: 'A', color: '#E8577A' }, { letter: 'B', color: '#4A7BD8' },
+      { letter: 'C', color: '#E09A2E' }, { letter: 'D', color: '#2FA58A' },
+    ];
+    const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+    const qs = window.QUESTIONS || [];
+    const counts = [0, 0, 0, 0];
+    qs.forEach((q) => { counts[q.answer] += 1; });
+    document.getElementById('summary').textContent =
+      `${qs.length} câu · đáp án đúng: ${CHOICES.map((c, i) => `${c.letter} ${counts[i]} câu`).join(' · ')}`;
+
+    document.getElementById('list').innerHTML = qs.map((q, n) => `
+      <li class="card q">
+        <div class="q-head">
+          <span class="q-num">${n + 1}</span>
+          <span class="q-emoji" aria-hidden="true">${q.emoji || '❓'}</span>
+          <p class="q-text">${esc(q.q)}${q.qEn ? `<span class="en">${esc(q.qEn)}</span>` : ''}</p>
+        </div>
+        <ul class="opts">${q.options.map((o, i) => `
+          <li class="opt ${i === q.answer ? 'correct' : ''}"><b style="background:${CHOICES[i].color}">${CHOICES[i].letter}</b>
+            <span>${esc(o)}${q.optionsEn ? `<span class="en">${esc(q.optionsEn[i])}</span>` : ''}</span></li>`).join('')}
+        </ul>
+        <div class="why">
+          <p>✅ ${esc(q.right)}${q.rightEn ? `<span class="en">${esc(q.rightEn)}</span>` : ''}</p>
+          <p>❌ ${esc(q.wrong)}${q.wrongEn ? `<span class="en">${esc(q.wrongEn)}</span>` : ''}</p>
+        </div>
+        <button class="mini reveal-btn" type="button">👀 Xem đáp án</button>
+      </li>`).join('');
+
+    document.querySelectorAll('.reveal-btn').forEach((b) => { b.onclick = () => b.closest('.q').classList.add('open'); });
+    const toggle = (id, cls, invert) => {
+      const btn = document.getElementById(id);
+      btn.onclick = () => {
+        const on = btn.getAttribute('aria-pressed') !== 'true';
+        btn.setAttribute('aria-pressed', String(on));
+        document.body.classList.toggle(cls, invert ? !on : on);
+        if (id === 'quizMode') document.querySelectorAll('.q').forEach((q) => q.classList.remove('open'));
+      };
+    };
+    toggle('quizMode', 'quiz-mode', false);
+    toggle('showEn', 'no-en', true);
+    document.getElementById('printBtn').onclick = () => window.print();
+  </script>
+</body>
+</html>
