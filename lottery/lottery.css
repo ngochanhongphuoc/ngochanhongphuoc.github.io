@@ -1,0 +1,109 @@
+/* Loto: tone đỏ son – vàng kim kiểu Trung Hoa (dùng cho TV và điện thoại khách) */
+:root {
+  --red: #C8102E;
+  --red-deep: #7A0A14;
+  --red-dark: #4E0610;
+  --gold: #F6C453;
+  --gold-light: #FFE29A;
+  --gold-deep: #B8862B;
+  --cream: #FFF6DC;
+  --ink: #4A0A10;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body.xs {
+  min-height: 100vh;
+  font-family: Montserrat, sans-serif;
+  color: var(--cream);
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,210,120,0.28) 0, transparent 45%),
+    radial-gradient(circle at 50% 120%, rgba(0,0,0,0.35) 0, transparent 55%),
+    repeating-radial-gradient(circle at 0 0, transparent 0 26px, rgba(246,196,83,0.06) 26px 28px),
+    linear-gradient(170deg, var(--red) 0%, var(--red-deep) 70%, var(--red-dark) 100%) fixed;
+  overflow-x: hidden;
+}
+.hidden { display: none !important; }
+#app { position: relative; z-index: 1; }
+.han { font-family: "Ma Shan Zheng", "Noto Serif SC", serif; font-weight: 400; }
+.gold-text {
+  background: linear-gradient(180deg, var(--gold-light), var(--gold) 55%, var(--gold-deep));
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+}
+
+/* Tên cặp đôi: không ngắt giữa tên */
+.couple .nm { white-space: nowrap; }
+.couple.stack .nm, .couple.stack .amp { display: block; }
+.couple.stack .amp { font-size: 0.7em; line-height: 1; }
+@media (max-width: 640px) {
+  .couple .nm, .couple .amp { display: block; }
+  .couple .amp { font-size: 0.7em; line-height: 1; }
+}
+.brand { font-family: "Great Vibes", cursive; color: var(--gold-light); line-height: 1.05; }
+
+/* Nút */
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 14px 28px; border: 0; border-radius: 9999px; cursor: pointer; text-decoration: none;
+  font: 800 1rem Montserrat, sans-serif; color: var(--red-deep);
+  background: linear-gradient(180deg, var(--gold-light), var(--gold) 60%, var(--gold-deep));
+  box-shadow: 0 6px 0 #7A4E10, 0 10px 24px rgba(0,0,0,0.3);
+  transition: transform 0.1s ease, opacity 0.2s;
+}
+.btn:active { transform: translateY(3px); box-shadow: 0 3px 0 #7A4E10; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.btn-big { font-size: 1.3em; padding: 18px 44px; }
+.btn-ghost { background: rgba(255,226,154,0.12); color: var(--gold-light); box-shadow: inset 0 0 0 2px rgba(246,196,83,0.5); }
+
+/* Vé số */
+.digits { display: inline-flex; gap: 0.18em; }
+.dg {
+  width: 1.15em; height: 1.5em; display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 0.18em; font-weight: 800; font-variant-numeric: tabular-nums;
+  background: var(--cream); color: var(--red-deep); box-shadow: inset 0 -0.08em 0 rgba(0,0,0,0.15);
+}
+.dg.hit { background: linear-gradient(180deg, var(--gold-light), var(--gold)); color: var(--red-deep); box-shadow: 0 0 0.35em rgba(255,226,154,0.9); }
+.dg.miss { background: #5A1A20; color: #C99; text-decoration: line-through; }
+.dg.spin { animation: shake 0.25s linear infinite; background: #FFF; }
+.digits.dead .dg { filter: grayscale(1); opacity: 0.55; }
+@keyframes shake { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-0.08em); } }
+
+/* Spinner */
+.spinner { width: 54px; height: 54px; border: 5px solid rgba(255,226,154,0.3); border-top-color: var(--gold); border-radius: 9999px; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* Đèn lồng */
+.lantern { position: fixed; top: 0; z-index: 0; pointer-events: none; display: flex; flex-direction: column; align-items: center; transform-origin: top center; animation: swing 3.2s ease-in-out infinite; }
+.lantern.left { left: 3vw; }
+.lantern.right { right: 3vw; animation-delay: -1.6s; }
+.lantern .cord { width: 2px; height: 5vh; background: var(--gold); }
+.lantern .body { font-size: clamp(2.4rem, 5vw, 4.5rem); filter: drop-shadow(0 0 18px rgba(255,120,60,0.7)); }
+@keyframes swing { 0%,100% { transform: rotate(5deg); } 50% { transform: rotate(-5deg); } }
+
+/* Pháo hoa emoji */
+.piece { position: fixed; top: -50px; font-size: 1.9rem; pointer-events: none; z-index: 50; animation: fall linear forwards; }
+@keyframes fall { to { transform: translateY(115vh) rotate(600deg); } }
+@keyframes pop { 0% { transform: scale(0.3); opacity: 0; } 70% { transform: scale(1.08); opacity: 1; } 100% { transform: scale(1); } }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+/* Hướng dẫn cách chơi */
+.howto { list-style: none; display: flex; flex-direction: column; gap: 8px; text-align: left; }
+.howto li { display: flex; gap: 10px; align-items: flex-start; background: rgba(0,0,0,0.22); border-radius: 14px; padding: 9px 12px; line-height: 1.45; }
+.howto .ic { font-size: 1.3em; line-height: 1.2; flex: none; }
+.howto b { color: var(--gold-light); }
+.help-modal { position: fixed; inset: 0; z-index: 100; background: rgba(40,0,6,0.75); display: flex; align-items: center; justify-content: center; padding: 16px; }
+.help-modal .box { width: 100%; max-width: 440px; max-height: 90vh; overflow: auto; background: linear-gradient(170deg, var(--red), var(--red-deep)); border-radius: 22px; padding: 20px 16px; box-shadow: 0 0 0 3px var(--gold), 0 20px 50px rgba(0,0,0,0.5); text-align: center; animation: pop 0.3s ease; }
+.help-modal h2 { margin-bottom: 12px; color: var(--gold-light); }
+.help-modal .btn { margin-top: 14px; }
+
+/* Đang quay: các số chưa sáng rung nhẹ */
+.digits.waiting .dg:not(.hit) { animation: shake 0.3s linear infinite; }
+.digits.waiting .dg:nth-child(2n):not(.hit) { animation-delay: -0.15s; }
+
+/* Ảnh cô dâu chú rể: ảnh tròn nhỏ cạnh tên trên TV, ảnh lớn chào mừng ở trang khách vào game */
+.topbar .brand.couple { display: inline-grid; grid-auto-flow: column; align-items: center; column-gap: 0.25em; }
+.topbar .brand.couple::before { content: ''; width: 1.5em; height: 1.5em; margin-right: 0.1em; border-radius: 50%; border: 2px solid #fff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2); background: url(../assets/images/couple.jpg) center 22% / cover; }
+/* Màn hẹp: tên xuống 3 dòng -> ảnh bên trái, tên canh giữa bên phải */
+@media (max-width: 640px) {
+  .topbar .brand.couple { grid-auto-flow: row; grid-template-columns: auto auto; justify-items: center; }
+  .topbar .brand.couple::before { grid-row: 1 / span 3; width: 2.1em; height: 2.1em; margin-right: 0.15em; }
+  .topbar .brand.couple > * { grid-column: 2; }
+}
+.brand.couple.stack::before { content: ''; display: block; width: min(72vw, 280px); aspect-ratio: 720 / 380; margin: 0 auto 10px; border-radius: 18px; border: 3px solid #fff; box-shadow: 0 6px 18px rgba(0, 0, 0, 0.15); background: url(../assets/images/gallery/wedding-01.jpg) center 30% / cover; }

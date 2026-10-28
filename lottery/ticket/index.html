@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#C8102E">
+<title>Vé Loto | Ngọc Hân & Hồng Phước</title>
+<link rel="icon" href="../../assets/icons/ticket.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Ma+Shan+Zheng&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lottery.css">
+<style>
+  .screen { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; padding: 16px; }
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; padding: 12px 0; }
+  .brand { font-size: 2.5rem; }
+  h1 { font-size: 1.45rem; font-weight: 800; line-height: 1.3; }
+  .sub { opacity: 0.9; line-height: 1.5; max-width: 340px; }
+  .top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 0.9rem; gap: 8px; }
+  .me { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,226,154,0.15); border-radius: 9999px; padding: 4px 12px 4px 6px; max-width: 65%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .me .ani { font-size: 1.3rem; }
+  .card { background: var(--cream); color: var(--ink); border-radius: 22px; padding: 20px; width: 100%; max-width: 420px; text-align: left; box-shadow: 0 0 0 4px var(--gold), 0 14px 34px rgba(0,0,0,0.3); }
+  .card label { display: block; font-weight: 700; font-size: 0.85rem; margin: 4px 0 8px; color: var(--red); }
+  .input { width: 100%; padding: 14px 16px; border: 2px solid #EBCB9A; border-radius: 14px; font: 700 1.1rem Montserrat, sans-serif; color: var(--ink); outline: none; background: #fff; }
+  .input:focus { border-color: var(--red); }
+  .pin-input { text-align: center; letter-spacing: 0.3em; font-size: 1.6rem; }
+  .animals { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 14px; }
+  .animal { aspect-ratio: 1; border: 2px solid #EBCB9A; border-radius: 14px; background: #fff; font-size: 1.8rem; cursor: pointer; }
+  .animal.on { border-color: var(--red); background: #FFE8D6; transform: scale(1.08); }
+  .err { color: #B3261E; font-weight: 600; font-size: 0.85rem; min-height: 1.2em; margin: 8px 0; }
+  .card .btn { width: 100%; }
+  .avatar { font-size: 5rem; line-height: 1; }
+
+  /* Tấm vé */
+  .ticket {
+    position: relative; width: 100%; max-width: 400px; border-radius: 20px; padding: 18px 16px 20px; text-align: center;
+    background: linear-gradient(160deg, #FFF9E8, var(--cream)); color: var(--ink);
+    box-shadow: 0 0 0 4px var(--gold), 0 0 0 8px var(--red-deep), 0 18px 40px rgba(0,0,0,0.4);
+  }
+  .ticket::before, .ticket::after { content: ""; position: absolute; top: 50%; width: 26px; height: 26px; margin-top: -13px; border-radius: 9999px; background: var(--red-deep); }
+  .ticket::before { left: -17px; } .ticket::after { right: -17px; }
+  .ticket .head { display: flex; justify-content: space-between; align-items: center; font-weight: 800; color: var(--red); font-size: 0.85rem; letter-spacing: 0.06em; }
+  .ticket .han { font-size: 2.6rem; color: var(--red); line-height: 1; }
+  .ticket .digits { font-size: clamp(2.1rem, 11vw, 3.2rem); margin: 14px 0 8px; }
+  .ticket .owner { font-weight: 700; font-size: 0.9rem; opacity: 0.8; }
+  .stamp { position: absolute; top: 38%; left: 50%; transform: translate(-50%, -50%) rotate(-14deg); border: 4px solid #8B1A1A; color: #8B1A1A; border-radius: 12px; padding: 4px 16px; font-size: 1.9rem; font-weight: 800; letter-spacing: 0.1em; background: rgba(255,246,220,0.75); animation: pop 0.4s ease; }
+  .status { font-size: 1.15rem; font-weight: 800; }
+  .pill { background: rgba(0,0,0,0.22); border-radius: 9999px; padding: 8px 16px; font-weight: 700; }
+  .win-han { font-size: 6rem; line-height: 1; animation: pop 0.8s ease; filter: drop-shadow(0 0 24px rgba(255,200,80,0.7)); }
+  .list { display: flex; flex-direction: column; gap: 8px; width: 100%; max-width: 400px; }
+  .list .row { background: rgba(0,0,0,0.22); border-radius: 14px; padding: 10px 14px; text-align: left; }
+  .list .row b { color: var(--gold-light); }
+  .mine { box-shadow: inset 0 0 0 2px var(--gold); }
+  .help-btn { border: 0; background: rgba(255,226,154,0.18); color: var(--gold-light); border-radius: 9999px; padding: 5px 11px; font: 700 0.8rem Montserrat, sans-serif; cursor: pointer; white-space: nowrap; }
+</style>
+</head>
+<body class="xs">
+<div id="app"></div>
+
+<script src="../../shared/firebase-config.js"></script>
+<script type="module">
+  import {
+    CONFIGURED, EMU, roomRef, get, set, onValue, serverTimestamp,
+    signIn, escapeHtml, unlockAudio, sfx, burst,
+    tidyUrl,
+    avatarHtml, avatarPickerHtml, DEFAULT_AVATARS,
+  } from '../../shared/live.js';
+  import { ROUNDS, hitsOf, ticketOf, keeps, survivors, winnersOf, ticketHtml, howToHtml, lanterns, COUPLE } from '../lottery.js';
+  const BASE = tidyUrl();
+
+  const app = document.getElementById('app');
+  let pin = (new URLSearchParams(location.search).get('pin') || '').replace(/\D/g, '');
+  let uid = null;
+  let room = null;
+  let chosenAnimal = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
+  let prev = { round: null, hits: '', alive: true, won: '' }; // để phát âm thanh khi có số mới
+  let view = '';
+
+  lanterns();
+  if (!CONFIGURED) {
+    app.innerHTML = '<div class="screen"><div class="center"><h1>Game chưa sẵn sàng</h1><p class="sub">Cô dâu chú rể chưa cấu hình xong, quay lại sau nhé!</p></div></div>';
+  } else {
+    start();
+  }
+
+  async function start() {
+    app.innerHTML = '<div class="screen"><div class="center"><div class="spinner"></div></div></div>';
+    try { uid = await signIn(); } catch (e) {
+      app.innerHTML = `<div class="screen"><div class="center"><h1>Không kết nối được 😢</h1><p class="sub">${escapeHtml(e.message)}</p></div></div>`;
+      return;
+    }
+    if (pin) openRoom(); else renderPinForm();
+  }
+
+  function renderPinForm(error = '') {
+    view = 'pin';
+    app.innerHTML = `<div class="screen"><div class="center">
+      <div class="brand couple stack">${COUPLE}</div>
+      <h1>Nhập mã phòng lô tô 🧧</h1>
+      <div class="card">
+        <label for="pinInput">Mã phòng (6 số trên màn hình lớn)</label>
+        <input class="input pin-input" id="pinInput" inputmode="numeric" maxlength="6" autocomplete="off" value="${pin}">
+        <div class="err">${escapeHtml(error)}</div>
+        <button class="btn" id="goBtn">Vào phòng</button>
+      </div>
+    </div></div>`;
+    const input = document.getElementById('pinInput');
+    const go = () => { pin = input.value.replace(/\D/g, ''); if (pin.length === 6) openRoom(); else renderPinForm('Mã phòng gồm 6 chữ số nha'); };
+    document.getElementById('goBtn').onclick = go;
+    input.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+  }
+
+  async function openRoom() {
+    const r = (await get(roomRef(pin))).val();
+    if (!r) { renderPinForm('Không tìm thấy phòng, kiểm tra lại mã nha'); return; }
+    // Mã của phòng Kahoot: chuyển sang trang chơi Kahoot
+    if (r.type !== 'lottery') { location.replace(new URL('../../quiz/join/', BASE).href + `?pin=${pin}${EMU ? '&emu=1' : ''}`); return; }
+    const url = new URL(location.href);
+    url.search = `?pin=${pin}${EMU ? '&emu=1' : ''}`;
+    history.replaceState(null, '', url);
+    onValue(roomRef(pin), (s) => { room = s.val(); render(); });
+  }
+
+  function renderJoin(error = '') {
+    view = 'join';
+    const nameValue = document.getElementById('nameInput')?.value || localStorage.getItem('kh_name') || '';
+    app.innerHTML = `<div class="screen"><div class="center">
+      <div class="brand couple stack">${COUPLE}</div>
+      <div class="han gold-text" style="font-size:3rem;line-height:1">囍</div>
+      <h1>Nhận vé Loto</h1>
+      <div class="card">
+        <label for="nameInput">Tên hiển thị</label>
+        <input class="input" id="nameInput" maxlength="20" autocomplete="off" placeholder="VD: Tuấn bàn 5" value="${escapeHtml(nameValue)}">
+        <label style="margin-top:14px">Chọn avatar</label>
+        ${avatarPickerHtml(chosenAnimal)}
+        <div class="err" id="joinErr">${escapeHtml(error)}</div>
+        <button class="btn" id="joinBtn">Nhận vé 🧧</button>
+      </div>
+      <button class="help-btn" data-help>❓ Cách chơi</button>
+    </div></div>`;
+    app.querySelectorAll('.animal').forEach((b) => {
+      b.onclick = () => { chosenAnimal = b.dataset.a; app.querySelectorAll('.animal').forEach((x) => x.classList.toggle('on', x === b)); };
+    });
+    document.getElementById('joinBtn').onclick = join;
+  }
+
+  async function join() {
+    unlockAudio();
+    const name = document.getElementById('nameInput').value.trim().replace(/\s+/g, ' ');
+    const errEl = document.getElementById('joinErr');
+    if (!name) { errEl.textContent = 'Nhập tên đã nha!'; return; }
+    if (Object.values(room.players || {}).some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+      errEl.textContent = 'Tên này có người dùng rồi, thêm chút gì cho khác nha 😄';
+      return;
+    }
+    const btn = document.getElementById('joinBtn');
+    btn.disabled = true;
+    try {
+      await set(roomRef(pin, `players/${uid}`), { name, animal: chosenAnimal, score: 0, joinedAt: serverTimestamp() });
+      localStorage.setItem('kh_name', name);
+      sfx.join();
+    } catch (e) {
+      btn.disabled = false;
+      errEl.textContent = 'Không vào được phòng, thử lại nha!';
+    }
+  }
+
+  const topBar = (me, extra = '') => `<div class="top"><span class="me"><span class="ani">${avatarHtml(me.animal)}</span>${escapeHtml(me.name)}</span><span>${extra} <button class="help-btn" data-help>❓ Cách chơi</button></span></div>`;
+
+  // Bảng cách chơi: gắn ngoài #app để không bị mất khi màn hình vẽ lại
+  function showHelp() {
+    if (document.querySelector('.help-modal')) return;
+    const box = document.createElement('div');
+    box.className = 'help-modal';
+    box.innerHTML = `<div class="box"><h2>🧧 Cách chơi Loto</h2>${howToHtml()}
+      <div class="sub" style="margin:12px auto 0">${ROUNDS.map((R, i) => `${R.han} Vòng ${i + 1}: ${R.prize} (vé ${R.digits} số, ${R.winners} giải)`).join('<br>')}</div>
+      <button class="btn" id="helpClose">Đã hiểu, chơi thôi!</button></div>`;
+    document.body.appendChild(box);
+    const close = () => box.remove();
+    box.querySelector('#helpClose').onclick = close;
+    box.onclick = (e) => { if (e.target === box) close(); };
+  }
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-help]')) showHelp(); });
+  const screen = (me, inner, extra = '') => `<div class="screen">${topBar(me, extra)}<div class="center">${inner}</div></div>`;
+
+  // Vòng mà mình đã trúng (nếu có)
+  function myWin() {
+    for (let r = 0; r < ROUNDS.length; r++) if (room.winners && room.winners[r] && room.winners[r][uid]) return r;
+    return -1;
+  }
+
+  function render() {
+    if (!room) { app.innerHTML = '<div class="screen"><div class="center"><h1>Phòng đã bị xóa</h1><p class="sub">Quét mã QR mới trên màn hình nha!</p></div></div>'; return; }
+    const me = room.players && room.players[uid];
+    if (!me) {
+      if (room.status === 'ended') { app.innerHTML = '<div class="screen"><div class="center"><h1>Lô tô đã kết thúc 🧧</h1><p class="sub">Hẹn bạn ở trò chơi sau nha!</p></div></div>'; return; }
+      if (view !== 'join') renderJoin();
+      return;
+    }
+    view = 'room';
+    const s = room.status;
+    if (s === 'lobby') {
+      app.innerHTML = screen(me, `<div class="avatar">${avatarHtml(me.animal)}</div><h1>Bạn đã vào phòng! 🎉</h1>
+        <p class="sub">Chờ MC phát vé nha. Trong lúc chờ, đọc nhanh cách chơi nè:</p>
+        <div style="width:100%;max-width:420px">${howToHtml()}</div>
+        <div class="pill">🧧 3 vòng · ${ROUNDS.map((R) => R.han).join(' · ')}</div>`);
+      return;
+    }
+    if (s === 'ended') { renderEnded(me); return; }
+
+    const r = room.round;
+    const R = ROUNDS[r];
+    const extra = `<span class="han" style="font-size:1.3rem">${R.han}</span> Vòng ${r + 1}/${ROUNDS.length}`;
+    const t = ticketOf(me, r);
+    const hits = hitsOf(room, r);
+    const alive = survivors(room, r, hits);
+    const won = room.winners && room.winners[r] && room.winners[r][uid];
+
+    if (s === 'won' && won) {
+      app.innerHTML = screen(me, `<div class="win-han han gold-text">${r === ROUNDS.length - 1 ? '大吉' : '囍'}</div>
+        <h1 class="gold-text" style="font-size:2rem">BẠN TRÚNG ${R.prize.toUpperCase()}!</h1>
+        ${ticketCard(me, r, t, t, false)}
+        <p class="sub">Lên sân khấu nhận quà từ cô dâu chú rể nha 🧧</p>`, extra);
+      if (prev.won !== `${pin}:${r}`) {
+        prev.won = `${pin}:${r}`;
+        sfx.fanfare();
+        burst(['🧧', '🧨', '🎆', '✨', '💰'], 60);
+        if (navigator.vibrate) navigator.vibrate([200, 100, 200, 100, 400]);
+      }
+      return;
+    }
+    if (s === 'won') {
+      const names = winnersOf(room, r).map((p) => `${avatarHtml(p.animal)} ${escapeHtml(p.name)}`).join(', ');
+      app.innerHTML = screen(me, `<div class="han gold-text" style="font-size:4rem;line-height:1">囍</div>
+        <h1>${R.prize} đã có chủ!</h1><p class="sub">Chúc mừng ${names} 🎉</p>
+        ${t ? ticketCard(me, r, t, hits, true) : ''}
+        <p class="sub">${r < ROUNDS.length - 1 ? 'Vòng sau sẽ có vé mới, đừng bỏ lỡ nha!' : 'Cảm ơn bạn đã chơi!'}</p>`, extra);
+      return;
+    }
+
+    // Đang phát vé / đang quay
+    if (!t) {
+      const w = myWin();
+      app.innerHTML = screen(me, w >= 0
+        ? `<div class="avatar">🎉</div><h1>Bạn đã trúng ${ROUNDS[w].prize} ở vòng ${w + 1}</h1><p class="sub">Vòng này nhường vé cho mọi người nha. Cùng xem ai may mắn tiếp theo!</p>`
+        : '<div class="spinner"></div><h1>Đang phát vé cho bạn...</h1><p class="sub">Nếu vòng này đã bắt đầu quay, bạn sẽ có vé ở vòng sau nha.</p>', extra);
+      return;
+    }
+    const isAlive = keeps(t, hits);
+    const spinning = Boolean(room.spinning) && isAlive;
+    let status;
+    if (!isAlive) status = `Vé không có số ${firstMiss(t, hits)} nên đã trượt 😢 Chờ vòng sau nha!`;
+    else if (room.spinning && room.spinning.tiebreak) status = 'Vé của bạn vào chung kết! Đang bốc thăm... 🙏';
+    else if (room.spinning) status = 'Đang quay số may mắn... cầu may nào 🙏';
+    else if (!hits) status = 'Đã nhận vé! Vé có số may mắn thì giữ, không có là trượt 🍀';
+    else status = `Vé còn giữ! Đã có ${hits.length}/${R.digits} số may mắn 🍀`;
+    app.innerHTML = screen(me, `${ticketCard(me, r, t, hits, !isAlive, spinning)}
+      <div class="status">${status}</div>
+      <div class="pill">Còn ${alive.length} vé · ${R.prize}: ${R.winners} giải</div>`, extra);
+
+    // Âm thanh khi có chữ số mới
+    if (prev.round === r && hits.length > prev.hits.length) {
+      if (isAlive) { sfx.correct(); if (navigator.vibrate) navigator.vibrate(80); }
+      else if (prev.alive) sfx.wrong();
+    }
+    prev = { ...prev, round: r, hits, alive: isAlive };
+  }
+
+  // Số may mắn đầu tiên mà vé không có
+  const firstMiss = (t, hits) => hits.split('').find((d) => !t.includes(d));
+
+  function ticketCard(me, r, t, hits, dead, spinning = false) {
+    const R = ROUNDS[r];
+    return `<div class="ticket">
+      <div class="head"><span>VÉ LÔ TÔ</span><span class="han">${R.han}</span><span>VÒNG ${r + 1}</span></div>
+      ${ticketHtml(t, hits, { spinning, dead })}
+      <div class="owner">${avatarHtml(me.animal)} ${escapeHtml(me.name)} · ${R.prize}</div>
+      ${dead ? '<div class="stamp">TRƯỢT</div>' : ''}
+    </div>`;
+  }
+
+  function renderEnded(me) {
+    app.innerHTML = screen(me, `<div class="han gold-text" style="font-size:4rem;line-height:1">囍</div>
+      <h1>Tổng kết Loto</h1>
+      <div class="list">${ROUNDS.map((R, r) => {
+        const ws = winnersOf(room, r);
+        const mine = ws.some((p) => p.uid === uid);
+        return `<div class="row ${mine ? 'mine' : ''}"><b>${R.han} ${R.prize}</b><br>${ws.map((p) => `${avatarHtml(p.animal)} ${escapeHtml(p.name)}`).join(', ') || 'Chưa quay'}</div>`;
+      }).join('')}</div>
+      <p class="sub">Cảm ơn bạn đã chơi cùng Ngọc Hân &amp; Hồng Phước! 💕</p>
+      <a class="btn" href="${new URL('../../', BASE).href}">Xem thiệp cưới</a>`);
+  }
+</script>
+</body>
+</html>

@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#7A0A14">
+<meta name="robots" content="noindex">
+<title>MC điều khiển | Loto</title>
+<link rel="icon" href="../../assets/icons/mc.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Ma+Shan+Zheng&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../lottery.css">
+<style>
+  html, body { touch-action: manipulation; }
+  body.xs { font-size: 15px; }
+  .screen { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; padding: 14px 14px 24px; max-width: 560px; margin: 0 auto; }
+  .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 12px; }
+  .head .title { font-weight: 800; font-size: 1rem; }
+  .head .title small { display: block; font-weight: 600; opacity: 0.8; font-size: 0.75rem; }
+  .badge { background: rgba(255,226,154,0.16); color: var(--gold-light); border-radius: 9999px; padding: 6px 12px; font-weight: 700; font-size: 0.78rem; white-space: nowrap; }
+  .card { background: rgba(0,0,0,0.22); border: 1px solid rgba(246,196,83,0.3); border-radius: 20px; padding: 16px; margin-bottom: 12px; }
+  .card h2 { font-size: 1.05rem; font-weight: 800; margin-bottom: 10px; color: var(--gold-light); }
+  .muted { opacity: 0.8; font-size: 0.85rem; line-height: 1.5; }
+  .big-num { font-size: 2.6rem; font-weight: 800; color: var(--gold-light); line-height: 1; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,226,154,0.14); border: 1px solid rgba(246,196,83,0.4); border-radius: 9999px; padding: 4px 10px; font-weight: 700; font-size: 0.8rem; }
+  .chip .digits { font-size: 0.85em; }
+  .rounds { list-style: none; display: grid; gap: 6px; }
+  .rounds li { background: rgba(0,0,0,0.2); border-radius: 12px; padding: 8px 12px; font-size: 0.88rem; }
+  .rounds li.on { box-shadow: 0 0 0 2px var(--gold); }
+  .rounds b { color: var(--gold-light); }
+  .draw-row { display: flex; align-items: center; gap: 14px; }
+  .ballbig { flex: none; width: 76px; height: 76px; border-radius: 9999px; display: flex; align-items: center; justify-content: center; font-size: 2.4rem; font-weight: 800; color: var(--red-deep); background: radial-gradient(circle at 32% 28%, #fff 0, var(--gold-light) 30%, var(--gold) 62%, var(--gold-deep) 100%); box-shadow: 0 0 0 3px var(--red-deep), 0 0 0 5px var(--gold); }
+  .ballbig.rolling { animation: wobble 0.22s linear infinite; }
+  @keyframes wobble { 0%,100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg); } }
+  .balls { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+  .ball { width: 30px; height: 30px; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-weight: 800; }
+  .ball.hit { background: radial-gradient(circle at 32% 28%, #fff 0, var(--gold-light) 35%, var(--gold) 100%); color: var(--red-deep); }
+  .ball.miss { background: #5A1A20; color: #C99; text-decoration: line-through; }
+  .note { font-weight: 700; font-size: 0.9rem; line-height: 1.4; }
+  .wcard { background: var(--cream); color: var(--ink); border-radius: 16px; padding: 10px 14px; display: flex; align-items: center; gap: 10px; margin-top: 8px; font-weight: 800; }
+  .wcard .ani { font-size: 1.8rem; }
+  .actions { display: grid; gap: 10px; margin-top: auto; padding-top: 6px; }
+  .actions .btn { width: 100%; }
+  .btn-main { font-size: 1.15rem; padding: 18px; }
+  .btn-soft { background: rgba(255,226,154,0.12); color: var(--gold-light); box-shadow: none; font-size: 0.9rem; }
+  .toast { position: fixed; left: 50%; bottom: 20px; transform: translateX(-50%); background: #111; color: #fff; padding: 10px 18px; border-radius: 9999px; font-size: 0.85rem; font-weight: 600; opacity: 0; transition: opacity 0.25s; pointer-events: none; z-index: 70; }
+  .toast.show { opacity: 1; }
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; }
+</style>
+</head>
+<body class="xs">
+<div id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/firebase-config.js"></script>
+<script type="module">
+  import { CONFIGURED, roomRef, onValue, signIn, watchServerTime, escapeHtml, tidyUrl, avatarHtml } from '../../shared/live.js';
+  import { claimControl, sendCommand, saveMcSession } from '../../shared/remote.js';
+  import { ROUNDS, hitsOf, survivors, winnersOf, ticketHtml, ballsHtml } from '../lottery.js';
+  tidyUrl();
+
+  const app = document.getElementById('app');
+  const params = new URLSearchParams(location.search);
+  let pin = (params.get('pin') || '').replace(/\D/g, '');
+  const key = params.get('key') || '';
+  let uid = null;
+  let room = null;
+  let unsubscribe = null;
+  let switching = false;
+
+  const toast = (msg) => {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toast.timer);
+    toast.timer = setTimeout(() => t.classList.remove('show'), 1800);
+  };
+  const message = (icon, title, sub = '') => {
+    app.innerHTML = `<div class="screen"><div class="center"><div style="font-size:4rem">${icon}</div><h2 style="font-size:1.4rem;font-weight:800">${title}</h2><p style="opacity:0.85;line-height:1.5;max-width:320px">${sub}</p></div></div>`;
+  };
+
+  if (!CONFIGURED) message('🛠️', 'Chưa cấu hình Firebase');
+  else if (!pin || !key) message('🎤', 'Thiếu mã điều khiển', 'Trên màn hình TV bấm "🎤 MC" rồi quét mã đó bằng điện thoại này.');
+  else start();
+
+  async function start() {
+    message('⏳', 'Đang kết nối...');
+    try { uid = await signIn(); } catch (e) { message('😢', 'Không kết nối được', escapeHtml(e.message)); return; }
+    watchServerTime();
+    await follow(pin);
+  }
+
+  async function follow(p) {
+    if (!(await claimControl(p, uid, key))) {
+      message('🔒', 'Mã điều khiển không đúng', 'Quét lại "🎤 MC" trên màn hình TV, hoặc vào trang /mc nhập lại mã phòng và mã MC.');
+      return;
+    }
+    pin = p;
+    saveMcSession(p, key, 'lottery');
+    const url = new URL(location.href);
+    url.searchParams.set('pin', pin);
+    history.replaceState(null, '', url);
+    if (unsubscribe) unsubscribe();
+    unsubscribe = onValue(roomRef(pin), async (snap) => {
+      room = snap.val();
+      if (room && room.movedTo && !switching) {
+        // TV đã tạo phòng mới: tự chuyển theo
+        switching = true;
+        toast(`Đã chuyển sang phòng mới ${room.movedTo}`);
+        await follow(room.movedTo);
+        switching = false;
+        return;
+      }
+      render();
+    });
+  }
+
+  async function send(type) {
+    try {
+      await sendCommand(pin, room, type);
+      if (navigator.vibrate) navigator.vibrate(30);
+      toast('Đã gửi lệnh ✔');
+    } catch (e) {
+      toast('Không gửi được lệnh, thử lại nha');
+    }
+  }
+
+  const chip = (p, extra = '') => `<span class="chip">${avatarHtml(p.animal)} ${escapeHtml(p.name)}${extra}</span>`;
+  const orderOf = (r) => String((room.order && room.order[r]) || '');
+  const common = '<button class="btn btn-soft" data-act="help">❓ Bật/tắt bảng Cách chơi trên TV</button>';
+  const newRoomBtn = '<button class="btn btn-soft" data-act="newroom">🔁 Tạo phòng mới</button>';
+
+  function render() {
+    if (switching) return;
+    if (!room) { message('👋', 'Phòng đã đóng', 'Quét lại "🎤 MC" trên TV để điều khiển phòng mới.'); return; }
+    const s = room.status;
+    const players = Object.values(room.players || {});
+    const statusText = {
+      lobby: '⏳ Sảnh chờ', ready: `🎟️ Vòng ${room.round + 1}`, drawing: `🎲 Vòng ${room.round + 1}`,
+      won: `🧧 Trúng vòng ${room.round + 1}`, ended: '🏆 Tổng kết',
+    }[s] || s;
+    let body = '';
+    if (s === 'lobby') body = lobbyView(players);
+    else if (s === 'ready' || s === 'drawing') body = drawView();
+    else if (s === 'won') body = wonView();
+    else if (s === 'ended') body = endedView();
+    app.innerHTML = `<div class="screen">
+      <div class="head">
+        <div class="title">🎤 MC · Loto<small>Phòng ${pin} · 👥 ${players.length} người</small></div>
+        <span class="badge">${statusText}</span>
+      </div>
+      ${body}
+    </div>`;
+    bind();
+  }
+
+  const roundsList = (cur) => `<ul class="rounds">${ROUNDS.map((R, i) => `<li class="${i === cur ? 'on' : ''}"><span class="han">${R.han}</span> Vòng ${i + 1}: <b>${R.prize}</b> · vé ${R.digits} số · ${R.winners} giải</li>`).join('')}</ul>`;
+
+  function lobbyView(players) {
+    return `<div class="card">
+        <h2>Khách đã nhận vé</h2>
+        <div class="big-num">${players.length}</div>
+        <div class="chips">${players.map((p) => chip(p)).join('') || '<span class="muted">Đang chờ khách quét mã trên TV...</span>'}</div>
+      </div>
+      <div class="card"><h2>Các vòng quay</h2>${roundsList(0)}</div>
+      <div class="card"><p class="muted">🎵 Nhạc và tiếng phát trên TV: lúc mở game trên máy tính, bấm 1 lần vào màn hình TV để trình duyệt cho phát âm thanh.</p></div>
+      <div class="actions">
+        <button class="btn btn-main" data-act="deal" ${players.length ? '' : 'disabled'}>🎟️ Phát vé vòng 1</button>
+        ${common}
+        ${newRoomBtn}
+      </div>`;
+  }
+
+  function drawView() {
+    const r = room.round;
+    const R = ROUNDS[r];
+    const hits = hitsOf(room, r);
+    const order = orderOf(r);
+    const alive = survivors(room, r, hits);
+    const miss = room.miss && room.miss.r === r ? room.miss : null;
+    const last = room.last && room.last.r === r ? room.last : null;
+    const pool = '0123456789'.split('').filter((d) => !order.includes(d));
+    const tie = alive.length > R.winners && !pool.some((d) => alive.some((p) => p.ticket.includes(d)));
+    const spinning = Boolean(room.spinning);
+    let note;
+    if (spinning) note = room.spinning.tiebreak ? 'Đang bốc thăm chung kết trên TV... 🥁' : 'Đang quay số trên TV... 🥁';
+    else if (miss) note = `Số ${miss.digit}: không ai giữ, bấm quay lại nha 😆`;
+    else if (tie) note = `Còn ${alive.length} vé giống hệt nhau, bấm để bốc thăm chung kết!`;
+    else if (last) note = `Số ${last.digit}: ${last.before} vé ➜ còn ${last.after} vé`;
+    else note = `Đã phát ${alive.length} vé, bấm Quay số để bắt đầu!`;
+    return `<div class="card">
+        <h2><span class="han">${R.han}</span> Vòng ${r + 1} · ${R.prize} · ${R.winners} giải</h2>
+        <div class="draw-row">
+          <div class="ballbig ${spinning ? 'rolling' : ''}">${spinning ? '?' : escapeHtml(order ? order[order.length - 1] : '?')}</div>
+          <div><div class="big-num">${alive.length}</div><div class="muted">vé đang giữ</div></div>
+        </div>
+        <div class="balls">${ballsHtml(hits, order)}</div>
+        <p class="note" style="margin-top:10px">${note}</p>
+        ${alive.length <= 30 ? `<div class="chips">${alive.map((p) => chip(p, ' ' + ticketHtml(p.ticket, hits))).join('')}</div>` : ''}
+      </div>
+      <div class="actions">
+        <button class="btn btn-main" data-act="spin" ${spinning ? 'disabled' : ''}>${tie ? '🎲 Bốc thăm chung kết' : '🎲 Quay số'}</button>
+        ${common}
+        ${newRoomBtn}
+      </div>`;
+  }
+
+  function wonView() {
+    const r = room.round;
+    const R = ROUNDS[r];
+    const list = winnersOf(room, r);
+    const lastRound = r >= ROUNDS.length - 1;
+    return `<div class="card">
+        <h2>🧧 Trúng ${R.prize}</h2>
+        ${list.map((p) => `<div class="wcard"><span class="ani">${avatarHtml(p.animal)}</span><span style="flex:1">${escapeHtml(p.name)}</span>${p.ticket ? ticketHtml(p.ticket, p.ticket) : ''}</div>`).join('')}
+        <p class="muted" style="margin-top:10px">💬 Gợi ý lời dẫn: mời ${list.length > 1 ? 'các bạn' : 'bạn'} lên nhận quà từ cô dâu chú rể!</p>
+      </div>
+      ${lastRound ? '' : `<div class="card"><h2>Vòng tiếp theo</h2>${roundsList(r + 1)}</div>`}
+      <div class="actions">
+        <button class="btn btn-main" data-act="next">${lastRound ? 'Xem tổng kết 🏆' : `🎟️ Phát vé vòng ${r + 2}`}</button>
+        ${common}
+        ${newRoomBtn}
+      </div>`;
+  }
+
+  function endedView() {
+    return `<div class="card">
+        <h2>🏆 Danh sách trúng giải</h2>
+        ${ROUNDS.map((R, r) => `<p style="margin-top:10px;font-weight:800"><span class="han">${R.han}</span> Vòng ${r + 1} · ${R.prize}</p>
+          <div class="chips">${winnersOf(room, r).map((p) => chip(p, p.ticket ? ` · ${p.ticket}` : '')).join('') || '<span class="muted">Chưa quay</span>'}</div>`).join('')}
+      </div>
+      <div class="actions">
+        <button class="btn btn-main" data-act="newroom">🔁 Chơi lại (phòng mới)</button>
+        ${common}
+      </div>`;
+  }
+
+  function bind() {
+    app.querySelectorAll('[data-act]').forEach((b) => {
+      b.onclick = () => {
+        const act = b.dataset.act;
+        if (act === 'newroom' && room.status !== 'ended' && !confirm('Tạo phòng lô tô mới? Khách sẽ phải quét mã QR mới trên TV.')) return;
+        b.disabled = true;
+        send(act);
+        setTimeout(() => { b.disabled = false; }, 1500);
+      };
+    });
+  }
+</script>
+</body>
+</html>

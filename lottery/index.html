@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Loto | Ngọc Hân & Hồng Phước</title>
+<link rel="icon" href="../assets/icons/lottery.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Ma+Shan+Zheng&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="lottery.css">
+<style>
+  body { font-size: clamp(13px, min(1.15vw, 2vh), 20px); }
+  /* TV: mỗi màn gói gọn trong 1 khung hình, không cuộn trang */
+  .screen { height: 100vh; height: 100dvh; overflow: hidden; padding: min(20px, 2.5vh) clamp(16px, 3vw, 48px); display: flex; flex-direction: column; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 10px; }
+  .topbar .brand { font-size: 2.1em; }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .icon-btn { background: rgba(255,226,154,0.12); border: 0; color: var(--gold-light); border-radius: 9999px; padding: 8px 14px; font: 600 0.85em Montserrat, sans-serif; cursor: pointer; }
+  .title { text-align: center; margin: 4px 0 min(14px, 1.5vh); flex: none; }
+  .title .han { font-size: min(3.4em, 6vh); line-height: 1; }
+  .title h1 { font-size: min(2.2em, 4.6vh); font-weight: 800; letter-spacing: 0.04em; }
+  .title .sub { opacity: 0.85; margin-top: 4px; }
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 16px; }
+
+  /* Sảnh chờ */
+  .lobby { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; grid-template-rows: minmax(0, 1fr); gap: clamp(16px, 2.5vw, 40px); align-items: center; }
+  .join-box { background: var(--cream); color: var(--ink); border-radius: 28px; padding: 18px 26px; text-align: center; box-shadow: 0 0 0 6px var(--gold), 0 20px 50px rgba(0,0,0,0.35); }
+  .join-box .label { font-weight: 800; font-size: 1.3em; color: var(--red); }
+  #qr { display: flex; justify-content: center; margin: 12px 0; }
+  #qr { margin: min(12px, 1.2vh) 0; }
+  #qr img, #qr canvas { width: clamp(180px, calc(100vh - 440px), 520px) !important; height: auto !important; }
+  .pin { font-size: 3.2em; font-weight: 800; letter-spacing: 0.12em; color: var(--red); line-height: 1.1; }
+  .side h2 { font-size: 1.6em; font-weight: 800; margin-bottom: 10px; color: var(--gold-light); }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; max-height: calc(100vh - 340px); overflow: auto; align-content: flex-start; }
+  .chip { background: rgba(255,226,154,0.14); border: 1px solid rgba(246,196,83,0.4); border-radius: 9999px; padding: 6px 14px; font-weight: 700; animation: pop 0.4s ease; }
+  /* Cột phải không bao giờ tràn: nút Phát vé luôn hiện, khung hướng dẫn co lại nếu thiếu chỗ */
+  .side.right { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 12px; max-height: 100%; min-height: 0; }
+  .side.right > * { flex: none; }
+  .side.right > .howto-box { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+  .rounds { list-style: none; display: flex; flex-direction: column; gap: 8px; margin-bottom: 8px; }
+  .rounds li { background: rgba(0,0,0,0.2); border-radius: 14px; padding: 8px 14px; text-align: right; }
+  .rounds b { color: var(--gold-light); }
+  .howto-box { max-width: 420px; font-size: 0.85em; }
+  .howto-box h2 { font-size: 1.3em; margin-bottom: 6px; text-align: right; }
+  .help-modal.tv .box { max-width: 860px; font-size: min(1.35em, 2.2vh); padding: min(30px, 3vh) 34px; }
+  .help-modal.tv .rounds li { text-align: left; }
+  @media (max-width: 900px) { .howto-box h2 { text-align: center; } }
+  /* Màn hình thấp (HD 1280x720, laptop): ẩn hướng dẫn ở sảnh chờ, MC bấm "❓ Cách chơi" để mở bảng to */
+  @media (max-height: 960px) and (min-width: 901px) { .howto-box { display: none; } }
+
+  /* Quay số */
+  .stage { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: min(18px, 1.8vh); text-align: center; }
+  .stage > * { flex: none; }
+  .bigball {
+    width: clamp(110px, min(17vw, 22vh), 270px); height: clamp(110px, min(17vw, 22vh), 270px); border-radius: 9999px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: clamp(3.2rem, min(10vw, 12vh), 9rem); font-weight: 800; font-variant-numeric: tabular-nums; color: var(--red-deep);
+    background: radial-gradient(circle at 32% 28%, #FFFFFF 0, var(--gold-light) 30%, var(--gold) 62%, var(--gold-deep) 100%);
+    box-shadow: 0 0 0 6px var(--red-deep), 0 0 0 10px var(--gold), 0 0 60px rgba(255,200,80,0.55), 0 20px 40px rgba(0,0,0,0.4);
+    animation: pop 0.5s ease;
+  }
+  .bigball.rolling { animation: wobble 0.22s linear infinite; }
+  .bigball.names { width: auto; min-width: clamp(260px, 30vw, 520px); padding: 0 40px; border-radius: 9999px; font-size: clamp(1.8rem, 3.4vw, 3.4rem); white-space: nowrap; }
+  @keyframes wobble { 0%,100% { transform: rotate(-4deg) scale(1.02); } 50% { transform: rotate(4deg) scale(0.98); } }
+  /* Hiệu ứng hồi hộp khi quay: suspense-1 (Song Hỷ), suspense-2 (Độc Đắc). Mọi thứ trừ quả cầu tối đi, quả cầu sáng rực */
+  .screen > *, .stage > * { transition: opacity 0.6s, filter 0.6s; }
+  body.suspense-1 .screen > :not(.stage), body.suspense-1 .stage > :not(.bigball) { opacity: 0.35; filter: saturate(0.6); }
+  body.suspense-2 .screen > :not(.stage), body.suspense-2 .stage > :not(.bigball):not(.note) { opacity: 0.12; filter: saturate(0.3); }
+  body.suspense-1::before, body.suspense-2::before { content: ''; position: fixed; inset: 0; z-index: 0; pointer-events: none; background: rgba(20, 0, 4, 0.45); animation: fadeIn 0.6s both; }
+  body.suspense-2::before { background: rgba(10, 0, 2, 0.7); }
+  body.suspense-1 .bigball, body.suspense-2 .bigball { position: relative; z-index: 2; }
+  body.suspense-1 .bigball.rolling { animation: wobble 0.22s linear infinite, glow 1.2s ease-in-out infinite; }
+  body.suspense-2 .bigball.rolling { animation: heartbeat 0.9s ease-in-out infinite, glow 0.9s ease-in-out infinite; }
+  body.suspense-2 .note { position: relative; z-index: 2; font-size: 1.25em; color: var(--gold-light); animation: blink 1.2s ease-in-out infinite; }
+  .bigball.tease { animation: tremble 0.09s linear infinite, glow 0.5s ease-in-out infinite !important; }
+  .bigball.reveal { animation: reveal 0.7s cubic-bezier(.2, 1.6, .4, 1); }
+  .reveal-flash { position: fixed; inset: 0; z-index: 40; pointer-events: none; background: radial-gradient(circle, #fff 0, rgba(255, 230, 150, 0.9) 30%, transparent 70%); animation: flash 0.9s ease-out forwards; }
+  .reveal-flash.lv1 { opacity: 0.6; }
+  @keyframes glow { 0%,100% { box-shadow: 0 0 0 6px var(--red-deep), 0 0 0 10px var(--gold), 0 0 50px rgba(255,200,80,0.5); } 50% { box-shadow: 0 0 0 6px var(--red-deep), 0 0 0 10px var(--gold-light), 0 0 120px 30px rgba(255,215,100,0.95); } }
+  @keyframes heartbeat { 0%,100% { transform: scale(1); } 15% { transform: scale(1.12); } 30% { transform: scale(0.98); } 45% { transform: scale(1.08); } }
+  @keyframes tremble { 0%,100% { transform: translate(0, 0) scale(1.1); } 25% { transform: translate(-3px, 2px) scale(1.1); } 75% { transform: translate(3px, -2px) scale(1.1); } }
+  @keyframes reveal { 0% { transform: scale(1.7); filter: brightness(2); } 100% { transform: scale(1); filter: none; } }
+  @keyframes flash { 0% { opacity: 0; } 15% { opacity: 1; } 100% { opacity: 0; } }
+  @keyframes blink { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+  .balls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; min-height: min(52px, 6vh); }
+  .ball { width: min(52px, 6vh); height: min(52px, 6vh); border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; font-size: min(1.6rem, 3.4vh); font-weight: 800; animation: pop 0.4s ease; }
+  .ball.hit { background: radial-gradient(circle at 32% 28%, #fff 0, var(--gold-light) 35%, var(--gold) 100%); color: var(--red-deep); }
+  .ball.miss { background: #5A1A20; color: #C99; text-decoration: line-through; }
+  .count { font-size: min(2.6em, 4.2vh); font-weight: 800; }
+  .count b { color: var(--gold-light); font-size: 1.4em; }
+  .note { min-height: 1.6em; font-size: 1.25em; font-weight: 700; }
+  .note.miss { color: #FFD0D0; }
+  /* Danh sách vé co lại và cuộn bên trong, để nút Quay số luôn nằm trong màn hình */
+  .stage > .alive { flex: 0 1 auto; min-height: 0; overflow-y: auto; }
+  .alive { display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-start; gap: 10px; max-width: 1100px; padding: 4px; }
+  .alive .chip { display: inline-flex; align-items: center; gap: 8px; font-size: 1.05em; }
+  .alive .digits { font-size: 0.95em; }
+  .hint { opacity: 0.6; font-size: 0.85em; }
+  @media (max-height: 820px) { .hint { display: none; } }
+  .actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+  /* Trúng giải */
+  .winners { display: flex; flex-wrap: wrap; gap: 22px; justify-content: center; }
+  .wcard { background: var(--cream); color: var(--ink); border-radius: 24px; padding: 22px 30px; min-width: 260px; box-shadow: 0 0 0 5px var(--gold), 0 20px 40px rgba(0,0,0,0.35); animation: pop 0.6s ease both; }
+  .wcard .ani { font-size: 3.6em; line-height: 1; }
+  .wcard .nm { font-size: 1.7em; font-weight: 800; margin: 6px 0 10px; color: var(--red-deep); }
+  .wcard .digits { font-size: 1.6em; }
+  .big-han { font-size: 7em; line-height: 1; filter: drop-shadow(0 0 30px rgba(255,200,80,0.6)); animation: pop 0.8s ease; }
+
+  /* Tổng kết */
+  .summary { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 14px; }
+  .sum-row { background: rgba(0,0,0,0.22); border-radius: 18px; padding: 14px 20px; display: flex; align-items: center; gap: 16px; text-align: left; flex-wrap: wrap; }
+  .sum-row .han { font-size: 2.4em; color: var(--gold-light); }
+  .sum-row h3 { font-size: 1.2em; color: var(--gold-light); min-width: 180px; }
+  .sum-row .ppl { display: flex; gap: 10px; flex-wrap: wrap; }
+  .setup p { opacity: 0.85; max-width: 560px; line-height: 1.6; }
+  .center { min-height: 0; overflow-y: auto; }
+  @media (max-width: 900px) { #qr img, #qr canvas { width: min(70vw, 360px) !important; } .screen { height: auto; min-height: 100vh; overflow: visible; } .lobby { grid-template-columns: 1fr; grid-template-rows: auto; } .side.right { max-height: none; } .side.right { align-items: center; } .rounds li { text-align: center; } }
+</style>
+</head>
+<body class="xs">
+<div id="app"></div>
+
+<script src="../shared/firebase-config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script type="module">
+  import {
+    CONFIGURED, EMU, roomRef, get, set, update, onValue, serverTimestamp,
+    signIn, watchServerTime, escapeHtml, unlockAudio, setMuted, isMuted, sfx, burst,
+    tidyUrl,
+    avatarHtml, avatarText,
+  } from '../shared/live.js';
+  import {
+    ROUNDS, hitsOf, missesOf, ticketOf, randomTicket, pastWinners, survivors, winnersOf, ticketHtml, ballsHtml, howToHtml, lanterns, COUPLE,
+  } from './lottery.js';
+  import { music, applyMute, duck, snd } from './sound.js';
+  import { controlKey, registerControl, commandFilter, showMcQr } from '../shared/remote.js';
+  // Trình duyệt chỉ cho phát nhạc sau lần bấm đầu tiên vào trang
+  ['pointerdown', 'keydown'].forEach((ev) => document.addEventListener(ev, () => music(true), { once: true }));
+  music(true); // bị chặn tự phát thì hiện dòng nhắc "Bấm vào màn hình để bật nhạc"
+  const BASE = tidyUrl();
+
+  const app = document.getElementById('app');
+  const PIN_KEY = 'xs_host_pin';
+  let uid = null;
+  let pin = null;
+  let room = null;
+  let qrUrl = '';
+  let scene = '';
+  let rolling = null; // đang quay trên máy này: { k, digit }
+  let dealing = false;
+  let mcUrl = '';
+  let takeCommand = commandFilter();
+  const ctrlKey = controlKey();
+
+  lanterns();
+  if (!CONFIGURED) {
+    app.innerHTML = '<div class="screen"><div class="center setup"><h1>Chưa cấu hình Firebase</h1><p>Mở file shared/firebase-config.js và dán cấu hình Firebase vào.</p></div></div>';
+  } else {
+    init();
+  }
+
+  async function init() {
+    app.innerHTML = '<div class="screen"><div class="center"><div class="spinner"></div></div></div>';
+    try { uid = await signIn(); } catch (e) {
+      app.innerHTML = `<div class="screen"><div class="center setup"><h1>Không kết nối được 😢</h1><p>${escapeHtml(e.message)}</p></div></div>`;
+      return;
+    }
+    watchServerTime();
+    // Tải lại trang giữa chừng thì vào lại đúng phòng cũ
+    const saved = localStorage.getItem(PIN_KEY);
+    if (saved) {
+      const r = (await get(roomRef(saved))).val();
+      if (r && r.hostUid === uid && r.type === 'lottery' && r.status !== 'ended') { attach(saved); return; }
+    }
+    createRoom();
+  }
+
+  // from: phòng cũ -> ghi "movedTo" để điện thoại MC tự chuyển theo
+  async function createRoom(from = null) {
+    unlockAudio();
+    app.innerHTML = '<div class="screen"><div class="center"><div class="spinner"></div><p>Đang tạo phòng lô tô...</p></div></div>';
+    for (let i = 0; i < 10; i++) {
+      const candidate = String(Math.floor(100000 + Math.random() * 900000));
+      if ((await get(roomRef(candidate))).exists()) continue;
+      await set(roomRef(candidate), { hostUid: uid, createdAt: serverTimestamp(), type: 'lottery', status: 'lobby', round: -1 });
+      await registerControl(candidate, ctrlKey);
+      if (from) update(roomRef(from), { movedTo: candidate }).catch(() => {});
+      attach(candidate);
+      return;
+    }
+    app.innerHTML = '<div class="screen"><div class="center"><h1>Không tạo được phòng, tải lại trang thử nha</h1></div></div>';
+  }
+
+  let unsubscribe = null;
+  function attach(p) {
+    pin = p;
+    localStorage.setItem(PIN_KEY, pin);
+    const url = new URL('ticket/', BASE);
+    url.search = `?pin=${pin}${EMU ? '&emu=1' : ''}`;
+    qrUrl = url.href;
+    const mc = new URL('host/', BASE);
+    mc.search = `?pin=${pin}&key=${ctrlKey}${EMU ? '&emu=1' : ''}`;
+    mcUrl = mc.href;
+    registerControl(pin, ctrlKey);
+    takeCommand = commandFilter();
+    scene = '';
+    if (unsubscribe) unsubscribe();
+    unsubscribe = onValue(roomRef(pin), (snap) => {
+      room = snap.val();
+      if (!room) { localStorage.removeItem(PIN_KEY); createRoom(); return; }
+      handleCommand(takeCommand(room.command));
+      // Lần quay bị bỏ dở (tải lại trang lúc đang quay)
+      if (room.spinning && !rolling) { update(roomRef(pin), { spinning: null }); return; }
+      autoDeal();
+      if (!rolling) render();
+    });
+  }
+
+  // ---------- Phát vé ----------
+  function randomTickets(n, digits, used) {
+    // Vé không trùng nhau; quá đông khách so với số vé có thể có thì cho phép trùng
+    const out = [];
+    for (let tries = 0; out.length < n && tries < n * 200; tries++) {
+      const t = randomTicket(digits);
+      if (used.has(t)) continue;
+      used.add(t);
+      out.push(t);
+    }
+    while (out.length < n) out.push(randomTicket(digits));
+    return out;
+  }
+
+  const eligible = (r) => {
+    const past = pastWinners(room, r);
+    return Object.keys(room.players || {}).filter((u) => !past.has(u));
+  };
+  const orderOf = (r) => String((room.order && room.order[r]) || '');
+
+  // remote: lệnh từ điện thoại MC -> không hiện hộp thoại trên TV
+  async function deal(r, remote = false) {
+    if (dealing) return;
+    const list = eligible(r);
+    if (!list.length) { if (!remote) alert('Chưa có ai để phát vé (hoặc mọi người đều đã trúng giải).'); return; }
+    dealing = true;
+    unlockAudio();
+    const tickets = randomTickets(list.length, ROUNDS[r].digits, new Set());
+    const upd = { status: 'ready', round: r, [`draws/${r}`]: null, [`misses/${r}`]: null, [`order/${r}`]: null, miss: null, last: null, spinning: null };
+    list.forEach((u, i) => { upd[`players/${u}/tickets/${r}`] = tickets[i]; });
+    await update(roomRef(pin), upd);
+    dealing = false;
+    sfx.start();
+  }
+
+  // Khách vào trễ (trước khi quay số đầu tiên của vòng) vẫn được phát vé
+  async function autoDeal() {
+    if (dealing || room.status !== 'ready' || orderOf(room.round)) return;
+    const r = room.round;
+    const missing = eligible(r).filter((u) => ticketOf(room.players[u], r) === null);
+    if (!missing.length) return;
+    dealing = true;
+    const used = new Set(Object.values(room.players).map((p) => ticketOf(p, r)).filter(Boolean));
+    const tickets = randomTickets(missing.length, ROUNDS[r].digits, used);
+    const upd = {};
+    missing.forEach((u, i) => { upd[`players/${u}/tickets/${r}`] = tickets[i]; });
+    try { await update(roomRef(pin), upd); } finally { dealing = false; }
+  }
+
+  // ---------- Quay số ----------
+  const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+
+  // Hiệu ứng quay trên quả cầu lớn: số chạy nhanh rồi chậm dần, dừng ở "final".
+  // Giải càng lớn quay càng lâu và càng hồi hộp (xem spinMs, suspense trong ROUNDS)
+  async function rollBall(values, final, R) {
+    const el = document.getElementById('bigball');
+    const level = R.suspense || 0;
+    duck(true);
+    snd.drum();
+    document.body.classList.add(`suspense-${level}`);
+    const start = performance.now();
+    await new Promise((done) => {
+      const step = () => {
+        const t = (performance.now() - start) / R.spinMs;
+        if (t >= 1) { done(); return; }
+        if (el) el.textContent = values[Math.floor(Math.random() * values.length)];
+        setTimeout(step, 70 + 400 * t * t); // 70ms lúc đầu -> gần 0.5s lúc sắp dừng
+      };
+      step();
+    });
+    // Giải Độc Đắc: dừng ở "?" rung nhẹ một nhịp trước khi lộ số
+    if (level >= 2 && el) {
+      el.textContent = '?';
+      el.classList.add('tease');
+      await wait(1200);
+      el.classList.remove('tease');
+    }
+    snd.stopDrum();
+    document.body.classList.remove(`suspense-${level}`);
+    if (!el) return;
+    el.textContent = final;
+    el.classList.remove('rolling');
+    el.classList.add('reveal');
+    if (level >= 1) {
+      const flash = document.createElement('div');
+      flash.className = `reveal-flash lv${level}`;
+      document.body.appendChild(flash);
+      setTimeout(() => flash.remove(), 900);
+      await wait(800); // giữ khoảnh khắc lộ số trước khi màn hình cập nhật kết quả
+    }
+  }
+
+  async function spin() {
+    if (rolling || !['ready', 'drawing'].includes(room.status)) return;
+    const r = room.round;
+    const R = ROUNDS[r];
+    const hits = hitsOf(room, r);
+    const order = orderOf(r);
+    const alive = survivors(room, r, hits);
+    if (!alive.length) return;
+    unlockAudio();
+    const pool = '0123456789'.split('').filter((d) => !order.includes(d));
+    const helpful = pool.filter((d) => alive.some((p) => p.ticket.includes(d)));
+    // Không còn số nào phân biệt được các vé còn lại (vé giống hệt nhau): bốc thăm
+    if (!helpful.length) { tiebreak(alive, R, r); return; }
+    // Vừa quay trượt hết 1 lần: lần này chỉ chọn số còn người giữ, để game không kéo dài
+    const pick = room.miss && room.miss.r === r ? helpful : pool;
+    const digit = pick[Math.floor(Math.random() * pick.length)];
+    rolling = { digit };
+    await update(roomRef(pin), { status: 'drawing', spinning: { at: serverTimestamp() }, miss: null });
+    renderDraw();
+    await rollBall('0123456789'.split(''), digit, R);
+
+    const next = survivors(room, r, hits + digit);
+    rolling = null;
+    if (!next.length) {
+      sfx.wrong();
+      duck(false);
+      await update(roomRef(pin), { spinning: null, [`misses/${r}`]: missesOf(room, r) + digit, [`order/${r}`]: order + digit, miss: { r, digit } });
+      return;
+    }
+    const upd = { spinning: null, [`draws/${r}`]: hits + digit, [`order/${r}`]: order + digit, last: { r, digit, before: alive.length, after: next.length } };
+    if (next.length <= R.winners) {
+      upd.status = 'won';
+      next.forEach((p) => { upd[`winners/${r}/${p.uid}`] = true; });
+    } else {
+      snd.gong();
+      duck(false);
+    }
+    await update(roomRef(pin), upd);
+  }
+
+  // Bốc thăm chung kết giữa các vé giống nhau
+  async function tiebreak(alive, R, r) {
+    const shuffled = alive.slice().sort(() => Math.random() - 0.5);
+    const chosen = shuffled.slice(0, R.winners);
+    rolling = { tiebreak: true };
+    await update(roomRef(pin), { status: 'drawing', spinning: { at: serverTimestamp(), tiebreak: true } });
+    renderDraw();
+    const names = alive.map((p) => `${avatarText(p.animal)} ${p.name}`);
+    await rollBall(names, `${avatarText(chosen[0].animal)} ${chosen[0].name}`, R);
+    rolling = null;
+    const upd = { spinning: null, status: 'won', [`tiebreak/${r}`]: true };
+    chosen.forEach((p) => { upd[`winners/${r}/${p.uid}`] = true; });
+    await update(roomRef(pin), upd);
+  }
+
+  function nextRound(remote = false) {
+    if (room.round < ROUNDS.length - 1) deal(room.round + 1, remote);
+    else update(roomRef(pin), { status: 'ended' });
+  }
+
+  async function newRoom(remote = false) {
+    if (!remote && !confirm('Tạo phòng lô tô mới? Khách sẽ phải quét mã QR mới.')) return;
+    if (room && room.status !== 'ended') await update(roomRef(pin), { status: 'ended' });
+    localStorage.removeItem(PIN_KEY);
+    createRoom(pin);
+  }
+
+  // ---------- Lệnh từ điện thoại MC ----------
+  // Lệnh kèm trạng thái lúc MC bấm; TV chỉ làm khi trạng thái còn khớp (tránh bấm 2 lần quay 2 số)
+  function handleCommand(cmd) {
+    if (!cmd) return;
+    if (cmd.status !== room.status || (cmd.round ?? -1) !== (room.round ?? -1)) return;
+    switch (cmd.type) {
+      case 'deal': if (room.status === 'lobby') deal(0, true); break;
+      case 'spin': if (['ready', 'drawing'].includes(room.status)) spin(); break;
+      case 'next': if (room.status === 'won') nextRound(true); break;
+      case 'help': toggleHelp(); break;
+      case 'newroom': newRoom(true); break;
+      default: break;
+    }
+  }
+  function toggleHelp() {
+    document.querySelector('.mc-qr')?.remove();
+    const open = document.querySelector('.help-modal');
+    if (open) open.remove(); else showHelp();
+  }
+
+  // Phím tắt: Space / Enter = nút chính
+  document.addEventListener('keydown', (e) => {
+    if (!room || !['Space', 'Enter'].includes(e.code) || e.target.tagName === 'INPUT') return;
+    e.preventDefault();
+    // Đang mở bảng cách chơi: phím tắt chỉ đóng bảng
+    const help = document.querySelector('.help-modal');
+    if (help) { help.remove(); return; }
+    document.getElementById('mainBtn')?.click();
+  });
+
+  // ---------- Giao diện ----------
+  function topbar() {
+    return `<div class="topbar">
+      <div class="brand couple">${COUPLE}</div>
+      <div class="tools">
+        <button class="icon-btn" id="mcBtn">🎤 MC</button>
+        <button class="icon-btn" id="helpBtn">❓ Cách chơi</button>
+        <button class="icon-btn" id="muteBtn">${isMuted() ? '🔇 Bật âm thanh' : '🔊 Tắt âm thanh'}</button>
+        <button class="icon-btn" id="newBtn">🔁 Phòng mới</button>
+      </div>
+    </div>`;
+  }
+  function bindTop() {
+    document.getElementById('muteBtn').onclick = (e) => { unlockAudio(); setMuted(!isMuted()); applyMute(); e.target.textContent = isMuted() ? '🔇 Bật âm thanh' : '🔊 Tắt âm thanh'; };
+    document.getElementById('newBtn').onclick = () => newRoom();
+    document.getElementById('helpBtn').onclick = showHelp;
+    document.getElementById('mcBtn').onclick = () => showMcQr(mcUrl, 'phát vé, quay số và chuyển vòng', pin, ctrlKey);
+  }
+  // Bảng cách chơi to giữa màn hình, để MC giải thích cho khách
+  function showHelp() {
+    if (document.querySelector('.help-modal')) return;
+    const box = document.createElement('div');
+    box.className = 'help-modal tv';
+    box.innerHTML = `<div class="box"><h2 class="gold-text">🧧 CÁCH CHƠI LOTO</h2>${howToHtml()}
+      <ul class="rounds" style="margin-top:14px">${ROUNDS.map((R, i) => `<li><span class="han" style="font-size:1.4em">${R.han}</span> Vòng ${i + 1}: <b>${R.prize}</b> · vé ${R.digits} số · ${R.winners} giải</li>`).join('')}</ul>
+      <button class="btn" id="helpClose">Đóng</button></div>`;
+    document.body.appendChild(box);
+    const close = () => box.remove();
+    box.querySelector('#helpClose').onclick = close;
+    box.onclick = (e) => { if (e.target === box) close(); };
+  }
+  const chip = (p, extra = '') => `<span class="chip">${avatarHtml(p.animal)} ${escapeHtml(p.name)}${extra}</span>`;
+  const roundTitle = (R, r) => `<div class="title"><div class="han gold-text">${R.han}</div><h1>Vòng ${r + 1} · ${R.name}</h1><div class="sub">${R.emoji} ${R.prize}: ${R.winners === 1 ? '1 người duy nhất' : `tối đa ${R.winners} người`} · vé ${R.digits} số</div></div>`;
+
+  function render() {
+    const s = room.status;
+    const key = s === 'lobby' ? 'lobby' : `${s}:${room.round}:${orderOf(room.round)}:${JSON.stringify(room.miss || null)}`;
+    if (s === 'lobby') { if (scene !== 'lobby') renderLobby(); else fillLobby(); }
+    else if (s === 'ready' || s === 'drawing') renderDraw();
+    else if (s === 'won') { if (scene !== key) renderWon(); }
+    else if (s === 'ended') { if (scene !== key) renderEnded(); }
+    scene = key;
+  }
+
+  function renderLobby() {
+    app.innerHTML = `<div class="screen">
+      ${topbar()}
+      <div class="title"><div class="han gold-text">囍</div><h1 class="gold-text">LOTO</h1><div class="sub">Quét mã nhận vé số may mắn 🧧</div></div>
+      <div class="lobby">
+        <div class="side"><h2 id="pcount"></h2><div class="chips" id="plist"></div></div>
+        <div class="join-box">
+          <div class="label">📱 Quét mã để nhận vé</div>
+          <div id="qr"></div>
+          <div style="font-size:0.85em;color:#8a5a50">hoặc nhập mã phòng</div>
+          <div class="pin">${pin}</div>
+        </div>
+        <div class="side right">
+          <div class="howto-box"><h2>❓ Cách chơi</h2>${howToHtml()}</div>
+          <ul class="rounds">${ROUNDS.map((R, i) => `<li><span class="han" style="font-size:1.4em">${R.han}</span> Vòng ${i + 1}: <b>${R.prize}</b> · ${R.winners} giải</li>`).join('')}</ul>
+          <button class="btn btn-big" id="mainBtn">Phát vé vòng 1 ▶</button>
+        </div>
+      </div>
+    </div>`;
+    new QRCode(document.getElementById('qr'), { text: qrUrl, width: 600, height: 600, correctLevel: QRCode.CorrectLevel.M });
+    bindTop();
+    document.getElementById('mainBtn').onclick = () => deal(0);
+    fillLobby();
+  }
+
+  let lastCount = 0;
+  function fillLobby() {
+    const players = Object.values(room.players || {}).sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+    if (players.length > lastCount) sfx.join();
+    lastCount = players.length;
+    document.getElementById('pcount').textContent = `${players.length} người đã vào`;
+    document.getElementById('plist').innerHTML = players.map((p) => chip(p)).join('') || '<span style="opacity:0.7">Đang chờ khách quét mã...</span>';
+  }
+
+  function renderDraw() {
+    const r = room.round;
+    const R = ROUNDS[r];
+    const hits = hitsOf(room, r);
+    const order = orderOf(r);
+    const alive = survivors(room, r, hits);
+    const miss = room.miss && room.miss.r === r ? room.miss : null;
+    const last = room.last && room.last.r === r ? room.last : null;
+    const pool = '0123456789'.split('').filter((d) => !order.includes(d));
+    const tie = alive.length > R.winners && !pool.some((d) => alive.some((p) => p.ticket.includes(d)));
+    let note;
+    let ball = order ? order[order.length - 1] : '?';
+    if (rolling && rolling.tiebreak) { note = 'Các vé còn lại giống hệt nhau: bốc thăm chung kết! 🥁'; ball = '🎲'; }
+    else if (rolling) note = ['Đang quay số may mắn... 🥁', 'Giải Song Hỷ... nín thở nào! 🥁', 'GIẢI ĐỘC ĐẮC... ai sẽ là người may mắn nhất? 🐉🥁'][R.suspense || 0];
+    else if (miss) note = `<span class="miss">Số ${miss.digit}: không ai giữ vé có số này! Quay lại nha 😆</span>`;
+    else if (tie) note = `Còn ${alive.length} vé giống hệt nhau, bấm để bốc thăm chung kết!`;
+    else if (last) note = `Số ${last.digit}: ${last.before} vé ➜ còn ${last.after} vé`;
+    else note = `Đã phát ${alive.length} vé. Vé nào có số may mắn thì giữ, không có là trượt!`;
+    const showList = alive.length <= 24;
+    app.innerHTML = `<div class="screen">
+      ${topbar()}
+      ${roundTitle(R, r)}
+      <div class="stage">
+        <div class="bigball ${rolling ? 'rolling' : ''} ${rolling && rolling.tiebreak ? 'names' : ''}" id="bigball">${escapeHtml(ball)}</div>
+        <div class="balls">${ballsHtml(hits, order)}</div>
+        <div class="note">${note}</div>
+        <div class="count">Còn <b>${alive.length}</b> vé đang giữ</div>
+        <div class="alive">${showList ? alive.map((p) => chip(p, ' ' + ticketHtml(p.ticket, hits))).join('') : '<span style="opacity:0.75">Danh sách hiện khi còn từ 24 vé trở xuống</span>'}</div>
+        <div class="actions"><button class="btn btn-big" id="mainBtn" ${rolling ? 'disabled' : ''}>${tie ? '🎲 Bốc thăm chung kết' : '🎲 Quay số'}</button></div>
+        <div class="hint">Phím tắt: Space</div>
+      </div>
+    </div>`;
+    bindTop();
+    document.getElementById('mainBtn').onclick = spin;
+  }
+
+  function renderWon() {
+    const r = room.round;
+    const R = ROUNDS[r];
+    const list = winnersOf(room, r);
+    const last = r >= ROUNDS.length - 1;
+    app.innerHTML = `<div class="screen">
+      ${topbar()}
+      <div class="center">
+        <div class="big-han han gold-text">${r === ROUNDS.length - 1 ? '大吉' : '囍'}</div>
+        <h1 class="gold-text" style="font-size:2.6em;font-weight:800">CHÚC MỪNG TRÚNG ${R.prize.toUpperCase()}!</h1>
+        <div class="winners">${list.map((p, i) => `<div class="wcard" style="animation-delay:${0.3 + i * 0.25}s">
+          <div class="ani">${avatarHtml(p.animal)}</div><div class="nm">${escapeHtml(p.name)}</div>${p.ticket ? ticketHtml(p.ticket, p.ticket) : ''}
+        </div>`).join('')}</div>
+        ${room.tiebreak && room.tiebreak[r] ? '<p>🎲 Có vé giống nhau nên đã bốc thăm chung kết</p>' : ''}<p style="font-size:1.2em">Mời ${list.length > 1 ? 'các bạn' : 'bạn'} lên nhận quà từ cô dâu chú rể 🧧</p>
+        <button class="btn btn-big" id="mainBtn">${last ? 'Xem tổng kết 🏆' : `Phát vé vòng ${r + 2} ▶`}</button>
+      </div>
+    </div>`;
+    bindTop();
+    document.getElementById('mainBtn').onclick = () => nextRound();
+    // Cồng + pháo, nhạc nền nhỏ lại trong lúc pháo nổ
+    snd.gong();
+    snd.firecrackers(7000);
+    duck(true);
+    setTimeout(() => duck(false), 7000);
+    burst(['🧧', '🧨', '🎆', '✨', '🏮', '💰'], 80);
+  }
+
+  function renderEnded() {
+    app.innerHTML = `<div class="screen">
+      ${topbar()}
+      <div class="center">
+        <div class="title"><div class="han gold-text">囍</div><h1 class="gold-text">TỔNG KẾT LOTO</h1></div>
+        <div class="summary">${ROUNDS.map((R, r) => `<div class="sum-row">
+          <span class="han">${R.han}</span><h3>Vòng ${r + 1} · ${R.prize}</h3>
+          <div class="ppl">${winnersOf(room, r).map((p) => chip(p, p.ticket ? ` · ${p.ticket}` : '')).join('') || '<span style="opacity:0.7">Chưa quay</span>'}</div>
+        </div>`).join('')}</div>
+        <p>Cảm ơn mọi người đã chơi cùng Ngọc Hân &amp; Hồng Phước! 💕</p>
+        <button class="btn" id="mainBtn">🔁 Chơi lại (phòng mới)</button>
+      </div>
+    </div>`;
+    bindTop();
+    document.getElementById('mainBtn').onclick = () => newRoom();
+    snd.firecrackers(5000);
+    burst(['🧧', '🎆', '🏮'], 40);
+  }
+</script>
+</body>
+</html>

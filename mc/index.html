@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#5d1821">
+  <title>MC vào lại | Ngọc Hân &amp; Hồng Phước</title>
+  <link rel="icon" href="../assets/icons/mc.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../nh/nh.css">
+  <style>
+    /* MC lỡ thoát hoặc đổi điện thoại: nhập mã phòng + mã MC (hiện trong bảng "🎤 MC" trên TV) để điều khiển tiếp */
+    .page { width: min(460px, 100%); padding-top: 26px; }
+    .page-title { font-size: 32px; }
+    .card + .card { margin-top: 14px; }
+    .card h2 { margin: 0 0 10px; color: var(--wine); font: 600 12px var(--sans); letter-spacing: .14em; text-transform: uppercase; }
+    label { display: block; margin: 12px 0 6px; color: var(--wine); font-size: 13px; font-weight: 600; }
+    input { width: 100%; padding: 12px 14px; border: 1px solid var(--line); border-radius: 10px; background: #fffdf8; color: var(--ink); font: 600 22px/1.2 ui-monospace, Consolas, monospace; letter-spacing: .12em; text-align: center; }
+    input::placeholder { color: #cbbcb0; font-weight: 500; }
+    input:focus { border-color: var(--rose); outline: none; box-shadow: 0 0 0 3px #8c55541c; }
+    .hint { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .err { min-height: 20px; margin: 10px 0 0; color: #b2463f; font-size: 13px; font-weight: 600; }
+    .go { width: 100%; margin-top: 8px; }
+    .sessions { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+    .sessions a { display: flex; align-items: center; gap: 12px; padding: 10px 14px; border: 1px solid var(--line); border-radius: 10px; color: var(--ink); background: var(--paper-light); text-decoration: none; }
+    .sessions a:hover { border-color: var(--wine); }
+    .sessions .ic { font-size: 24px; }
+    .sessions b { display: block; color: var(--wine); font-size: 14px; }
+    .sessions small { color: var(--muted); font-size: 12px; }
+    .sessions .go-arrow { margin-left: auto; color: var(--wine); font-weight: 700; }
+  </style>
+  <script src="../shared/firebase-config.js"></script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back-link" href="../nh/">← Trang quản lý</a>
+    <span class="eyebrow" style="margin:0">🎤 MC</span>
+  </header>
+  <main class="page">
+    <div class="page-head">
+      <p class="eyebrow">Ngọc Hân &amp; Hồng Phước</p>
+      <h1 class="page-title">MC vào lại game</h1>
+      <p class="page-lead">Lỡ thoát hoặc đổi điện thoại? Nhập mã để điều khiển tiếp đúng chỗ đang chơi.</p>
+    </div>
+
+    <section class="card" id="recent" hidden>
+      <h2>Phòng vừa điều khiển trên máy này</h2>
+      <ul class="sessions" id="sessions"></ul>
+    </section>
+
+    <section class="card">
+      <h2>Nhập mã</h2>
+      <form id="form" autocomplete="off">
+        <label for="pin">Mã phòng (6 số)</label>
+        <input id="pin" inputmode="numeric" maxlength="6" placeholder="123456">
+        <label for="code">Mã MC (16 số)</label>
+        <input id="code" inputmode="numeric" maxlength="19" placeholder="0000 0000 0000 0000">
+        <p class="hint">Hai mã này hiện trên màn hình TV: bấm nút <b>🎤 MC</b> (Ai Là Triệu Phú: <b>🎤 Mã điều khiển cho MC</b> ở sảnh chờ), ngay dưới mã QR.</p>
+        <p class="err" id="err"></p>
+        <button class="button go" type="submit" id="go">Vào điều khiển</button>
+      </form>
+    </section>
+  </main>
+  <script type="module">
+    import { CONFIGURED, roomRef, get } from '../shared/live.js';
+    import { loadMcSessions, formatMcCode } from '../shared/remote.js';
+
+    // Trang điều khiển MC của từng game, theo "type" của phòng (Ai Là Triệu Phú không có type)
+    const GAMES = {
+      quiz: { name: 'Ai Là Triệu Phú', icon: '🧠', host: '../quiz/host/' },
+      lottery: { name: 'Loto', icon: '🧧', host: '../lottery/host/' },
+      tree: { name: 'Rung Cây, Rinh Quà', icon: '🌳', host: '../tree/host/' },
+    };
+    const hostUrl = (game, pin, key) => `${(GAMES[game] || GAMES.quiz).host}?pin=${pin}&key=${key}`;
+
+    const pinInput = document.getElementById('pin');
+    const codeInput = document.getElementById('code');
+    const err = document.getElementById('err');
+    const params = new URLSearchParams(location.search);
+    pinInput.value = (params.get('pin') || '').replace(/\D/g, '').slice(0, 6);
+
+    // Phòng đã điều khiển trên điện thoại này: bấm là vào lại, không cần nhập mã
+    const sessions = loadMcSessions();
+    if (sessions.length) {
+      document.getElementById('recent').hidden = false;
+      document.getElementById('sessions').innerHTML = sessions.map((s) => {
+        const g = GAMES[s.game] || GAMES.quiz;
+        const when = new Date(s.at).toLocaleString('vi-VN', { hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit' });
+        return `<li><a href="${hostUrl(s.game, s.pin, s.key)}"><span class="ic">${g.icon}</span><span><b>${g.name}</b><small>Phòng ${s.pin} · ${when}</small></span><span class="go-arrow">Tiếp tục →</span></a></li>`;
+      }).join('');
+    }
+
+    pinInput.addEventListener('input', () => { pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 6); });
+    codeInput.addEventListener('input', () => { codeInput.value = formatMcCode(codeInput.value.replace(/\D/g, '').slice(0, 16)); });
+
+    document.getElementById('form').addEventListener('submit', async (event) => {
+      event.preventDefault();
+      const pin = pinInput.value;
+      const key = codeInput.value.replace(/\D/g, '');
+      err.textContent = '';
+      if (pin.length !== 6) { err.textContent = 'Mã phòng gồm 6 số.'; pinInput.focus(); return; }
+      if (key.length !== 16) { err.textContent = 'Mã MC gồm 16 số.'; codeInput.focus(); return; }
+      if (!CONFIGURED) { err.textContent = 'Game chưa cấu hình Firebase.'; return; }
+      const button = document.getElementById('go');
+      button.disabled = true;
+      button.textContent = 'Đang tìm phòng...';
+      try {
+        const room = (await get(roomRef(pin))).val();
+        if (!room) { err.textContent = 'Không tìm thấy phòng này. Kiểm tra lại mã phòng trên TV nha.'; return; }
+        // Mã MC đúng hay sai do trang điều khiển kiểm tra với Firebase
+        location.href = hostUrl(room.type || 'quiz', pin, key);
+      } catch (e) {
+        err.textContent = 'Không kết nối được, thử lại nha.';
+      } finally {
+        button.disabled = false;
+        button.textContent = 'Vào điều khiển';
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,1 +1,12 @@
+.DS_Store
+Thumbs.db
+desktop.ini
+.vscode/
+node_modules/
+*.log
+
+# Công cụ chép nhạc chỉ dùng trên máy (trang /musicplay tự nạp khi chạy localhost)
+musicplay/local-tools.js
+
+# Mã Apps Script của Google Sheet (dán thủ công vào Sheet, giữ trên máy như repo cũ)
 google-sheet/

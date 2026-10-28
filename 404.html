@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Ngọc Hân &amp; Hồng Phước</title>
+<script>
+  // GitHub Pages trả trang này cho mọi link không tồn tại.
+  // Link cũ (QR/link đã gửi trước khi đổi tên thư mục) được chuyển sang link mới, giữ nguyên ?pin=... và #...
+  // Đặt link dài lên trước link ngắn.
+  (function () {
+    var MOVED = [
+      ['/games/quiz', '/quiz'],
+      ['/games/lottery', '/lottery'],
+      ['/games/tree', '/tree'],
+      ['/games/shared', '/shared'],
+      ['/games', '/nh']
+    ];
+    // Trang nằm ở gốc tên miền (ngochanhongphuoc.github.io) hoặc trong thư mục repo (huuvinhdocthan.github.io/ngochanhongphuoc/)
+    var first = location.pathname.split('/')[1] || '';
+    var base = ['ngochanhongphuoc', 'wedding-phuoc-han'].indexOf(first) >= 0 ? '/' + first : '';
+    var path = location.pathname.slice(base.length).replace(/\/+$/, '');
+    var lower = path.toLowerCase();
+    for (var i = 0; i < MOVED.length; i++) {
+      var from = MOVED[i][0];
+      if (lower === from || lower.indexOf(from + '/') === 0) {
+        var to = MOVED[i][1] + path.slice(from.length);
+        location.replace(base + to + '/' + location.search + location.hash);
+        return;
+      }
+    }
+    window.HOME = base + '/';
+  })();
+</script>
+<style>
+  body { margin: 0; min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 16px; box-sizing: border-box; background: #f6f0e7; color: #3f2524; font-family: "Segoe UI", system-ui, sans-serif; text-align: center; }
+  .icon { font-size: 64px; }
+  h1 { color: #5d1821; font-family: Georgia, serif; font-weight: 500; }
+  a { display: inline-block; margin-top: 12px; padding: 12px 22px; border-radius: 9999px; background: #5d1821; color: #fffaf2; font-weight: 600; text-decoration: none; }
+</style>
+</head>
+<body>
+  <div>
+    <div class="icon">💌</div>
+    <h1>Không tìm thấy trang</h1>
+    <p>Link này không còn tồn tại.</p>
+    <a href="./" id="home">Về thiệp cưới</a>
+  </div>
+  <script>document.getElementById('home').href = window.HOME || '/';</script>
+</body>
+</html>

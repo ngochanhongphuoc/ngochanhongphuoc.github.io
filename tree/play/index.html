@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="theme-color" content="#C8102E">
+<title>Rung Cây, Rinh Quà | Ngọc Hân & Hồng Phước</title>
+<link rel="icon" href="../../assets/icons/tree.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/shake.css">
+<link rel="stylesheet" href="../tree.css">
+<style>
+  html, body { touch-action: manipulation; }
+  .screen { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; padding: 16px; }
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 14px; padding: 10px 0; }
+  .brand { font-size: 2.4rem; color: var(--gold); }
+  h1 { font-size: 1.45rem; font-weight: 800; line-height: 1.3; }
+  .sub { opacity: 0.9; line-height: 1.5; max-width: 340px; }
+  .top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 0.9rem; gap: 8px; }
+  .me { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.16); border-radius: 9999px; padding: 4px 12px 4px 6px; max-width: 70%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .me .ani { font-size: 1.3rem; }
+  .card { background: var(--cream); color: #6E0A18; border-radius: 22px; padding: 20px; width: 100%; max-width: 420px; text-align: left; box-shadow: 0 14px 34px rgba(0,0,0,0.3); }
+  .card label { display: block; font-weight: 700; font-size: 0.85rem; margin: 4px 0 8px; color: #9D0208; }
+  .input { width: 100%; padding: 14px 16px; border: 2px solid #F1D3A8; border-radius: 14px; font: 700 1.1rem Montserrat, sans-serif; color: #6E0A18; outline: none; background: #fff; }
+  .input:focus { border-color: #9D0208; }
+  .pin-input { text-align: center; letter-spacing: 0.3em; font-size: 1.6rem; }
+  .animals { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 12px; }
+  .animal { aspect-ratio: 1; border: 2px solid #F1D3A8; border-radius: 14px; background: #fff; font-size: 1.7rem; cursor: pointer; }
+  .animal.on { border-color: #9D0208; background: #FFF1D6; transform: scale(1.08); }
+  .err { color: #B3261E; font-weight: 600; font-size: 0.85rem; min-height: 1.2em; margin: 8px 0; }
+  .card .btn { width: 100%; }
+  .big { font-size: 7.5rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; text-shadow: 0 6px 30px rgba(0,0,0,0.3); }
+  .count { font-size: 8rem; font-weight: 900; line-height: 1; color: var(--gold); font-variant-numeric: tabular-nums; text-shadow: 0 0 40px rgba(255,209,102,0.5); }
+  .count.bump { animation: pop 0.18s ease; }
+  .timer { font-size: 1.6rem; font-weight: 900; }
+  .icon-big { font-size: 6rem; line-height: 1; }
+  .practice { background: rgba(0,0,0,0.2); border-radius: 18px; padding: 12px 18px; font-weight: 700; }
+  .practice b { font-size: 1.6em; color: var(--gold); }
+  .tap { width: min(78vw, 300px); aspect-ratio: 1; border-radius: 9999px; border: 0; font: 900 1.6rem Montserrat, sans-serif; color: #6E0A18; background: radial-gradient(circle at 35% 30%, #fff 0, var(--gold) 55%, #C99419 100%); box-shadow: 0 10px 0 #9C7212, 0 16px 30px rgba(0,0,0,0.35); -webkit-user-select: none; user-select: none; }
+  .tap:active { transform: translateY(6px); box-shadow: 0 4px 0 #9C7212; }
+  .pill { background: rgba(0,0,0,0.22); border-radius: 9999px; padding: 8px 16px; font-weight: 700; }
+  .warn { background: rgba(0,0,0,0.3); border-radius: 14px; padding: 10px 14px; font-size: 0.85rem; line-height: 1.4; max-width: 360px; }
+  .win-card { background: linear-gradient(170deg, #FFE29A, var(--gold)); color: #6E0A18; border-radius: 24px; padding: 18px 20px; max-width: 360px; box-shadow: 0 0 0 4px #fff, 0 18px 40px rgba(0,0,0,0.35); animation: pop 0.6s ease; }
+  .win-card b { font-size: 1.2em; }
+  /* Lì xì ảo rơi trên điện thoại lúc lắc */
+  .gift { position: fixed; left: 50%; top: 18%; transform: translateX(-50%); z-index: 60; background: #fff; color: #9D0208; border-radius: 18px; padding: 10px 16px; font-weight: 800; box-shadow: 0 12px 30px rgba(0,0,0,0.35); animation: giftIn 2.2s ease forwards; white-space: nowrap; max-width: 92vw; overflow: hidden; text-overflow: ellipsis; }
+  @keyframes giftIn { 0% { opacity: 0; transform: translate(-50%, -30px) scale(0.6); } 15% { opacity: 1; transform: translate(-50%, 0) scale(1.05); } 80% { opacity: 1; transform: translate(-50%, 0) scale(1); } 100% { opacity: 0; transform: translate(-50%, 20px) scale(0.9); } }
+  .flash { animation: flash 0.15s ease; }
+  @keyframes flash { 0% { filter: brightness(1.4); } 100% { filter: none; } }
+</style>
+</head>
+<body class="sk tree">
+<div id="app"></div>
+
+<script src="../../shared/firebase-config.js"></script>
+<script type="module">
+  import {
+    CONFIGURED, EMU, roomRef, get, set, onValue, serverTimestamp,
+    signIn, watchServerTime, serverNow, escapeHtml, unlockAudio, sfx, burst, tidyUrl,
+    avatarHtml, avatarPickerHtml, DEFAULT_AVATARS,
+  } from '../../shared/live.js';
+  import { ROUNDS, MAX_SHAKES, COUPLE, overallTop, winnersOf, randomWish, howToHtml, showHelp } from '../tree.js';
+  const BASE = tidyUrl();
+
+  const app = document.getElementById('app');
+  let pin = (new URLSearchParams(location.search).get('pin') || '').replace(/\D/g, '');
+  let uid = null;
+  let room = null;
+  let view = '';
+  let chosenAnimal = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
+
+  // Cảm biến lắc
+  let sensorOn = false;  // đã bấm bật cảm biến
+  let mode = 'motion';   // 'motion' = lắc thật, 'tap' = máy không có cảm biến: bấm nút
+  let gotMotion = false;
+  let count = 0;         // số lần lắc vòng hiện tại
+  let countRound = -1;
+  let practice = 0;      // lắc thử lúc chờ
+  let lastSent = -1;
+
+  if (!CONFIGURED) {
+    app.innerHTML = '<div class="screen"><div class="center"><h1>Game chưa sẵn sàng</h1></div></div>';
+  } else {
+    start();
+  }
+
+  async function start() {
+    app.innerHTML = '<div class="screen"><div class="center"><div class="spinner"></div></div></div>';
+    try { uid = await signIn(); } catch (e) {
+      app.innerHTML = `<div class="screen"><div class="center"><h1>Không kết nối được 😢</h1><p class="sub">${escapeHtml(e.message)}</p></div></div>`;
+      return;
+    }
+    watchServerTime();
+    if (pin) openRoom(); else renderPinForm();
+  }
+
+  function renderPinForm(error = '') {
+    view = 'pin';
+    app.innerHTML = `<div class="screen"><div class="center">
+      <div class="brand couple stack">${COUPLE}</div>
+      <h1>🌳 Rung Cây, Rinh Quà 🧧</h1>
+      <div class="card">
+        <label for="pinInput">Mã phòng (6 số trên màn hình lớn)</label>
+        <input class="input pin-input" id="pinInput" inputmode="numeric" maxlength="6" autocomplete="off" value="${pin}">
+        <div class="err">${escapeHtml(error)}</div>
+        <button class="btn" id="goBtn">Vào phòng</button>
+      </div>
+    </div></div>`;
+    const input = document.getElementById('pinInput');
+    const go = () => { pin = input.value.replace(/\D/g, ''); if (pin.length === 6) openRoom(); else renderPinForm('Mã phòng gồm 6 chữ số nha'); };
+    document.getElementById('goBtn').onclick = go;
+    input.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+  }
+
+  async function openRoom() {
+    const r = (await get(roomRef(pin))).val();
+    if (!r) { renderPinForm('Không tìm thấy phòng, kiểm tra lại mã nha'); return; }
+    // Mã của game khác: trang nhập mã chung sẽ chuyển tới đúng game
+    if (r.type !== 'tree') { location.replace(new URL('../../quiz/join/', BASE).href + `?pin=${pin}${EMU ? '&emu=1' : ''}`); return; }
+    const url = new URL(location.href);
+    url.search = `?pin=${pin}${EMU ? '&emu=1' : ''}`;
+    history.replaceState(null, '', url);
+    onValue(roomRef(pin), (s) => { room = s.val(); render(); });
+    setInterval(tick, 150);
+    setInterval(send, 400);
+  }
+
+  // ---------- Vào phòng ----------
+  function renderJoin(error = '') {
+    view = 'join';
+    const nameValue = document.getElementById('nameInput')?.value || localStorage.getItem('kh_name') || '';
+    app.innerHTML = `<div class="screen"><div class="center">
+      <div class="brand couple stack">${COUPLE}</div>
+      <h1>🌳 Rung Cây, Rinh Quà 🧧</h1>
+      <div class="card">
+        <label for="nameInput">Tên hiển thị</label>
+        <input class="input" id="nameInput" maxlength="20" autocomplete="off" placeholder="VD: Tuấn bàn 5" value="${escapeHtml(nameValue)}">
+        <label style="margin-top:12px">Chọn avatar</label>
+        ${avatarPickerHtml(chosenAnimal)}
+        <div class="err" id="joinErr">${escapeHtml(error)}</div>
+        <button class="btn" id="joinBtn">Vào rung cây 🧧</button>
+      </div>
+      <button class="help-btn" data-help>❓ Cách chơi</button>
+    </div></div>`;
+    app.querySelectorAll('.animal').forEach((b) => {
+      b.onclick = () => { chosenAnimal = b.dataset.a; app.querySelectorAll('.animal').forEach((x) => x.classList.toggle('on', x === b)); };
+    });
+    document.getElementById('joinBtn').onclick = join;
+  }
+
+  async function join() {
+    unlockAudio();
+    const name = document.getElementById('nameInput').value.trim().replace(/\s+/g, ' ');
+    const errEl = document.getElementById('joinErr');
+    if (!name) { errEl.textContent = 'Nhập tên đã nha!'; return; }
+    if (Object.values(room.players || {}).some((p) => p.name.toLowerCase() === name.toLowerCase())) {
+      errEl.textContent = 'Tên này có người dùng rồi, thêm chút gì cho khác nha 😄';
+      return;
+    }
+    const btn = document.getElementById('joinBtn');
+    btn.disabled = true;
+    try {
+      await set(roomRef(pin, `players/${uid}`), { name, animal: chosenAnimal, score: 0, joinedAt: serverTimestamp() });
+      localStorage.setItem('kh_name', name);
+      sfx.join();
+    } catch (e) {
+      btn.disabled = false;
+      errEl.textContent = e.code === 'PERMISSION_DENIED'
+        ? 'Game chưa được cập nhật luật Firebase. Báo cô dâu chú rể nha!'
+        : 'Không vào được phòng, thử lại nha!';
+    }
+  }
+
+  // ---------- Cảm biến lắc ----------
+  async function enableSensor() {
+    unlockAudio();
+    try {
+      if (window.DeviceMotionEvent && typeof DeviceMotionEvent.requestPermission === 'function') {
+        const res = await DeviceMotionEvent.requestPermission(); // iPhone phải hỏi quyền
+        if (res !== 'granted') mode = 'tap';
+      }
+    } catch (e) { mode = 'tap'; }
+    if (mode === 'motion') window.addEventListener('devicemotion', onMotion);
+    sensorOn = true;
+    // Không nhận được dữ liệu cảm biến (máy tính, trình duyệt chặn): chuyển sang bấm nút
+    setTimeout(() => { if (!gotMotion) { mode = 'tap'; view = ''; render(); } }, 1500);
+    view = '';
+    render();
+  }
+
+  let prev = null;
+  let lastShakeAt = 0;
+  function onMotion(e) {
+    const a = e.accelerationIncludingGravity;
+    if (!a || a.x === null) return;
+    gotMotion = true;
+    if (prev) {
+      const d = Math.abs(a.x - prev.x) + Math.abs(a.y - prev.y) + Math.abs(a.z - prev.z);
+      const t = performance.now();
+      if (d > 18 && t - lastShakeAt > 120) { lastShakeAt = t; onShake(); }
+    }
+    prev = { x: a.x, y: a.y, z: a.z };
+  }
+
+  let lastTapAt = 0;
+  function onTap() {
+    const t = performance.now();
+    if (t - lastTapAt < 80) return; // giới hạn tốc độ bấm cho công bằng
+    lastTapAt = t;
+    onShake();
+  }
+
+  const inWindow = () => room && room.status === 'shaking' && serverNow() >= room.startAt && serverNow() <= room.endAt;
+
+  // Lì xì ảo: thỉnh thoảng rơi xuống kèm 1 câu chúc, chỉ để vui trên máy khách
+  let nextGiftAt = 25 + Math.floor(Math.random() * 15);
+  function showGift() {
+    document.querySelector('.gift')?.remove();
+    const g = document.createElement('div');
+    g.className = 'gift';
+    g.textContent = `🧧 ${randomWish()}`;
+    document.body.appendChild(g);
+    setTimeout(() => g.remove(), 2300);
+  }
+
+  function onShake() {
+    if (inWindow()) {
+      if (countRound !== room.round) { countRound = room.round; count = 0; lastSent = -1; nextGiftAt = 25 + Math.floor(Math.random() * 15); }
+      count = Math.min(MAX_SHAKES, count + 1);
+      const el = document.getElementById('myCount');
+      if (el) { el.textContent = count; el.classList.remove('bump'); void el.offsetWidth; el.classList.add('bump'); }
+      document.body.classList.remove('flash'); void document.body.offsetWidth; document.body.classList.add('flash');
+      if (count >= nextGiftAt) { nextGiftAt = count + 30 + Math.floor(Math.random() * 20); showGift(); }
+    } else {
+      practice++;
+      const el = document.getElementById('practice');
+      if (el) el.textContent = practice;
+    }
+  }
+
+  // Gửi số lần lắc lên Firebase (mỗi 0,4 giây nếu có thay đổi)
+  async function send() {
+    if (!room || room.status !== 'shaking' || countRound !== room.round || count === lastSent) return;
+    if (serverNow() > room.endAt + 1200) return;
+    const value = count;
+    try {
+      await set(roomRef(pin, `shakes/${room.round}/${uid}`), value);
+      lastSent = value;
+    } catch (e) { console.warn('Không gửi được số lần lắc', e); }
+  }
+
+  // ---------- Giao diện ----------
+  const topBar = (me) => `<div class="top"><span class="me"><span class="ani">${avatarHtml(me.animal)}</span>${escapeHtml(me.name)}</span><button class="help-btn" data-help>❓ Cách chơi</button></div>`;
+  const screen = (me, inner) => `<div class="screen">${topBar(me)}<div class="center">${inner}</div></div>`;
+
+  document.addEventListener('click', (e) => { if (e.target.closest('[data-help]')) showHelp(); });
+
+  let phase = '';
+  function currentPhase() {
+    if (!room) return 'none';
+    if (room.status !== 'shaking') return room.status;
+    const now = serverNow();
+    if (now < room.startAt) return 'pre';
+    if (now <= room.endAt) return 'go';
+    return 'wait';
+  }
+
+  function tick() {
+    if (!room || !room.players || !room.players[uid]) return; // chưa vào phòng: đừng vẽ lại form đang nhập
+    const p = currentPhase();
+    if (p !== phase) { view = ''; render(); return; }
+    if (p === 'pre') {
+      const el = document.getElementById('pre');
+      const s = String(Math.max(1, Math.ceil((room.startAt - serverNow()) / 1000)));
+      if (el && el.textContent !== s) { el.textContent = s; sfx.tick(true); if (navigator.vibrate) navigator.vibrate(60); }
+    } else if (p === 'go') {
+      const el = document.getElementById('left');
+      if (el) el.textContent = `⏱ còn ${Math.ceil((room.endAt - serverNow()) / 1000)} giây`;
+    }
+  }
+
+  // Lộc của mình qua các vòng
+  const myWins = () => Object.entries(room.results || {}).flatMap(([r, res]) => winnersOf(res).filter((w) => w.uid === uid).map((w) => ({ ...w, r: Number(r) })));
+
+  function render() {
+    if (!room) { app.innerHTML = '<div class="screen"><div class="center"><h1>Phòng đã bị xóa</h1><p class="sub">Quét mã QR mới trên màn hình nha!</p></div></div>'; return; }
+    const me = room.players && room.players[uid];
+    if (!me) {
+      if (room.status === 'final') { app.innerHTML = '<div class="screen"><div class="center"><h1>Game đã kết thúc 🎉</h1></div></div>'; return; }
+      if (view !== 'join') renderJoin();
+      return;
+    }
+    const p = currentPhase();
+    const key = `${p}:${room.round}:${mode}:${sensorOn}`;
+    if (key === view) return;
+    view = key;
+    phase = p;
+
+    if (!sensorOn) {
+      app.innerHTML = screen(me, `<div class="icon-big wiggle">📱</div><h1>Bật cảm biến lắc</h1>
+        <p class="sub">Game đếm số lần bạn lắc điện thoại. Bấm nút dưới và cho phép truy cập chuyển động nếu máy hỏi nha.</p>
+        <button class="btn btn-big" id="sensorBtn">Bật lắc 🧧</button>`);
+      document.getElementById('sensorBtn').onclick = enableSensor;
+      return;
+    }
+    const tapNote = mode === 'tap' ? '<div class="warn">Máy bạn không đo được chuyển động, nên sẽ <b>bấm liên tục vào nút tròn</b> thay cho lắc nha.</div>' : '';
+    const practiceBox = mode === 'tap'
+      ? `${tapNote}<button class="tap" id="tapBtn">Bấm thử!</button><div class="practice">Bấm thử: <b id="practice">${practice}</b></div>`
+      : `<div class="practice">📱 Lắc thử xem cảm biến chạy chưa: <b id="practice">${practice}</b></div>`;
+
+    if (p === 'lobby') {
+      app.innerHTML = screen(me, `<div class="icon-big"><span class="lixi">🧧</span>🌳<span class="lixi">🧧</span></div>
+        <h1>Bạn đã vào phòng!</h1><p class="sub">Chờ MC bắt đầu nha. Trong lúc chờ, đọc nhanh cách chơi nè:</p>
+        <div style="width:100%;max-width:420px">${howToHtml()}</div>${practiceBox}`);
+      bindTap();
+      return;
+    }
+    if (p === 'result') {
+      const res = (room.results && room.results[room.round]) || {};
+      const mine = room.shakes && room.shakes[room.round] ? (room.shakes[room.round][uid] || 0) : 0;
+      const won = winnersOf(res).find((w) => w.uid === uid);
+      app.innerHTML = screen(me, won
+        ? `<div class="icon-big lixi">🧧</div><h1>BẠN TRÚNG LỘC VÒNG ${room.round + 1}! 🎉</h1>
+           <div class="win-card"><b>🧧 ${escapeHtml(won.wish)}</b><p style="margin-top:8px">Lên nhận quà từ cô dâu chú rể nha!</p></div>`
+        : `<div class="icon-big">🌳</div><h1>Vòng ${room.round + 1}: bạn lắc được ${mine} lần</h1>
+           <p class="sub">${winnersOf(res).length ? 'Chưa vào top lắc nhiều nhất, vòng sau lắc mạnh hơn nha! 💪' : 'Đang chờ công bố người lắc nhiều nhất...'}</p>`);
+      if (won) { sfx.fanfare(); burst(['🧧', '🎉', '🌼', '✨'], 50); if (navigator.vibrate) navigator.vibrate([200, 100, 200]); }
+      return;
+    }
+    if (p === 'pre') {
+      if (countRound !== room.round) { countRound = room.round; count = 0; lastSent = -1; }
+      app.innerHTML = screen(me, `<h1>Vòng ${room.round + 1}/${ROUNDS} · Chuẩn bị!</h1>
+        <div class="big" id="pre">${Math.max(1, Math.ceil((room.startAt - serverNow()) / 1000))}</div>
+        <p class="sub">${mode === 'tap' ? 'Đặt ngón tay lên nút tròn...' : 'Cầm chắc điện thoại, đừng để rơi nha! 😆'}</p>`);
+      return;
+    }
+    if (p === 'go') {
+      app.innerHTML = screen(me, `<h1>${mode === 'tap' ? '👆 BẤM BẤM BẤM!' : '<span class="wiggle">📱</span> RUNG CÂY NÀO!'}</h1>
+        <div class="count" id="myCount">${count}</div>
+        <div class="timer" id="left"></div>
+        ${mode === 'tap' ? '<button class="tap" id="tapBtn">BẤM!</button>' : '<p class="sub">Ai lắc nhiều nhất sẽ trúng lộc!</p>'}`);
+      bindTap();
+      if (navigator.vibrate) navigator.vibrate(300);
+      return;
+    }
+    if (p === 'wait') {
+      app.innerHTML = screen(me, `<div class="spinner"></div><h1>Hết giờ! Bạn lắc được ${count} lần</h1><p class="sub">Nhìn lên màn hình lớn xem ai trúng lộc nha...</p>`);
+      return;
+    }
+    if (p === 'final') {
+      const wins = myWins();
+      const mine = overallTop(room).find((x) => x.uid === uid);
+      app.innerHTML = screen(me, `<div class="icon-big"><span class="lixi">🧧</span>🌳<span class="lixi">🧧</span></div>
+        <h1>${wins.length ? `Bạn trúng lộc ${wins.length} lần! 🎉` : 'Lộc đã chia xong!'}</h1>
+        ${wins.map((w) => `<div class="win-card"><b>Vòng ${w.r + 1}: 🧧 ${escapeHtml(w.wish)}</b></div>`).join('')}
+        <p class="sub">Bạn lắc tổng cộng <b>${mine ? mine.count : 0}</b> lần. Cảm ơn bạn đã chơi cùng Ngọc Hân &amp; Hồng Phước 💕</p>
+        <a class="btn" href="${new URL('../../', BASE).href}">Xem thiệp cưới</a>`);
+    }
+  }
+
+  function bindTap() {
+    const b = document.getElementById('tapBtn');
+    if (b) b.addEventListener('pointerdown', (e) => { e.preventDefault(); onTap(); });
+  }
+</script>
+</body>
+</html>

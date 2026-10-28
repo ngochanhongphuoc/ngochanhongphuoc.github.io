@@ -1,0 +1,12 @@
+/* Rung Cây, Rinh Quà: màu đỏ vàng ngày Tết, dùng sau shared/shake.css (giữ nút, hướng dẫn, ảnh cô dâu chú rể) */
+body.sk.tree {
+  --gold: #FFD166; --cream: #FFF8E7;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(255,214,102,0.25) 0, transparent 45%),
+    radial-gradient(circle at 50% 110%, rgba(255,120,60,0.25) 0, transparent 50%),
+    linear-gradient(170deg, #C8102E 0%, #8E0E1F 65%, #5A0712 100%) fixed;
+}
+body.sk.tree .help-modal .box { background: linear-gradient(170deg, #C8102E, #6E0A18); }
+body.sk.tree .chip { background: rgba(255,214,102,0.18); }
+.lixi { display: inline-block; animation: swingLixi 1.6s ease-in-out infinite; transform-origin: top center; }
+@keyframes swingLixi { 0%,100% { transform: rotate(8deg); } 50% { transform: rotate(-8deg); } }

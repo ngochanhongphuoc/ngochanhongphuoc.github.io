@@ -1,0 +1,56 @@
+{
+  "rules": {
+    "rooms": {
+      "$pin": {
+        ".read": true,
+        ".write": "auth != null && (data.exists() ? data.child('hostUid').val() === auth.uid : newData.child('hostUid').val() === auth.uid)",
+        "players": {
+          "$uid": {
+            ".write": "auth != null && auth.uid === $uid && !data.exists() && newData.exists() && root.child('rooms/' + $pin).exists() && !root.child('rooms/' + $pin + '/banned/' + $uid).exists()",
+            ".validate": "newData.hasChildren(['name', 'animal'])",
+            "name": { ".validate": "newData.isString() && newData.val().length > 0 && newData.val().length <= 20" },
+            "animal": { ".validate": "newData.isString() && newData.val().length <= 8" },
+            "joinedAt": { ".validate": "newData.isNumber()" },
+            "team": { ".validate": "newData.val() === 'trai' || newData.val() === 'gai'" },
+            "score": { ".validate": "newData.isNumber() && (newData.val() === 0 || auth.uid === root.child('rooms/' + $pin + '/hostUid').val())" },
+            "$other": { ".validate": "auth.uid === root.child('rooms/' + $pin + '/hostUid').val()" }
+          }
+        },
+        "answers": {
+          "$q": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && !data.exists() && root.child('rooms/' + $pin + '/players/' + $uid).exists() && root.child('rooms/' + $pin + '/status').val() === 'question' && root.child('rooms/' + $pin + '/qKey').val() === $q && now <= root.child('rooms/' + $pin + '/qStartAt').val() + 31000",
+              ".validate": "newData.hasChildren(['choice', 'at']) && newData.child('choice').isNumber() && newData.child('choice').val() >= 0 && newData.child('choice').val() <= 3 && newData.child('at').val() === now"
+            }
+          }
+        },
+        "shakes": {
+          "$r": {
+            "$uid": {
+              ".write": "auth != null && auth.uid === $uid && root.child('rooms/' + $pin + '/players/' + $uid).exists() && root.child('rooms/' + $pin + '/status').val() === 'shaking' && root.child('rooms/' + $pin + '/roundKey').val() === $r && now <= root.child('rooms/' + $pin + '/endAt').val() + 2000",
+              ".validate": "newData.isNumber() && newData.val() >= 0 && newData.val() <= 400 && (!data.exists() || newData.val() >= data.val())"
+            }
+          }
+        },
+        "command": {
+          ".write": "auth != null && root.child('controlKeys/' + $pin).exists() && root.child('controllerClaims/' + $pin + '/' + auth.uid).val() === root.child('controlKeys/' + $pin).val()",
+          ".validate": "newData.hasChildren(['type', 'id'])"
+        }
+      }
+    },
+    "controlKeys": {
+      "$pin": {
+        ".write": "auth != null && root.child('rooms/' + $pin + '/hostUid').val() === auth.uid",
+        ".validate": "newData.isString() && newData.val().length >= 16"
+      }
+    },
+    "controllerClaims": {
+      "$pin": {
+        "$uid": {
+          ".write": "auth != null && auth.uid === $uid",
+          ".validate": "newData.isString() && newData.val() === root.child('controlKeys/' + $pin).val()"
+        }
+      }
+    }
+  }
+}

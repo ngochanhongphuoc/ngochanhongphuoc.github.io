@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#D4798A">
+<title>Vào chơi | Mini Game Đám Cưới</title>
+<link rel="icon" href="../../assets/icons/play.svg" type="image/svg+xml">
+<meta name="description" content="Quét mã, chọn tên và avatar, chơi mini game cùng cô dâu chú rể!">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../../shared/live.css">
+<style>
+  body.live { transition: background 0.4s; }
+  body.right { background: #2FA58A; }
+  body.wrong { background: #C23B5B; }
+  body.none { background: #8A7F8C; }
+  .screen { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; padding: 16px; }
+  .top { display: flex; justify-content: space-between; align-items: center; font-weight: 700; font-size: 0.9rem; gap: 8px; }
+  .me { display: inline-flex; align-items: center; gap: 6px; background: rgba(255,255,255,0.18); border-radius: 9999px; padding: 4px 12px 4px 6px; max-width: 60%; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
+  .me .ani { font-size: 1.3rem; }
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 12px; padding: 16px 0; }
+  .brand { font-family: "Great Vibes", cursive; font-size: 2.6rem; line-height: 1.1; }
+  h1 { font-size: 1.5rem; font-weight: 800; line-height: 1.3; }
+  p.sub { opacity: 0.85; line-height: 1.5; max-width: 340px; }
+
+  .card { background: #fff; color: var(--ink); border-radius: 24px; padding: 20px; width: 100%; max-width: 420px; text-align: left; box-shadow: 0 14px 34px rgba(0,0,0,0.2); }
+  .card label { display: block; font-weight: 700; font-size: 0.85rem; margin: 4px 0 8px; color: var(--deep); }
+  .input { width: 100%; padding: 14px 16px; border: 2px solid #F3D9E0; border-radius: 14px; font: 700 1.1rem Montserrat, sans-serif; color: var(--ink); outline: none; }
+  .input:focus { border-color: var(--main); }
+  .pin-input { text-align: center; letter-spacing: 0.3em; font-size: 1.6rem; }
+  .animals { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin-bottom: 16px; }
+  .animal { aspect-ratio: 1; border: 2px solid #F3D9E0; border-radius: 14px; background: #fff; font-size: 1.8rem; cursor: pointer; transition: transform 0.1s; }
+  .animal.on { border-color: var(--main); background: #FCEEF1; transform: scale(1.08); }
+  .err { color: #B3261E; font-weight: 600; font-size: 0.85rem; min-height: 1.2em; margin: 8px 0; }
+  .card .btn { width: 100%; background: linear-gradient(135deg, var(--main), var(--main-light)); color: #fff; }
+
+  .avatar { font-size: 5.5rem; line-height: 1; animation: bob 1.6s ease-in-out infinite; }
+  .name { font-size: 1.6rem; font-weight: 800; word-break: break-word; }
+  .pill { background: rgba(255,255,255,0.18); border-radius: 9999px; padding: 8px 16px; font-weight: 700; }
+  @keyframes bob { 50% { transform: translateY(-8px); } }
+
+  .timebar { height: 10px; background: rgba(255,255,255,0.25); border-radius: 9999px; overflow: hidden; margin: 12px 0; }
+  .timebar div { height: 100%; background: #fff; border-radius: 9999px; transition: width 0.2s linear; }
+  .q-title { text-align: center; font-weight: 700; opacity: 0.9; margin-bottom: 4px; }
+  .q-card { background: #fff; color: var(--ink); border-radius: 20px; padding: 14px 16px; text-align: center; margin-bottom: 12px; box-shadow: 0 8px 20px rgba(120,40,70,0.18); }
+  .q-card .q-emoji { font-size: 1.8rem; }
+  .q-card p { font-weight: 800; font-size: 1.12rem; line-height: 1.35; margin-top: 2px; }
+  .answers { flex: 1; display: grid; grid-auto-rows: 1fr; gap: 10px; }
+  .answers .ans { flex-direction: row; justify-content: flex-start; text-align: left; gap: 12px; padding: 12px 16px; min-height: 64px; font: 700 1.02rem/1.35 Montserrat, sans-serif; }
+  .answers .ans .shape { font-size: 1.7rem; flex: none; width: 1.6rem; text-align: center; }
+  .chosen { display: flex; align-items: center; gap: 12px; width: 100%; max-width: 420px; border-radius: 20px; padding: 16px 18px; color: #fff; font-weight: 700; text-align: left; line-height: 1.35; box-shadow: 0 6px 0 rgba(0,0,0,0.2); }
+  .chosen .shape { font-size: 2rem; flex: none; }
+  .answer-card { background: #fff; color: var(--ink); border-radius: 18px; padding: 12px 16px; width: 100%; max-width: 420px; text-align: left; line-height: 1.45; font-weight: 600; }
+  .answer-card .lbl { font-size: 0.8rem; color: var(--deep); font-weight: 800; text-transform: uppercase; letter-spacing: 0.05em; }
+  .ans { border: 0; border-radius: 20px; color: #fff; font: 800 1.6rem Montserrat, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; box-shadow: 0 6px 0 rgba(0,0,0,0.25); cursor: pointer; }
+  .ans .shape { font-size: 3.4rem; line-height: 1; }
+  .ans:active { transform: translateY(4px); box-shadow: 0 2px 0 rgba(0,0,0,0.25); }
+  .ans:disabled { opacity: 0.4; }
+
+  .big-icon { font-size: 5rem; line-height: 1; }
+  .gain { font-size: 2.4rem; font-weight: 800; }
+  .streak { background: rgba(0,0,0,0.2); border-radius: 9999px; padding: 6px 14px; font-weight: 700; }
+  .medal { font-size: 6rem; line-height: 1; }
+  .links { display: grid; gap: 10px; width: 100%; max-width: 340px; margin-top: 8px; }
+</style>
+</head>
+<body class="live">
+<div id="app"></div>
+
+<script src="../../shared/firebase-config.js"></script>
+<script type="module">
+  import {
+    CONFIGURED, EMU, QUESTION_MS, CHOICES, roomRef, get, set, onValue, serverTimestamp,
+    signIn, watchServerTime, serverNow, fmtSec, fmtScore, escapeHtml, unlockAudio, sfx, burst, petals,
+    tidyUrl,
+    avatarHtml, avatarPickerHtml, DEFAULT_AVATARS,
+  } from '../../shared/live.js';
+  const BASE = tidyUrl();
+
+  const app = document.getElementById('app');
+  const params = new URLSearchParams(location.search);
+  let pin = (params.get('pin') || '').replace(/\D/g, '');
+  let uid = null;
+  let room = null;
+  let me = null;
+  let viewKey = '';
+  let wasJoined = false;
+  let chosenAnimal = DEFAULT_AVATARS[Math.floor(Math.random() * DEFAULT_AVATARS.length)];
+  const pendingAnswer = {};
+
+  // Nút vào phòng khác (khi phòng cũ bị xóa / bị mời ra)
+  const NEW_ROOM_BTN = '<div class="links"><button class="btn" id="newRoomBtn">🎮 Vào phòng mới</button></div>';
+  let movedTo = null; // MC đã chuyển sang phòng mới (mã phòng mới)
+  function bindNewRoom() {
+    const b = document.getElementById('newRoomBtn');
+    // Phòng cũ đã chuyển sang phòng mới thì vào thẳng phòng mới, không cần nhập mã
+    const next = movedTo ? `?pin=${movedTo}${EMU ? '&emu=1' : ''}` : (EMU ? '?emu=1' : '');
+    if (b) b.onclick = () => { location.href = BASE + next; };
+  }
+
+  const setMood = (mood) => { document.body.className = 'live' + (mood ? ' ' + mood : ''); };
+
+  if (!CONFIGURED) {
+    app.innerHTML = '<div class="screen"><div class="center"><div class="big-icon">🛠️</div><h1>Game chưa sẵn sàng</h1><p class="sub">Cô dâu chú rể chưa cấu hình xong, quay lại sau nhé!</p></div></div>';
+  } else {
+    petals(6);
+    start();
+  }
+
+  async function start() {
+    app.innerHTML = '<div class="screen"><div class="center"><div class="spinner"></div></div></div>';
+    try {
+      uid = await signIn();
+    } catch (e) {
+      app.innerHTML = `<div class="screen"><div class="center"><h1>Không kết nối được 😢</h1><p class="sub">${escapeHtml(e.message)}</p></div></div>`;
+      return;
+    }
+    watchServerTime();
+    if (pin) openRoom(); else renderPinForm();
+  }
+
+  function renderPinForm(error = '') {
+    setMood('');
+    app.innerHTML = `<div class="screen"><div class="center">
+      <div class="brand couple stack"><span class="nm">Ngọc Hân</span> <span class="amp">&amp;</span> <span class="nm">Hồng Phước</span></div>
+      <h1>Nhập mã phòng 🎮</h1>
+      <div class="card">
+        <label for="pinInput">Mã phòng (6 số trên màn hình lớn)</label>
+        <input class="input pin-input" id="pinInput" inputmode="numeric" maxlength="6" autocomplete="off" value="${pin}">
+        <div class="err">${escapeHtml(error)}</div>
+        <button class="btn" id="goBtn">Vào phòng</button>
+      </div>
+    </div></div>`;
+    const input = document.getElementById('pinInput');
+    input.focus();
+    const go = () => { pin = input.value.replace(/\D/g, ''); if (pin.length === 6) openRoom(); else renderPinForm('Mã phòng gồm 6 chữ số nha'); };
+    document.getElementById('goBtn').onclick = go;
+    input.onkeydown = (e) => { if (e.key === 'Enter') go(); };
+  }
+
+  async function openRoom() {
+    const snap = await get(roomRef(pin));
+    const r = snap.val();
+    if (!r || r.status === 'ended') { renderPinForm(r ? 'Phòng này đã kết thúc rồi 😅' : 'Không tìm thấy phòng, kiểm tra lại mã nha'); return; }
+    // Mã của phòng Loto: chuyển sang trang vé số
+    if (r.type === 'lottery') { location.replace(new URL('../../lottery/ticket/', BASE).href + `?pin=${pin}${EMU ? '&emu=1' : ''}`); return; }
+    // Rung Cây, Rinh Quà: chuyển sang trang chơi của game đó
+    const PLAY_PAGES = { tree: '../../tree/play/' };
+    if (PLAY_PAGES[r.type]) { location.replace(new URL(PLAY_PAGES[r.type], BASE).href + `?pin=${pin}${EMU ? '&emu=1' : ''}`); return; }
+    const url = new URL(location.href);
+    url.search = `?pin=${pin}${EMU ? '&emu=1' : ''}`;
+    history.replaceState(null, '', url);
+    onValue(roomRef(pin), (s) => { room = s.val(); render(); });
+    setInterval(tickTimer, 200);
+  }
+
+  function renderJoin(error = '') {
+    setMood('');
+    const nameValue = document.getElementById('nameInput')?.value || localStorage.getItem('kh_name') || '';
+    app.innerHTML = `<div class="screen"><div class="center">
+      <div class="brand couple stack"><span class="nm">Ngọc Hân</span> <span class="amp">&amp;</span> <span class="nm">Hồng Phước</span></div>
+      <h1>Chọn tên &amp; avatar của bạn</h1>
+      <div class="card">
+        <label for="nameInput">Tên hiển thị</label>
+        <input class="input" id="nameInput" maxlength="20" autocomplete="off" placeholder="VD: Tuấn bàn 5" value="${escapeHtml(nameValue)}">
+        <label style="margin-top:14px">Chọn avatar</label>
+        ${avatarPickerHtml(chosenAnimal)}
+        <div class="err" id="joinErr">${escapeHtml(error)}</div>
+        <button class="btn" id="joinBtn">Vào chơi 🚀</button>
+      </div>
+    </div></div>`;
+    app.querySelectorAll('.animal').forEach((b) => {
+      b.onclick = () => {
+        chosenAnimal = b.dataset.a;
+        app.querySelectorAll('.animal').forEach((x) => x.classList.toggle('on', x === b));
+      };
+    });
+    document.getElementById('joinBtn').onclick = join;
+  }
+
+  async function join() {
+    unlockAudio();
+    const name = document.getElementById('nameInput').value.trim().replace(/\s+/g, ' ');
+    const errEl = document.getElementById('joinErr');
+    if (!name) { errEl.textContent = 'Nhập tên đã nha!'; return; }
+    const taken = Object.values(room.players || {}).some((p) => p.name.toLowerCase() === name.toLowerCase());
+    if (taken) { errEl.textContent = 'Tên này có người dùng rồi, thêm chút gì cho khác nha 😄'; return; }
+    const btn = document.getElementById('joinBtn');
+    btn.disabled = true;
+    try {
+      await set(roomRef(pin, `players/${uid}`), { name, animal: chosenAnimal, score: 0, joinedAt: serverTimestamp() });
+      localStorage.setItem('kh_name', name);
+      sfx.join();
+    } catch (e) {
+      btn.disabled = false;
+      errEl.textContent = 'Không vào được phòng, thử lại nha!';
+    }
+  }
+
+  function topBar(extra = '') {
+    return `<div class="top"><span class="me"><span class="ani">${avatarHtml(me.animal)}</span>${escapeHtml(me.name)}</span><span>${extra}</span></div>`;
+  }
+
+  function myAnswer() {
+    const a = room.answers && room.answers[room.q] && room.answers[room.q][uid];
+    return a || (pendingAnswer[room.q] !== undefined ? { choice: pendingAnswer[room.q] } : null);
+  }
+
+  function render() {
+    if (room && room.movedTo) movedTo = room.movedTo;
+    if (!room || room.movedTo) {
+      setMood('');
+      app.innerHTML = `<div class="screen"><div class="center"><div class="big-icon">👋</div><h1>Phòng đã đóng</h1><p class="sub">MC đã tạo game mới. Quét mã QR mới trên màn hình hoặc nhập mã phòng mới nha!</p>${NEW_ROOM_BTN}</div></div>`;
+      bindNewRoom();
+      viewKey = '';
+      return;
+    }
+    me = room.players && room.players[uid];
+    if (!me) {
+      if (wasJoined || (room.banned && room.banned[uid])) {
+        setMood('');
+        viewKey = 'kicked';
+        app.innerHTML = '<div class="screen"><div class="center"><div class="big-icon">😅</div><h1>Bạn đã được MC mời ra khỏi phòng</h1><p class="sub">Có thể do trùng tên hoặc tên chưa phù hợp. Hỏi MC nếu muốn vào lại nha!</p>' + NEW_ROOM_BTN + '</div></div>';
+        bindNewRoom();
+        return;
+      }
+      if (viewKey !== 'join') { viewKey = 'join'; renderJoin(); }
+      return;
+    }
+    wasJoined = true;
+    if (room.status === 'ended') { viewKey = 'ended'; renderEnded(); return; }
+
+    const a = myAnswer();
+    const key = [room.status, room.q, a ? 'a' + (a.at ? 't' : 'p') : '', room.reveal ? 'r' : '', me.lastQ, me.rank].join('|');
+    if (key === viewKey) { if (room.status === 'lobby') updateLobbyCount(); return; }
+    const prevStatus = viewKey.split('|')[0];
+    viewKey = key;
+
+    if (room.status === 'lobby') renderLobby();
+    else if (room.status === 'question') renderQuestion(a);
+    else if (room.status === 'reveal' || room.status === 'leaderboard') renderResult(prevStatus);
+    else if (room.status === 'podium') renderFinal(prevStatus);
+  }
+
+  function renderLobby() {
+    setMood('');
+    app.innerHTML = `<div class="screen">${topBar()}<div class="center">
+      <div class="avatar">${avatarHtml(me.animal)}</div>
+      <div class="name">${escapeHtml(me.name)}</div>
+      <h1>Bạn đã vào phòng! 🎉</h1>
+      <p class="sub">Nhìn lên màn hình lớn và chờ MC bắt đầu nhé. Trả lời càng nhanh càng được nhiều điểm!</p>
+      <div class="pill" id="lobbyCount"></div>
+    </div></div>`;
+    updateLobbyCount();
+  }
+
+  function updateLobbyCount() {
+    const el = document.getElementById('lobbyCount');
+    if (el) el.textContent = `👥 ${Object.keys(room.players || {}).length} người đang chờ`;
+  }
+
+  function renderQuestion(a) {
+    setMood('');
+    const cur = room.current || { options: [] };
+    const optText = (i) => escapeHtml((cur.options && cur.options[i]) || '');
+    const head = `<div class="q-title">Câu ${room.q + 1}/${room.total}</div><div class="timebar"><div id="timebar" style="width:100%"></div></div>`;
+    const qCard = `<div class="q-card"><div class="q-emoji">${cur.emoji || '❓'}</div><p>${escapeHtml(cur.q || '')}</p></div>`;
+    if (a) {
+      const c = CHOICES[a.choice];
+      const time = a.at && room.qStartAt ? `⏱ Bạn chốt sau ${fmtSec(Math.max(0, a.at - room.qStartAt))}` : 'Đang gửi...';
+      app.innerHTML = `<div class="screen">${topBar(`${fmtScore(me.score)} điểm`)}${head}${qCard}<div class="center">
+        <div class="chosen" style="background:${c.color}"><span class="shape">${c.shape}</span><span><b>${c.letter}.</b> ${optText(a.choice)}</span></div>
+        <h1>Đã chốt đáp án!</h1>
+        <div class="pill">${time}</div>
+        <p class="sub">Chờ mọi người trả lời xong nhé 🤞</p>
+      </div></div>`;
+      return;
+    }
+    app.innerHTML = `<div class="screen">${topBar(`${fmtScore(me.score)} điểm`)}${head}${qCard}
+      <div class="answers">${CHOICES.map((c, i) => `<button class="ans" data-i="${i}" style="background:${c.color}"><span class="shape">${c.shape}</span><span><b>${c.letter}.</b> ${optText(i)}</span></button>`).join('')}</div>
+    </div>`;
+    app.querySelectorAll('.ans').forEach((b) => { b.onclick = () => answer(Number(b.dataset.i)); });
+    tickTimer();
+  }
+
+  async function answer(choice) {
+    unlockAudio();
+    const q = room.q;
+    if (pendingAnswer[q] !== undefined) return;
+    pendingAnswer[q] = choice;
+    app.querySelectorAll('.ans').forEach((b) => { b.disabled = true; });
+    sfx.answer();
+    if (navigator.vibrate) navigator.vibrate(40);
+    try {
+      await set(roomRef(pin, `answers/${q}/${uid}`), { choice, at: serverTimestamp() });
+    } catch (e) {
+      // Bị từ chối: hết giờ hoặc câu hỏi đã đóng
+      delete pendingAnswer[q];
+      viewKey = '';
+      app.innerHTML = `<div class="screen">${topBar()}<div class="center"><div class="big-icon">⏰</div><h1>Hết giờ mất rồi!</h1><p class="sub">Câu trả lời không kịp gửi đi.</p></div></div>`;
+      return;
+    }
+    render();
+  }
+
+  function tickTimer() {
+    const bar = document.getElementById('timebar');
+    if (!bar || !room || room.status !== 'question' || typeof room.qStartAt !== 'number') return;
+    const left = Math.max(0, room.qStartAt + QUESTION_MS - serverNow());
+    bar.style.width = (left / QUESTION_MS) * 100 + '%';
+    if (left <= 0 && !myAnswer()) app.querySelectorAll('.ans').forEach((b) => { b.disabled = true; });
+  }
+
+  function rankLine() {
+    const total = Object.keys(room.players || {}).length;
+    return me.rank ? `Hạng ${me.rank}/${total} · ${fmtScore(me.score)} điểm` : `${fmtScore(me.score)} điểm`;
+  }
+
+  function renderResult(prevStatus) {
+    if (room.status === 'reveal' && !room.reveal) {
+      setMood('');
+      app.innerHTML = `<div class="screen">${topBar()}<div class="center"><div class="spinner"></div><h1>Đang chấm điểm...</h1></div></div>`;
+      return;
+    }
+    if (me.lastQ !== room.q) {
+      setMood('');
+      app.innerHTML = `<div class="screen">${topBar()}<div class="center"><div class="avatar">${avatarHtml(me.animal)}</div><h1>Bạn vào hơi trễ câu này</h1><p class="sub">Chuẩn bị cho câu tiếp theo nha!</p></div></div>`;
+      return;
+    }
+    const res = me.lastResult;
+    setMood(res);
+    if (prevStatus !== 'reveal' && prevStatus !== 'leaderboard') {
+      if (res === 'right') sfx.correct(); else sfx.wrong();
+      if (navigator.vibrate) navigator.vibrate(res === 'right' ? [60, 40, 60] : 200);
+    }
+    const streak = me.streak >= 2 ? `<div class="streak">🔥 Chuỗi ${me.streak} câu đúng${me.lastBonus ? ` (+${fmtScore(me.lastBonus)})` : ''}</div>` : '';
+    const body = res === 'right'
+      ? `<div class="big-icon">✅</div><h1>Chính xác!</h1><div class="gain">+${fmtScore(me.lastGain)}</div>${streak}<div class="pill">⏱ ${fmtSec(me.lastMs)}</div>`
+      : res === 'wrong'
+        ? '<div class="big-icon">❌</div><h1>Sai mất rồi!</h1><p class="sub">Câu sau gỡ lại nha 💪</p>'
+        : '<div class="big-icon">⏰</div><h1>Hết giờ!</h1><p class="sub">Bạn chưa kịp chọn đáp án.</p>';
+    const fastest = room.reveal && room.reveal.fastest && room.reveal.fastest.uid === uid ? '<div class="pill">⚡ Bạn nhanh tay nhất câu này!</div>' : '';
+    const rv = room.reveal || {};
+    const cur = room.current || {};
+    const ansIdx = rv.answer;
+    const answerCard = typeof ansIdx === 'number' && cur.options
+      ? `<div class="answer-card"><div class="lbl">Đáp án đúng</div><b>${CHOICES[ansIdx].shape} ${CHOICES[ansIdx].letter}.</b> ${escapeHtml(cur.options[ansIdx])}${rv[res === 'right' ? 'right' : 'wrong'] ? `<div style="margin-top:6px;opacity:0.8">💬 ${escapeHtml(rv[res === 'right' ? 'right' : 'wrong'])}</div>` : ''}</div>`
+      : '';
+    app.innerHTML = `<div class="screen">${topBar()}<div class="center">${body}${fastest}${answerCard}<div class="pill">🏆 ${rankLine()}</div></div></div>`;
+  }
+
+  function renderFinal(prevStatus) {
+    setMood('');
+    const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
+    const medal = medals[me.rank] || avatarHtml(me.animal);
+    const title = me.rank === 1 ? 'Vô địch rồi!!! 👑' : me.rank <= 3 ? 'Lên bục vinh quang! 🎉' : 'Cảm ơn bạn đã chơi!';
+    const record = room.record && room.record.uid === uid ? `<div class="pill">⚡ Kỷ lục nhanh tay nhất game: ${fmtSec(room.record.ms)}</div>` : '';
+    app.innerHTML = `<div class="screen">${topBar()}<div class="center">
+      <div class="medal">${medal}</div>
+      <h1>${title}</h1>
+      <div class="pill">🏆 ${rankLine()}</div>
+      ${record}
+      <div class="links">
+        <a class="btn" href="../../#rsvp">💌 Xác nhận dự tiệc</a>
+        <a class="btn btn-ghost" href="../../">Xem thiệp cưới</a>
+      </div>
+    </div></div>`;
+    if (prevStatus !== 'podium' && me.rank <= 3) setTimeout(() => { sfx.fanfare(); burst(['🎉', '✨', '🌸', '🏆'], 40); }, 2400);
+  }
+
+  function renderEnded() {
+    setMood('');
+    app.innerHTML = '<div class="screen"><div class="center"><div class="big-icon">💗</div><h1>Game đã kết thúc</h1><p class="sub">Cảm ơn bạn đã chơi cùng Ngọc Hân &amp; Hồng Phước!</p><div class="links"><a class="btn" href="../../">Xem thiệp cưới</a></div></div></div>';
+  }
+</script>
+</body>
+</html>

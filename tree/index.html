@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Rung Cây, Rinh Quà | Ngọc Hân & Hồng Phước</title>
+<link rel="icon" href="../assets/icons/tree.svg" type="image/svg+xml">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="../shared/shake.css">
+<link rel="stylesheet" href="tree.css">
+<style>
+  body { font-size: clamp(14px, 1.15vw, 20px); }
+  .screen { min-height: 100vh; padding: 20px clamp(16px, 3vw, 48px); display: flex; flex-direction: column; }
+  /* Sảnh chờ vừa đúng 1 màn hình (kể cả TV HD 1366x768), không phải cuộn */
+  .screen.fit { height: 100vh; min-height: 0; padding-top: 14px; padding-bottom: 14px; }
+  .topbar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
+  .topbar .brand { font-size: 2.1em; color: var(--gold); }
+  .tools { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; }
+  .icon-btn { background: rgba(255,255,255,0.14); border: 0; color: var(--cream); border-radius: 9999px; padding: 8px 14px; font: 600 0.85em Montserrat, sans-serif; cursor: pointer; }
+  .title { text-align: center; margin: 0 0 10px; }
+  .title h1 { font-size: 2.6em; font-weight: 900; letter-spacing: 0.02em; color: var(--gold); text-shadow: 0 4px 20px rgba(0,0,0,0.3); }
+  .title .sub { opacity: 0.9; margin-top: 2px; font-size: 1.1em; }
+  .center { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 16px; }
+
+  /* Sảnh chờ */
+  .lobby { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; gap: clamp(16px, 2.5vw, 40px); align-items: stretch; }
+  .side { border-radius: 26px; padding: 18px; display: flex; flex-direction: column; min-height: 0; background: rgba(0,0,0,0.18); }
+  .side h2 { font-size: 1.6em; font-weight: 900; color: var(--gold); margin-bottom: 8px; }
+  .side.right { align-items: center; justify-content: center; gap: 12px; text-align: center; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; align-content: flex-start; overflow: auto; flex: 1; min-height: 0; }
+  .chip { border-radius: 9999px; padding: 6px 13px; font-weight: 700; animation: pop 0.4s ease; }
+  .lobby > div:nth-child(2) { display: flex; flex-direction: column; justify-content: center; }
+  .join-box { align-self: center; background: var(--cream); color: #6E0A18; border-radius: 28px; padding: 18px 26px; text-align: center; box-shadow: 0 0 0 6px var(--gold), 0 20px 50px rgba(0,0,0,0.35); }
+  .join-box .label { font-weight: 800; font-size: 1.3em; }
+  #qr { display: flex; justify-content: center; margin: 10px 0 6px; }
+  #qr img, #qr canvas { width: clamp(200px, calc(100vh - 28em), 480px) !important; height: auto !important; }
+  .pin { font-size: 3.2em; font-weight: 900; letter-spacing: 0.12em; line-height: 1.1; }
+  .hint { font-size: 0.85em; opacity: 0.75; }
+  .mini-tree { font-size: 7em; line-height: 1; }
+  .actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 14px; }
+
+  /* Cây lộc */
+  .shake { flex: 1; display: grid; grid-template-columns: 1fr minmax(280px, 0.8fr); gap: 30px; align-items: center; }
+  .tree-box { position: relative; display: flex; justify-content: center; align-items: flex-end; height: min(62vh, 560px); }
+  .mai { position: relative; font-size: min(46vh, 26vw); line-height: 1; transform-origin: 50% 95%; filter: drop-shadow(0 20px 30px rgba(0,0,0,0.35)); }
+  .mai.wobble { animation: rustle var(--speed, 0.6s) ease-in-out infinite; }
+  @keyframes rustle { 0%,100% { transform: rotate(calc(var(--amp, 2deg) * -1)); } 50% { transform: rotate(var(--amp, 2deg)); } }
+  .mai .bloom { position: absolute; font-size: 0.13em; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+  .mai .bag { position: absolute; font-size: 0.11em; }
+  .panel { display: flex; flex-direction: column; gap: 18px; text-align: center; }
+  .timer { font-size: 5em; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+  .timer.urgent { color: var(--gold); animation: pop 0.5s ease infinite; }
+  .meter { position: relative; height: 54px; border-radius: 9999px; background: rgba(0,0,0,0.3); overflow: hidden; box-shadow: inset 0 0 0 3px rgba(255,214,102,0.5); }
+  .meter .fill { position: absolute; inset: 0 auto 0 0; width: 0; border-radius: 9999px; background: linear-gradient(90deg, #FFB703, var(--gold), #FFF3B0); transition: width 0.3s linear; }
+  .meter .txt { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-weight: 900; font-size: 1.3em; color: #6E0A18; }
+  .meter.full { animation: glowGold 0.8s ease-in-out infinite; }
+  @keyframes glowGold { 0%,100% { box-shadow: inset 0 0 0 3px var(--gold), 0 0 0 rgba(255,214,102,0); } 50% { box-shadow: inset 0 0 0 3px #fff, 0 0 40px rgba(255,214,102,0.9); } }
+  .total { font-size: 1.3em; font-weight: 800; }
+  .total b { font-size: 2em; color: var(--gold); font-variant-numeric: tabular-nums; }
+  .top5 { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; min-height: 2.6em; }
+  .count-big { font-size: 16em; font-weight: 900; line-height: 1; color: var(--gold); text-shadow: 0 0 60px rgba(255,209,102,0.6); animation: pop 0.9s ease infinite; }
+
+  /* Kết quả */
+  .banner { font-size: 3em; font-weight: 900; color: var(--gold); text-shadow: 0 0 40px rgba(255,209,102,0.5); animation: pop 0.8s ease; }
+  .roll { min-width: min(560px, 80vw); padding: 18px 40px; border-radius: 9999px; background: radial-gradient(circle at 32% 28%, #fff 0, #FFE29A 30%, var(--gold) 65%, #C99419 100%); color: #6E0A18; font-size: 2.6em; font-weight: 900; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; box-shadow: 0 0 0 6px #6E0A18, 0 0 0 10px var(--gold), 0 0 60px rgba(255,200,80,0.55); }
+  .roll.spin { animation: rollShake 0.2s linear infinite; }
+  @keyframes rollShake { 0%,100% { transform: rotate(-1.5deg); } 50% { transform: rotate(1.5deg); } }
+  .winners { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; }
+  .wcard { width: min(300px, 80vw); background: linear-gradient(170deg, #E63946, #9D0208); border-radius: 26px; padding: 18px; text-align: center; box-shadow: 0 0 0 4px var(--gold), 0 18px 36px rgba(0,0,0,0.35); animation: pop 0.6s ease both; }
+  .wcard .ani { font-size: 4em; line-height: 1.1; }
+  .wcard .nm { font-size: 1.5em; font-weight: 900; margin: 4px 0; }
+  .wcard .wish { background: rgba(0,0,0,0.22); border-radius: 14px; padding: 8px 10px; margin-top: 8px; line-height: 1.4; }
+  .rank { list-style: none; display: flex; flex-direction: column; gap: 8px; width: min(640px, 88vw); margin: 0 auto; padding: 0; }
+  .rank li { display: flex; align-items: center; gap: 14px; padding: 10px 24px; border-radius: 9999px; background: rgba(0,0,0,0.25); font-size: 1.35em; font-weight: 800; opacity: 0; transform: translateY(14px); transition: opacity 0.4s ease, transform 0.4s ease; }
+  .rank li.show { opacity: 1; transform: none; }
+  .rank li.win { background: radial-gradient(circle at 30% 30%, #fff 0, #FFE29A 35%, var(--gold) 75%); color: #6E0A18; font-size: 1.7em; box-shadow: 0 0 40px rgba(255,209,102,0.55); }
+  .rank .pos { width: 1.8em; text-align: center; }
+  .rank .who { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rank .cnt { font-variant-numeric: tabular-nums; }
+  .mvp { background: rgba(0,0,0,0.22); border-radius: 9999px; padding: 10px 24px; font-size: 1.2em; font-weight: 800; }
+  @media (max-width: 900px) {
+    .lobby, .shake { grid-template-columns: 1fr; }
+    /* Điện thoại: bỏ khóa chiều cao 1 màn hình, QR tính theo chiều ngang để không tràn */
+    .screen.fit { height: auto; min-height: 100vh; }
+    #qr img, #qr canvas { width: min(70vw, 360px) !important; }
+    .tree-box { height: auto; }
+    .mai { font-size: min(60vw, 40vh); }
+  }
+</style>
+</head>
+<body class="sk tree">
+<div id="app"></div>
+
+<script src="../shared/firebase-config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script type="module">
+  import {
+    CONFIGURED, EMU, roomRef, get, set, update, onValue,
+    signIn, watchServerTime, serverNow, escapeHtml, unlockAudio, setMuted, isMuted, sfx, burst,
+    startGameMusic, stopGameMusic, tidyUrl, avatarHtml, avatarText, audioWithFallback,
+  } from '../shared/live.js';
+  import { controlKey, registerControl, commandFilter, showMcQr } from '../shared/remote.js';
+  import { DURATION, COUNTDOWN, ROUNDS, WINNERS, COUPLE, totalOf, meterOf, topOf, drawWinners, winnersOf, overallTop, played, isOver, showHelp } from './tree.js';
+  const BASE = tidyUrl();
+
+  const app = document.getElementById('app');
+  const PIN_KEY = 'tr_host_pin';
+  let uid = null;
+  let pin = null;
+  let room = null;
+  let qrUrl = '';
+  let scene = '';
+  let finishing = false;
+  let lastSec = null;
+  let mcUrl = '';
+  let takeCommand = commandFilter();
+  const ctrlKey = controlKey();
+
+  // Tiếng trống, cồng, pháo dùng chung với game lô tô
+  const sound = (f, vol) => { const a = audioWithFallback(f.replace(/\.\w+$/, ''), new URL(`../assets/audio/${f}`, BASE).href); a.volume = vol; a.preload = 'auto'; return a; };
+  const gong = sound('gong.ogg', 0.9);
+  const phao = sound('firecrackers.ogg', 0.75);
+  const drum = sound('drum-roll.ogg', 0.8);
+  drum.loop = true;
+  const playSnd = (a, ms) => {
+    if (isMuted()) return;
+    a.currentTime = 0;
+    a.play().catch(() => {});
+    if (ms) setTimeout(() => a.pause(), ms);
+  };
+
+  if (!CONFIGURED) {
+    app.innerHTML = '<div class="screen"><div class="center"><h1>Chưa cấu hình Firebase</h1><p>Mở file shared/firebase-config.js và dán cấu hình Firebase vào.</p></div></div>';
+  } else {
+    init();
+  }
+
+  async function init() {
+    app.innerHTML = '<div class="screen"><div class="center"><div class="spinner"></div></div></div>';
+    try { uid = await signIn(); } catch (e) {
+      app.innerHTML = `<div class="screen"><div class="center"><h1>Không kết nối được 😢</h1><p>${escapeHtml(e.message)}</p></div></div>`;
+      return;
+    }
+    watchServerTime();
+    const saved = localStorage.getItem(PIN_KEY);
+    if (saved) {
+      const r = (await get(roomRef(saved))).val();
+      if (r && r.hostUid === uid && r.type === 'tree' && r.status !== 'final') { attach(saved); return; }
+    }
+    createRoom();
+  }
+
+  // from: phòng cũ -> ghi "movedTo" để điện thoại MC tự chuyển theo
+  async function createRoom(from = null) {
+    app.innerHTML = '<div class="screen"><div class="center"><div class="spinner"></div><p>Đang tạo phòng...</p></div></div>';
+    for (let i = 0; i < 10; i++) {
+      const candidate = String(Math.floor(100000 + Math.random() * 900000));
+      if ((await get(roomRef(candidate))).exists()) continue;
+      await set(roomRef(candidate), { hostUid: uid, createdAt: Date.now(), type: 'tree', status: 'lobby', round: -1 });
+      await registerControl(candidate, ctrlKey);
+      if (from) update(roomRef(from), { movedTo: candidate }).catch(() => {});
+      attach(candidate);
+      return;
+    }
+    app.innerHTML = '<div class="screen"><div class="center"><h1>Không tạo được phòng, tải lại trang thử nha</h1></div></div>';
+  }
+
+  let unsubscribe = null;
+  let ticker = null;
+  function attach(p) {
+    pin = p;
+    localStorage.setItem(PIN_KEY, pin);
+    const url = new URL('play/', BASE);
+    url.search = `?pin=${pin}${EMU ? '&emu=1' : ''}`;
+    qrUrl = url.href;
+    const mc = new URL('host/', BASE);
+    mc.search = `?pin=${pin}&key=${ctrlKey}${EMU ? '&emu=1' : ''}`;
+    mcUrl = mc.href;
+    registerControl(pin, ctrlKey);
+    takeCommand = commandFilter();
+    scene = '';
+    if (unsubscribe) unsubscribe();
+    unsubscribe = onValue(roomRef(pin), (snap) => {
+      room = snap.val();
+      if (!room) { localStorage.removeItem(PIN_KEY); createRoom(); return; }
+      handleCommand(takeCommand(room.command));
+      render();
+    });
+    if (!ticker) ticker = setInterval(tick, 200);
+  }
+
+  // ---------- Lệnh từ điện thoại MC ----------
+  function handleCommand(cmd) {
+    if (!cmd) return;
+    if (cmd.status !== room.status || (cmd.round ?? -1) !== (room.round ?? -1)) return;
+    switch (cmd.type) {
+      case 'start': if (room.status === 'lobby') startRound(0); break;
+      case 'next': if (room.status === 'result' && !revealing) next(); break;
+      case 'help': toggleHelp(); break;
+      case 'newroom': newRoom(true); break;
+      default: break;
+    }
+  }
+  function toggleHelp() {
+    document.querySelector('.mc-qr')?.remove();
+    const open = document.querySelector('.help-modal');
+    if (open) open.remove(); else showHelp('tv');
+  }
+
+  // ---------- Điều khiển ----------
+  function startRound(r) {
+    unlockAudio();
+    const startAt = serverNow() + COUNTDOWN;
+    finishing = false;
+    update(roomRef(pin), { status: 'shaking', round: r, roundKey: String(r), startAt, endAt: startAt + DURATION, [`shakes/${r}`]: null, [`results/${r}`]: null });
+  }
+
+  // Hết giờ: chốt tổng số lần lắc và chọn những người lắc nhiều nhất
+  async function finishRound() {
+    if (finishing) return;
+    finishing = true;
+    const fresh = (await get(roomRef(pin))).val();
+    const r = fresh.round;
+    const top = topOf(fresh, r)[0];
+    await update(roomRef(pin), {
+      status: 'result',
+      [`results/${r}`]: { total: totalOf(fresh, r), meter: meterOf(fresh, r), winners: drawWinners(fresh, r), mvp: top ? { uid: top.uid, name: top.name, animal: top.animal, count: top.count } : null },
+    });
+  }
+
+  function next() {
+    if (isOver(room)) update(roomRef(pin), { status: 'final' });
+    else startRound(played(room));
+  }
+
+  async function newRoom(remote = false) {
+    if (!remote && !confirm('Tạo phòng mới? Khách sẽ phải quét mã QR mới.')) return;
+    stopGameMusic();
+    localStorage.removeItem(PIN_KEY);
+    if (unsubscribe) { unsubscribe(); unsubscribe = null; }
+    createRoom(pin);
+  }
+
+  // Đồng hồ: đếm ngược, rung cây theo tốc độ lắc của cả phòng, tự kết thúc vòng
+  let lastTotal = 0;
+  let rate = 0; // số lần lắc mỗi giây (làm mượt)
+  function tick() {
+    if (!room || room.status !== 'shaking') return;
+    const now = serverNow();
+    if (now < room.startAt) {
+      const s = Math.ceil((room.startAt - now) / 1000);
+      const el = document.getElementById('countBig');
+      if (el && el.textContent !== String(s)) { el.textContent = s; sfx.tick(true); }
+      return;
+    }
+    if (document.getElementById('countBig')) { renderShake(); playSnd(gong); lastTotal = 0; rate = 0; }
+    // Gọi mỗi nhịp: nhạc đang phát thì bỏ qua; bị chặn hoặc trang TV vừa mở lại giữa vòng thì bật lại
+    if (now < room.endAt) startGameMusic();
+    const left = Math.max(0, room.endAt - now);
+    const sec = Math.ceil(left / 1000);
+    const timer = document.getElementById('timer');
+    if (timer) { timer.textContent = sec; timer.classList.toggle('urgent', sec <= 5); }
+    if (sec !== lastSec) { lastSec = sec; if (sec > 0 && sec <= 5) sfx.tick(true); }
+    updateShake();
+    if (now > room.endAt + 1500) { stopGameMusic(); finishRound(); }
+  }
+
+  document.addEventListener('keydown', (e) => {
+    if (!room || !['Space', 'Enter'].includes(e.code)) return;
+    e.preventDefault();
+    const help = document.querySelector('.help-modal');
+    if (help) { help.remove(); return; }
+    document.getElementById('mainBtn')?.click();
+  });
+
+  // ---------- Giao diện ----------
+  function topbar() {
+    return `<div class="topbar">
+      <div class="brand couple">${COUPLE}</div>
+      <div class="tools">
+        <button class="icon-btn" id="mcBtn">🎤 MC</button>
+        <button class="icon-btn" id="helpBtn">❓ Cách chơi</button>
+        <button class="icon-btn" id="muteBtn">${isMuted() ? '🔇 Bật âm thanh' : '🔊 Tắt âm thanh'}</button>
+        <button class="icon-btn" id="newBtn">🔁 Phòng mới</button>
+      </div>
+    </div>`;
+  }
+  function bindTop() {
+    document.getElementById('muteBtn').onclick = (e) => { unlockAudio(); setMuted(!isMuted()); e.target.textContent = isMuted() ? '🔇 Bật âm thanh' : '🔊 Tắt âm thanh'; };
+    document.getElementById('newBtn').onclick = () => newRoom();
+    document.getElementById('helpBtn').onclick = () => showHelp('tv');
+    document.getElementById('mcBtn').onclick = () => showMcQr(mcUrl, 'bắt đầu vòng và chuyển vòng', pin, ctrlKey);
+  }
+  const chip = (p, extra = '') => `<span class="chip">${avatarHtml(p.animal)} ${escapeHtml(p.name)}${extra}</span>`;
+
+  function render() {
+    const s = room.status;
+    const key = `${s}:${room.round}`;
+    if (s === 'lobby') { if (scene !== 'lobby') renderLobby(); else fillLobby(); }
+    else if (s === 'shaking') { if (scene !== key) { lastSec = null; serverNow() < room.startAt ? renderCountdown() : renderShake(); } }
+    else if (s === 'result') { if (scene !== key) renderResult(); }
+    else if (s === 'final') { if (scene !== key) renderFinal(); }
+    scene = key;
+    // Nhạc nền: phát từ lúc vào sảnh chờ và suốt lúc lắc; dừng khi công bố kết quả (để nghe trống, cồng)
+    if (s === 'lobby' || s === 'shaking') startGameMusic(); else stopGameMusic();
+  }
+
+  function renderLobby() {
+    app.innerHTML = `<div class="screen fit">
+      ${topbar()}
+      <div class="title"><h1>🌳 RUNG CÂY, RINH QUÀ 🧧</h1><div class="sub">Cả phòng cùng lắc · ${ROUNDS} vòng, mỗi vòng ${DURATION / 1000} giây · mỗi vòng ${WINNERS} người trúng lộc</div></div>
+      <div class="lobby">
+        <div class="side"><h2 id="pcount"></h2><div class="chips" id="plist"></div></div>
+        <div>
+          <div class="join-box">
+            <div class="label">📱 Quét mã, bấm Bật lắc!</div>
+            <div id="qr"></div>
+            <div class="hint">hoặc nhập mã phòng</div>
+            <div class="pin">${pin}</div>
+          </div>
+        </div>
+        <div class="side right">
+          <div class="mini-tree"><span class="lixi">🧧</span>🌳<span class="lixi">🧧</span></div>
+          <p style="line-height:1.5">Ai lắc nhiều nhất,<br><b style="color:var(--gold)">người đó trúng lộc!</b></p>
+          <button class="btn btn-big" id="mainBtn">Bắt đầu rung ▶</button>
+        </div>
+      </div>
+    </div>`;
+    new QRCode(document.getElementById('qr'), { text: qrUrl, width: 600, height: 600, correctLevel: QRCode.CorrectLevel.M });
+    bindTop();
+    document.getElementById('mainBtn').onclick = () => startRound(0);
+    fillLobby();
+  }
+
+  let lastCount = 0;
+  function fillLobby() {
+    const ps = Object.values(room.players || {}).sort((a, b) => (a.joinedAt || 0) - (b.joinedAt || 0));
+    if (ps.length > lastCount) sfx.join();
+    lastCount = ps.length;
+    document.getElementById('pcount').textContent = `${ps.length} người đã vào`;
+    document.getElementById('plist').innerHTML = ps.map((p) => chip(p)).join('') || '<span style="opacity:0.75">Đang chờ khách quét mã...</span>';
+  }
+
+  function renderCountdown() {
+    const r = room.round;
+    app.innerHTML = `<div class="screen">
+      ${topbar()}
+      <div class="center">
+        <div class="title"><h1>Vòng ${r + 1}/${ROUNDS}</h1><div class="sub">Cầm chắc điện thoại, chuẩn bị rung cây!</div></div>
+        <div class="count-big" id="countBig">${Math.max(1, Math.ceil((room.startAt - serverNow()) / 1000))}</div>
+      </div>
+    </div>`;
+    bindTop();
+  }
+
+  // Hoa mai và bao lì xì gắn trên tán cây (vị trí tính theo % của cây)
+  const BLOOMS = [[18, 22], [34, 10], [52, 6], [70, 14], [82, 30], [12, 40], [28, 32], [48, 24], [66, 34], [86, 46], [22, 54], [42, 46], [60, 52], [76, 58]];
+  const BAGS = [[26, 44], [56, 38], [74, 46], [40, 58]];
+  function renderShake() {
+    const r = room.round;
+    const blooms = BLOOMS.map(([x, y]) => `<span class="bloom" style="left:${x}%;top:${y}%">🌼</span>`).join('');
+    const bags = BAGS.map(([x, y]) => `<span class="bag lixi" style="left:${x}%;top:${y}%">🧧</span>`).join('');
+    app.innerHTML = `<div class="screen">
+      ${topbar()}
+      <div class="title"><h1>Vòng ${r + 1}/${ROUNDS} · 📱 LẮC MẠNH LÊN!</h1></div>
+      <div class="shake">
+        <div class="tree-box"><div class="mai wobble" id="tree">🌳${blooms}${bags}</div></div>
+        <div class="panel">
+          <div class="timer" id="timer">${DURATION / 1000}</div>
+          <div class="meter" id="meter"><div class="fill" id="fill"></div><div class="txt" id="pct">LỘC 0%</div></div>
+          <div class="total">Cả phòng đã lắc <b id="total">0</b> lần</div>
+          <div class="top5" id="top5"></div>
+        </div>
+      </div>
+    </div>`;
+    bindTop();
+  }
+
+  function updateShake() {
+    const tree = document.getElementById('tree');
+    if (!tree) return;
+    const r = room.round;
+    const total = totalOf(room, r);
+    // Tốc độ lắc của cả phòng -> cây rung mạnh/yếu và hoa, lì xì rơi nhiều/ít
+    rate = rate * 0.7 + Math.max(0, total - lastTotal) * 5 * 0.3;
+    lastTotal = total;
+    const power = Math.min(1, rate / 40);
+    tree.style.setProperty('--amp', `${1.5 + power * 9}deg`);
+    tree.style.setProperty('--speed', `${0.7 - power * 0.45}s`);
+    const drops = Math.round(power * 4);
+    if (drops) burst(['🌼', '🌸', '🧧', '🪙'], drops);
+    const m = meterOf(room, r);
+    document.getElementById('fill').style.width = `${m * 100}%`;
+    document.getElementById('pct').textContent = m >= 1 ? 'LỘC ĐẦY ẮP 100%! 🎉' : `LỘC ${Math.round(m * 100)}%`;
+    document.getElementById('meter').classList.toggle('full', m >= 1);
+    document.getElementById('total').textContent = total.toLocaleString('vi-VN');
+    document.getElementById('top5').innerHTML = topOf(room, r).slice(0, 5).map((p, i) => chip(p, ` · ${p.count}${i === 0 ? ' 🔥' : ''}`)).join('');
+  }
+
+  // Công bố người trúng lộc: lật bảng xếp hạng số lần lắc từ dưới lên, hạng 1 (người thắng) hiện sau cùng
+  let revealing = false;
+  const wait = (ms) => new Promise((res) => setTimeout(res, ms));
+  async function renderResult() {
+    const r = room.round;
+    const res = (room.results && room.results[r]) || null;
+    if (!res) return;
+    const over = isOver(room);
+    const winners = winnersOf(res);
+    const ranking = topOf(room, r).slice(0, Math.max(5, winners.length));
+    app.innerHTML = `<div class="screen">
+      ${topbar()}
+      <div class="center">
+        <div class="banner">🧧 ${winners.length ? `${winners.length} NGƯỜI TRÚNG LỘC VÒNG ${r + 1}` : 'CHƯA AI LẮC CẢ 😅'}</div>
+        <div class="total">Cả phòng lắc <b>${(res.total || 0).toLocaleString('vi-VN')}</b> lần · Lộc ${Math.round((res.meter || 0) * 100)}%</div>
+        ${winners.length ? `<ol class="rank" id="rank">${ranking.map((p, i) => `<li class="${i < winners.length ? 'win' : ''}"><span class="pos">${['🥇', '🥈', '🥉'][i] || i + 1}</span><span class="who">${avatarHtml(p.animal)} ${escapeHtml(p.name)}</span><span class="cnt">${p.count} lần</span></li>`).join('')}</ol>` : ''}
+        <div class="winners" id="winners"></div>
+        <button class="btn btn-big" id="mainBtn" ${winners.length ? 'disabled' : ''}>${over ? 'Xem tổng kết 🏆' : `Vòng ${played(room) + 1} ▶`}</button>
+      </div>
+    </div>`;
+    bindTop();
+    const btn = document.getElementById('mainBtn');
+    btn.onclick = () => { if (!revealing) next(); };
+    if (!winners.length) return;
+    revealing = true;
+    const rank = document.getElementById('rank');
+    const rows = [...rank.children];
+    // Lật từ hạng thấp lên hạng 1: hạng thường hiện nhanh, người thắng có trống dồn rồi mới hiện
+    for (let i = rows.length - 1; i >= 0; i--) {
+      if (!rank.isConnected) break; // đã chuyển màn khác
+      const isWin = rows[i].classList.contains('win');
+      if (isWin) { playSnd(drum); await wait(1800); drum.pause(); }
+      if (!rank.isConnected) break;
+      rows[i].classList.add('show');
+      if (isWin) {
+        playSnd(gong);
+        const w = winners[i];
+        if (w) document.getElementById('winners').insertAdjacentHTML('beforeend', `<div class="wcard">
+          <div class="ani">${avatarHtml(w.animal, '1em')}</div><div class="nm">${escapeHtml(w.name)}</div>
+          <div>lắc nhiều nhất: ${w.count} lần</div><div class="wish">🧧 ${escapeHtml(w.wish)}</div></div>`);
+        burst(['🧧', '🌼', '✨', '🪙'], 40);
+        await wait(1200);
+      } else await wait(550);
+    }
+    revealing = false;
+    btn.disabled = false;
+    sfx.fanfare();
+    playSnd(phao, 5000);
+  }
+
+  function renderFinal() {
+    const all = [];
+    for (let r = 0; r < ROUNDS; r++) winnersOf(room.results && room.results[r]).forEach((w) => all.push({ ...w, r }));
+    const top = overallTop(room).slice(0, 3);
+    app.innerHTML = `<div class="screen">
+      ${topbar()}
+      <div class="center">
+        <div style="font-size:6em;line-height:1"><span class="lixi">🧧</span>🌳<span class="lixi">🧧</span></div>
+        <div class="banner">LỘC ĐÃ CHIA XONG!</div>
+        <h2>🧧 Những người trúng lộc</h2>
+        <div class="winners">${all.map((w) => `<div class="wcard" style="width:auto;padding:10px 18px"><b>${avatarHtml(w.animal)} ${escapeHtml(w.name)}</b> · vòng ${w.r + 1}</div>`).join('') || '<span>Chưa có ai trúng</span>'}</div>
+        <h2 style="margin-top:6px">⚡ Tay rung vàng</h2>
+        <div class="winners">${top.map((p, i) => chip(p, ` · ${p.count} lần ${['🥇', '🥈', '🥉'][i]}`)).join('') || '<span>Chưa có ai lắc</span>'}</div>
+        <p>Chúc cả nhà năm nay rủng rỉnh lộc như cây may mắn này! Cảm ơn mọi người đã chơi cùng Ngọc Hân &amp; Hồng Phước 💕</p>
+        <div class="actions"><button class="btn" id="mainBtn">🔁 Chơi lại (phòng mới)</button></div>
+      </div>
+    </div>`;
+    bindTop();
+    document.getElementById('mainBtn').onclick = () => newRoom();
+    playSnd(gong);
+    playSnd(phao, 7000);
+    burst(['🎉', '🧧', '🌼', '✨', '🎆'], 90);
+  }
+</script>
+</body>
+</html>
