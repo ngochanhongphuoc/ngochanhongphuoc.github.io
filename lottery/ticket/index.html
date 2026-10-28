@@ -226,7 +226,7 @@
     const s = room.status;
     if (s === 'lobby') {
       app.innerHTML = screen(me, `<div class="avatar">${avatarHtml(me.animal)}</div><h1>${L('Bạn đã vào phòng! 🎉', 'You\'re in! 🎉')}</h1>
-        <p class="sub">${L('Chờ MC phát vé nha. Vé có 3 hàng, mỗi hàng 3 số, giữ nguyên cả 3 vòng.', 'Wait for the MC to hand out tickets. Your ticket has 3 rows of 3 numbers and stays the same for all 3 rounds.')}</p>
+        <p class="sub">${L('Chờ MC phát vé nha. Vé có 3 hàng, mỗi hàng 3 số, giữ nguyên cả 4 vòng.', 'Wait for the MC to hand out tickets. Your ticket has 3 rows of 3 numbers and stays the same for all 4 rounds.')}</p>
         <div style="width:100%;max-width:420px">${howToHtml()}</div>`);
       return;
     }
@@ -265,7 +265,7 @@
     let status;
     if (room.spinning) status = L('Đang quay số... cầu may nào 🙏', 'Drawing a number... fingers crossed 🙏');
     else if (mine >= 0) status = L(`🎉 Bạn đã trúng <b>${prizeName(PRIZES[mine])}</b>! Chơi tiếp cho vui nha.`, `🎉 You won the <b>${prizeName(PRIZES[mine])}</b>! Keep playing for fun.`);
-    else if (stage >= PRIZES.length) status = L('Đã đủ 3 giải 🧧', 'All 3 prizes are won 🧧');
+    else if (stage >= PRIZES.length) status = L(`Đã đủ ${PRIZES.length} giải 🧧`, `All ${PRIZES.length} prizes are won 🧧`);
     else {
       const P = PRIZES[stage];
       const pr = progress(rows, called, P.rows);

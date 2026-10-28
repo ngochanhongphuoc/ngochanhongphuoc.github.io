@@ -164,8 +164,8 @@
         <div class="big-num">${players.length}</div>
         <div class="chips">${players.map((p) => chip(p)).join('') || '<span class="muted">Đang chờ khách quét mã trên TV...</span>'}</div>
       </div>
-      <div class="card"><h2>3 vòng · 3 giải</h2>${ladder()}</div>
-      <div class="card"><p class="muted">🎟️ Mỗi khách 1 vé 3 hàng × 3 số (0–30), giữ nguyên cả 3 vòng. Mỗi vòng ai KINH (đủ 1 hàng ngang hoặc 1 cột dọc) đầu tiên trúng giải, sang vòng mới thì xóa số quay lại từ đầu.</p></div>
+      <div class="card"><h2>${PRIZES.length} vòng · ${PRIZES.length} giải</h2>${ladder()}</div>
+      <div class="card"><p class="muted">🎟️ Mỗi khách 1 vé 3 hàng × 3 số (0–30), giữ nguyên cả 4 vòng. Mỗi vòng ai KINH (đủ 1 hàng ngang hoặc 1 cột dọc) đầu tiên trúng giải, sang vòng mới thì xóa số quay lại từ đầu.</p></div>
       <div class="actions">
         <button class="btn btn-main" data-act="deal" ${players.length ? '' : 'disabled'}>🎟️ Phát vé</button>
         ${common}

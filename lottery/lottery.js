@@ -1,6 +1,6 @@
 // Phần dùng chung cho game Loto (TV: /lottery, điện thoại khách: /lottery/ticket, MC: /lottery/host).
 // Lô tô kiểu Việt Nam: mỗi khách 1 vé 3 hàng × 3 số (9 số khác nhau, 0–30), giữ nguyên từ đầu đến cuối game.
-// Chơi 3 vòng, mỗi vòng 1 giải: TV quay ra từng số (không lặp), vé có số đó tự đánh dấu, người đầu tiên đủ 1 hàng
+// Chơi 4 vòng, mỗi vòng 1 giải: TV quay ra từng số (không lặp), vé có số đó tự đánh dấu, người đầu tiên đủ 1 hàng
 // hoặc 1 cột dọc ("KINH") thắng giải của vòng. Sang vòng mới thì xóa hết số đã quay, quay lại từ đầu (vé giữ nguyên).
 // Mỗi người tối đa 1 giải; nhiều người cùng KINH ở một số thì TV bốc thăm.
 
@@ -14,7 +14,8 @@ export const ALL_NUMS = Array.from({ length: MAX_NUM + 1 }, (_, i) => i);
 export const PRIZES = [
   { name: 'Giải Lộc', nameEn: 'Fortune Prize', short: 'Vòng 1 · Lộc', shortEn: 'Round 1 · Fortune', rows: 1, emoji: '🧧', han: '小吉', spinMs: 1600, suspense: 0 },
   { name: 'Giải Song Hỷ', nameEn: 'Double Happiness Prize', short: 'Vòng 2 · Song Hỷ', shortEn: 'Round 2 · Double Happiness', rows: 1, emoji: '🏮', han: '囍', spinMs: 2000, suspense: 1 },
-  { name: 'Giải Độc Đắc', nameEn: 'Jackpot', short: 'Vòng 3 · Độc Đắc', shortEn: 'Round 3 · Jackpot', rows: 1, emoji: '🐉', han: '大吉', spinMs: 2600, suspense: 2 },
+  { name: 'Giải Phát Tài', nameEn: 'Prosperity Prize', short: 'Vòng 3 · Phát Tài', shortEn: 'Round 3 · Prosperity', rows: 1, emoji: '💰', han: '發', spinMs: 2300, suspense: 2 },
+  { name: 'Giải Độc Đắc', nameEn: 'Jackpot', short: 'Vòng 4 · Độc Đắc', shortEn: 'Round 4 · Jackpot', rows: 1, emoji: '🐉', han: '大吉', spinMs: 2800, suspense: 2 },
 ];
 // Tên giải theo ngôn ngữ đang dùng
 export const prizeName = (P) => L(P.name, P.nameEn);
@@ -120,7 +121,7 @@ export const HOW_TO = [
   ['🎟️', 'Mỗi người nhận <b>1 vé gồm 3 hàng, mỗi hàng 3 số</b> (từ 0 đến 30). Vé <b>giữ nguyên đến hết game</b>.', 'Everyone gets <b>1 ticket with 3 rows of 3 numbers</b> (0 to 30). You <b>keep the same ticket the whole game</b>.'],
   ['🎲', 'TV quay ra từng số. Vé có số đó <b>tự đánh dấu</b>, không cần chạm gì.', 'The TV draws numbers one by one. Your ticket <b>marks them automatically</b>, no tapping needed.'],
   ['🧧', 'Đủ 3 số một <b>hàng ngang</b> hoặc một <b>cột dọc</b> là <b>KINH</b>! Người KINH đầu tiên trúng giải của vòng.', 'Complete a <b>row</b> or a <b>column</b> and that is <b>KINH</b>! The first KINH wins the round.'],
-  ['🔁', 'Chơi <b>3 vòng</b>: <b>Lộc</b> → <b>Song Hỷ</b> → <b>Độc Đắc</b>. Sang vòng mới thì <b>xóa hết số, quay lại từ đầu</b>, vé giữ nguyên.', '<b>3 rounds</b>: <b>Fortune</b> → <b>Double Happiness</b> → <b>Jackpot</b>. Each new round <b>clears all numbers and starts over</b>, same ticket.'],
+  ['🔁', 'Chơi <b>4 vòng</b>: <b>Lộc</b> → <b>Song Hỷ</b> → <b>Phát Tài</b> → <b>Độc Đắc</b>. Sang vòng mới thì <b>xóa hết số, quay lại từ đầu</b>, vé giữ nguyên.', '<b>4 rounds</b>: <b>Fortune</b> → <b>Double Happiness</b> → <b>Prosperity</b> → <b>Jackpot</b>. Each new round <b>clears all numbers and starts over</b>, same ticket.'],
   ['🎲', 'Mỗi người tối đa 1 giải. Nhiều người cùng KINH ở một số thì TV <b>bốc thăm</b>.', 'One prize per person. If several people KINH on the same number, the TV <b>draws</b> a winner.'],
 ];
 export const howToHtml = () => `<ol class="howto">${HOW_TO.map(([icon, vi, en]) => `<li><span class="ic">${icon}</span><span>${L(vi, en)}</span></li>`).join('')}</ol>`;
