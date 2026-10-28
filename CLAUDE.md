@@ -19,12 +19,13 @@
 - Song ngữ VI/EN: chữ trong `translations` của `script.js`, hoặc cặp class `vi-only` / `en-only`. Lựa chọn lưu ở localStorage `phuoc-han-language`, link `?lang=en` mở thẳng bản tiếng Anh.
 - Font: `--script` Alex Brush (tên cặp đôi viết tay ở bìa và đầu thiệp), `--display` Cormorant Garamond (tiêu đề, số lớn), `--serif` Lora (chữ đọc), `--sans` Be Vietnam Pro (nhãn, nút). Font tự lưu trong `assets/fonts/`.
 - Màn hình từ 1024px trở lên có khối CSS riêng ở cuối `styles.css` (bản desktop).
-- "Hành trình của chúng mình" (`#story`): dòng thời gian 6 mốc (nhánh xen kẽ trái phải trên máy tính, hiện dần khi cuộn tới). Nội dung gốc ở [docs/love-story.md](docs/love-story.md). Giữ nguyên câu "Anh gặp em là hết may mắn!". Chỉ dùng chi tiết thật cô dâu chú rể đã kể, không tự thêm.
+- "Hành trình của chúng mình" (`#story`): dòng thời gian 4 mốc (nhánh xen kẽ trái phải trên máy tính, hiện dần khi cuộn tới). Nội dung gốc ở [docs/love-story.md](docs/love-story.md). Giữ nguyên câu "Anh gặp em là hết may mắn!". Chỉ dùng chi tiết thật cô dâu chú rể đã kể, không tự thêm.
 
-## Bài đăng Facebook (`posts/`) và trang cảm ơn (`thank-you/`)
+## Bài đăng Facebook (`posts/`), trang cảm ơn (`thank-you/`), hướng dẫn game (`game-guide/`)
 
-- `posts/`: 3 bài trong mảng `POSTS` (nhà gái 28/11, nhà trai 29/11, cảm ơn). Facebook không có chữ đậm: chữ trong `**…**` được đổi sang ký tự đậm Unicode khi chép (`toBold`: tách dấu NFD, giữ dấu). Nội dung sửa và ảnh đã chọn lưu localStorage `fb-post:text:<id>`, `fb-post:photos:<id>`. Có noindex.
+- `posts/`: 4 bài trong mảng `POSTS` (nhà gái 28/11, nhà trai 29/11, mini game, cảm ơn). Facebook không có chữ đậm: chữ trong `**…**` được đổi sang ký tự đậm Unicode khi chép (`toBold`: tách dấu NFD, giữ dấu). Nội dung sửa và ảnh đã chọn lưu localStorage `fb-post:text:<id>`, `fb-post:photos:<id>`. Có noindex.
 - `thank-you/`: thư cảm ơn, 2 ngày cưới, album 12 ảnh; song ngữ bằng `vi-only` / `en-only`, nhớ chung `phuoc-han-language` với thiệp.
+- `game-guide/`: hướng dẫn 3 mini game cho khách (cách vào, luật, mẹo). **Đổi luật game (thời gian, số câu, số quà) thì sửa cả trang này** và bài "🎮 Mini game" trong `posts/`.
 
 ## Trang quản lý (`nh/`)
 
