@@ -10,6 +10,7 @@
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../shared/shake.css">
 <link rel="stylesheet" href="tree.css">
+<link rel="stylesheet" href="../shared/couple-bg.css">
 <style>
   body { font-size: clamp(14px, 1.15vw, 20px); }
   .screen { min-height: 100vh; padding: 20px clamp(16px, 3vw, 48px); display: flex; flex-direction: column; }
@@ -282,13 +283,11 @@
       <div class="tools">
         <button class="icon-btn" id="mcBtn">🎤 MC</button>
         <button class="icon-btn" id="helpBtn">❓ Cách chơi</button>
-        <button class="icon-btn" id="muteBtn">${isMuted() ? '🔇 Bật âm thanh' : '🔊 Tắt âm thanh'}</button>
         <button class="icon-btn" id="newBtn">🔁 Phòng mới</button>
       </div>
     </div>`;
   }
   function bindTop() {
-    document.getElementById('muteBtn').onclick = (e) => { unlockAudio(); setMuted(!isMuted()); e.target.textContent = isMuted() ? '🔇 Bật âm thanh' : '🔊 Tắt âm thanh'; };
     document.getElementById('newBtn').onclick = () => newRoom();
     document.getElementById('helpBtn').onclick = () => showHelp('tv');
     document.getElementById('mcBtn').onclick = () => showMcQr(mcUrl, 'bắt đầu vòng và chuyển vòng', pin, ctrlKey);

@@ -11,6 +11,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../../shared/live.css">
+<link rel="stylesheet" href="../../shared/couple-bg.css">
 <style>
   .screen { min-height: 100vh; min-height: 100dvh; display: flex; flex-direction: column; padding: 14px 14px 24px; max-width: 560px; margin: 0 auto; }
   .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
@@ -216,7 +217,7 @@
           <p class="muted">Bấm vào tên để mời người chơi ra khỏi phòng.</p>
           <div class="chips">${players.map((p) => `<button class="chip" data-kick="${p.uid}">${avatarHtml(p.animal)} ${escapeHtml(p.name)}</button>`).join('') || '<span class="muted">Đang chờ khách quét mã trên TV...</span>'}</div>
         </div>
-        <div class="card"><p class="muted">🎵 Nhạc phát trên TV: nếu TV chưa có nhạc, bấm 1 lần vào màn hình TV.</p></div>
+        <div class="card"><p class="muted">🎵 Nhạc tự chạy trên TV: nếu TV chưa có tiếng, chạm hoặc bấm phím bất kỳ 1 lần trên máy TV.</p></div>
         <div class="actions">
           <button class="btn btn-main" data-act="start" ${players.length ? '' : 'disabled'}>▶ Bắt đầu game</button>
           ${reset}

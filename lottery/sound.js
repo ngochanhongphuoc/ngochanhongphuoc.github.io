@@ -24,8 +24,8 @@ let musicOn = false;
 // Nhạc nền: assets/audio/game/lottery-music.mp3 (lỗi thì dùng assets/audio/lottery-music.opus)
 function bgmPlay() {
   bgm.play().catch((e) => {
-    // Trình duyệt chặn phát nhạc khi chưa ai bấm vào TV: hiện dòng nhắc
-    if (e && e.name === 'NotAllowedError') needGesture(() => { if (musicOn && !isMuted()) bgm.play().catch(() => {}); });
+    // Trình duyệt chặn phát nhạc khi chưa ai bấm vào TV: tự thử lại (needGesture)
+    if (e && e.name === 'NotAllowedError') needGesture(() => { if (musicOn && !isMuted()) bgmPlay(); });
   });
 }
 function bgmPause() { bgm.pause(); }

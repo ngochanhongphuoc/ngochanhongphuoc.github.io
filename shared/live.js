@@ -7,6 +7,7 @@ import {
   getAuth, connectAuthEmulator, signInAnonymously, onAuthStateChanged,
 } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
 import { playTrack, stopTrack } from './yt-music.js';
+import { L } from './i18n.js';
 
 export { ref, get, set, update, remove, onValue, serverTimestamp };
 
@@ -85,8 +86,8 @@ export function escapeHtml(s) {
 
 // ---------- Avatar: mặt cô dâu chú rể hoặc con vật ----------
 // Mặt cô dâu chú rể lưu mã ngắn '@g1'...'@b6' vào trường animal (luật DB cho tối đa 8 ký tự)
-// Chưa có ảnh mặt Phước & Hân: để trống thì ô chọn chỉ hiện con vật. Có ảnh thì thêm lại mã @g1…, @b1… như trên.
-export const FACES = [];
+// Mặt chú rể @g1…@g6, cô dâu @b1…@b6: ảnh 160px trong assets/images/avatars/ (cắt từ ảnh cưới)
+export const FACES = ['@g1', '@g2', '@g3', '@g4', '@g5', '@g6', '@b1', '@b2', '@b3', '@b4', '@b5', '@b6'];
 // Avatar gán sẵn cho khách mới: mặt cô dâu chú rể nếu có, không thì con vật
 export const DEFAULT_AVATARS = FACES.length ? FACES : ANIMALS;
 const FACE_DIR = new URL('../assets/images/avatars/', import.meta.url).href;
@@ -107,7 +108,7 @@ export function avatarPickerHtml(chosen) {
   const btn = (a, face) => `<button type="button" class="animal ${a === chosen ? 'on' : ''}" data-a="${a}"${face ? ' style="padding:3px;min-width:0"' : ' style="padding:0;min-width:0;font-size:1.5rem"'}>${face ? avatarHtml(a, '100%') : a}</button>`;
   const title = (t) => `<div style="font-size:0.85em;font-weight:700;opacity:0.75;margin:6px 0">${t}</div>`;
   const faces = FACES.length
-    ? title('🤵👰 Mặt cô dâu chú rể') + `<div class="animals" style="grid-template-columns:repeat(6,minmax(0,1fr))">${FACES.map((a) => btn(a, true)).join('')}</div>` + title('🐾 Hoặc con vật')
+    ? title(L('🤵👰 Mặt cô dâu chú rể', '🤵👰 Bride & groom faces')) + `<div class="animals" style="grid-template-columns:repeat(6,minmax(0,1fr))">${FACES.map((a) => btn(a, true)).join('')}</div>` + title(L('🐾 Hoặc con vật', '🐾 Or an animal'))
     : '';
   return faces
     + `<div class="animals" style="grid-template-columns:repeat(7,minmax(0,1fr))">${ANIMALS.map((a) => btn(a, false)).join('')}</div>`;
@@ -237,7 +238,7 @@ const GAME_NAME = ['tree'].find((g) => location.pathname.toLowerCase().includes(
 const MUSIC_FILES = {
   quiz: { lobby: 'quiz-intro', question: 'quiz-music' }, // Ai Là Triệu Phú: giới thiệu/sảnh chờ, lúc trả lời
   tree: {
-    idle: { file: 'lottery-music', volume: 0.25 },          // Rung Cây: sảnh chờ, đếm ngược, kết quả: nhạc nhẹ của Lô tô
+    idle: { file: '../vi-phuoc-han', volume: 0.35 },        // Rung Cây: sảnh chờ, đếm ngược, kết quả: nhạc thiệp (assets/audio/vi-phuoc-han.mp3)
     shake: { file: 'tree-music', start: 38, volume: 0.5 },   // lúc cả phòng đang lắc: phát từ giây 0:38
   },
 };
@@ -271,23 +272,22 @@ function getGameAudio(name) {
 
 // Trình duyệt chặn phát nhạc khi chưa ai bấm vào trang (MC điều khiển bằng điện thoại thì không ai chạm vào TV).
 // Hiện dòng nhắc trên TV; bấm/nhấn phím 1 lần là chạy resume() và ẩn dòng nhắc.
+// Nhạc luôn chạy, không có nút bật/tắt và không hiện dòng nhắc: TV tự thử phát lại mỗi 2 giây,
+// và phát ngay khi có cú bấm/phím bất kỳ. Máy TV bật edge://settings/content/mediaAutoplay → Cho phép thì phát được ngay từ đầu.
+const gestureWaiters = new Set();
+let gestureTimer = null;
+function resumeAll() {
+  const list = [...gestureWaiters];
+  gestureWaiters.clear();
+  clearInterval(gestureTimer);
+  gestureTimer = null;
+  list.forEach((fn) => fn());
+}
+document.addEventListener('pointerdown', () => { unlockAudio(); resumeAll(); }, true);
+document.addEventListener('keydown', () => { unlockAudio(); resumeAll(); }, true);
 export function needGesture(resume) {
-  if (document.getElementById('sound-gate')) return;
-  const bar = document.createElement('button');
-  bar.id = 'sound-gate';
-  bar.type = 'button';
-  bar.textContent = '🔇 Bấm vào màn hình để bật nhạc';
-  bar.style.cssText = 'position:fixed;z-index:200;left:50%;bottom:22px;transform:translateX(-50%);padding:14px 28px;border:0;border-radius:9999px;background:#fff;color:#5d1821;font:800 1.15rem Montserrat,sans-serif;box-shadow:0 8px 28px rgba(0,0,0,0.35);cursor:pointer;animation:pop 0.4s ease';
-  document.body.appendChild(bar);
-  const go = () => {
-    bar.remove();
-    document.removeEventListener('pointerdown', go, true);
-    document.removeEventListener('keydown', go, true);
-    unlockAudio();
-    resume();
-  };
-  document.addEventListener('pointerdown', go, true);
-  document.addEventListener('keydown', go, true);
+  gestureWaiters.add(resume);
+  if (!gestureTimer) gestureTimer = setInterval(resumeAll, 2000);
 }
 
 // phase: chọn bài trong MUSIC_FILES (Ai Là Triệu Phú: "lobby" / "question"; Rung Cây: "idle" / "shake")
@@ -321,7 +321,7 @@ export function startGameMusic(phase) {
   audio.volume = track.volume ?? 0.5;
   audio.play().catch((e) => {
     if (e && e.name === 'NotAllowedError') {
-      // Trình duyệt chặn tự phát nhạc khi chưa có cú bấm nào: hiện dòng nhắc, phát ngay khi bấm vào màn hình
+      // Trình duyệt chặn tự phát nhạc khi chưa có cú bấm nào: tự thử lại mỗi 2 giây, phát ngay khi có cú bấm
       if (waitingForGesture) return;
       waitingForGesture = true;
       needGesture(() => {

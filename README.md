@@ -18,7 +18,7 @@ Web tĩnh (HTML/CSS/JS thuần, không có bước build), tự động deploy l
 |---|---|
 | `/` | Thiệp cưới (`?lang=en` mở bản tiếng Anh) |
 | `/nh` | Trang quản lý: mở màn hình TV của 3 game, tất cả link, nút sao chép link |
-| `/mc` | MC lỡ thoát hoặc đổi điện thoại: nhập mã phòng + mã MC để điều khiển tiếp |
+| `/mc` | MC lỡ thoát hoặc đổi điện thoại: chỉ cần nhập mã phòng để điều khiển tiếp |
 | `/musicplay` | Trình phát nhạc tiệc cho màn LED: đĩa than, pad nhạc nghi lễ, danh sách nhạc tiệc |
 | `/quiz` | Ai Là Triệu Phú (TV). Khách: `/quiz/join` (trang nhập mã phòng dùng chung cho mọi game). MC: `/quiz/host` |
 | `/lottery` | Loto (TV). Khách: `/lottery/ticket`. MC: `/lottery/host` |
@@ -36,7 +36,9 @@ ngochanhongphuoc/
 │
 ├── nh/                   # Trang quản lý (link /nh): 3 game + tất cả link, noindex
 │   └── index.html · nh.css
-├── mc/                   # MC vào lại (link /mc): nhập mã phòng + mã MC, hoặc bấm phòng vừa điều khiển
+├── mc/                   # MC vào lại (link /mc): nhập mã phòng, hoặc bấm phòng vừa điều khiển
+├── posts/                # Bài đăng Facebook (link /posts): nhà gái, nhà trai, cảm ơn; chữ đậm Unicode + chọn ảnh, noindex
+├── thank-you/            # Trang cảm ơn sau ngày cưới (link /thank-you), song ngữ VI/EN
 ├── musicplay/            # Trình phát nhạc tiệc cho màn LED (link /musicplay)
 │   └── party/            #   Nhạc tiệc (m4a) + list.json (chạy update-list.py khi thêm/bớt bài)
 ├── quiz/                 # Game Ai Là Triệu Phú (đố vui, cả tiệc trả lời cùng lúc)

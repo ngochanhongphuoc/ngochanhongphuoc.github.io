@@ -9,6 +9,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Ma+Shan+Zheng&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="lottery.css">
+<link rel="stylesheet" href="../shared/couple-bg.css">
 <style>
   body { font-size: clamp(13px, min(1.15vw, 2vh), 20px); }
   /* TV: mỗi màn gói gọn trong 1 khung hình, không cuộn trang */
@@ -158,7 +159,7 @@
   import { controlKey, registerControl, commandFilter, showMcQr } from '../shared/remote.js';
   // Trình duyệt chỉ cho phát nhạc sau lần bấm đầu tiên vào trang
   ['pointerdown', 'keydown'].forEach((ev) => document.addEventListener(ev, () => music(true), { once: true }));
-  music(true); // bị chặn tự phát thì hiện dòng nhắc "Bấm vào màn hình để bật nhạc"
+  music(true); // bị chặn tự phát thì tự thử lại (needGesture)
   const BASE = tidyUrl();
 
   const AUTO_GAP = 4500; // chế độ Tự quay: nghỉ giữa 2 lần quay (ms)
@@ -421,13 +422,11 @@
       <div class="tools">
         <button class="icon-btn" id="mcBtn">🎤 MC</button>
         <button class="icon-btn" id="helpBtn">❓ Cách chơi</button>
-        <button class="icon-btn" id="muteBtn">${isMuted() ? '🔇 Bật âm thanh' : '🔊 Tắt âm thanh'}</button>
         <button class="icon-btn" id="newBtn">🔁 Phòng mới</button>
       </div>
     </div>`;
   }
   function bindTop() {
-    document.getElementById('muteBtn').onclick = (e) => { unlockAudio(); setMuted(!isMuted()); applyMute(); e.target.textContent = isMuted() ? '🔇 Bật âm thanh' : '🔊 Tắt âm thanh'; };
     document.getElementById('newBtn').onclick = () => newRoom();
     document.getElementById('helpBtn').onclick = showHelp;
     document.getElementById('mcBtn').onclick = () => showMcQr(mcUrl, 'phát vé, quay số, bật tự quay', pin, ctrlKey);

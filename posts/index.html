@@ -1,0 +1,239 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#5d1821">
+  <title>Bài đăng Facebook | Ngọc Hân &amp; Hồng Phước</title>
+  <link rel="icon" href="../assets/icons/links.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../nh/nh.css">
+  <style>
+    /* Bài đăng Facebook: nhà gái, nhà trai (trước cưới) và cảm ơn (sau cưới).
+       Facebook không có chữ đậm: chữ trong **…** đổi sang ký tự đậm Unicode khi chép. */
+    .page { width: min(1100px, 100%); }
+    .tabs { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 18px; }
+    .tab { min-height: 40px; padding: 8px 18px; border: 1px solid var(--line); border-radius: 999px; color: var(--wine); background: var(--paper-light); font-weight: 700; font-size: 13px; cursor: pointer; }
+    .tab[aria-selected="true"] { color: #fff; border-color: var(--wine); background: var(--wine); }
+    .post { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr); gap: 18px; align-items: start; }
+    .post[hidden] { display: none; }
+    .card h2 { margin: 0 0 10px; color: var(--wine); font: 600 12px var(--sans); letter-spacing: .14em; text-transform: uppercase; }
+    .when { margin: -4px 0 12px; color: var(--muted); font-size: 12.5px; }
+    textarea { width: 100%; min-height: 300px; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: #fffdf8; color: var(--ink); font: 14px/1.6 var(--sans); resize: vertical; }
+    .hint { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.5; }
+    .preview { white-space: pre-wrap; max-height: 360px; overflow: auto; padding: 14px; border: 1px solid var(--line); border-radius: 10px; background: #fff; font: 15px/1.55 "Segoe UI", system-ui, sans-serif; color: #1c1e21; }
+    .row { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+    .mini { display: inline-flex; align-items: center; justify-content: center; min-height: 40px; padding: 8px 16px; border: 1px solid var(--line); border-radius: 999px; color: var(--wine); background: var(--paper-light); font-size: 12.5px; font-weight: 700; cursor: pointer; text-decoration: none; }
+    .mini.primary { color: #fff; border-color: var(--wine); background: var(--wine); }
+    .is-done { color: #fff !important; border-color: #4f7a4a !important; background: #4f7a4a !important; }
+    .photos { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+    .ph { position: relative; padding: 0; border: 2px solid transparent; border-radius: 8px; background: none; cursor: pointer; overflow: hidden; aspect-ratio: 3 / 4; }
+    .ph img { width: 100%; height: 100%; object-fit: cover; object-position: center 25%; display: block; }
+    .ph.on { border-color: var(--wine); }
+    .ph.on::after { content: attr(data-n); position: absolute; top: 4px; right: 4px; width: 22px; height: 22px; display: grid; place-items: center; border-radius: 50%; color: #fff; background: var(--wine); font: 700 12px var(--sans); }
+    .count { margin: 8px 0 0; color: var(--muted); font-size: 12px; }
+    @media (max-width: 860px) { .post { grid-template-columns: minmax(0, 1fr); } }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back-link" href="../nh/">← Trang quản lý</a>
+    <span class="eyebrow" style="margin:0">📣 Facebook</span>
+  </header>
+  <main class="page">
+    <div class="page-head">
+      <p class="eyebrow">Ngọc Hân &amp; Hồng Phước</p>
+      <h1 class="page-title">Bài đăng Facebook</h1>
+      <p class="page-lead">Sửa nội dung nếu muốn, bấm <b>Chép nội dung</b> rồi dán lên Facebook. Chữ trong <code>**…**</code> sẽ thành <b>chữ đậm</b> khi dán. Chọn ảnh rồi tải về để đăng kèm.</p>
+    </div>
+    <div class="tabs" role="tablist" id="tabs"></div>
+    <div id="posts"></div>
+  </main>
+  <script>
+    const GALLERY = ['../assets/images/couple.jpg'].concat(Array.from({ length: 12 }, (_, i) => `../assets/images/gallery/wedding-${String(i + 1).padStart(2, '0')}.jpg`));
+    const POSTS = [
+      {
+        id: 'bride', tab: '👰 Nhà gái', when: 'Đăng trước ngày cưới · thiệp ngochanhongphuoc.github.io',
+        photos: [0, 2, 10, 11],
+        text: `💍 **THIỆP MỜI CƯỚI** 💍
+
+Trân trọng kính mời quý họ hàng, bạn bè và đồng nghiệp đến chung vui cùng gia đình chúng tôi trong ngày trọng đại của hai con:
+
+👰 **NGỌC HÂN** & 🤵 **HỒNG PHƯỚC**
+
+🍽️ **TIỆC CƯỚI NHÀ GÁI**
+🕔 **17:00 · THỨ BẢY, 28.11.2026**
+(Tức ngày 20 tháng 10 năm Bính Ngọ)
+📍 **118 Trường Chinh, Gò Dầu, Tây Ninh**
+🗺️ Chỉ đường: https://www.google.com/maps/dir/?api=1&destination=11.0845607,106.2707409
+
+👨‍👩‍👧 **GIA ĐÌNH NHÀ GÁI**
+Ông Võ Văn Tĩnh · Bà Trương Thị Thủy Tuyên
+🏠 Ô 1/59A, Tổ 3, Khu Phố Thanh Bình, Gò Dầu, Tây Ninh
+
+💌 Thiệp cưới online, xác nhận tham dự và gửi lời chúc:
+https://ngochanhongphuoc.github.io
+
+Sự hiện diện của quý vị là niềm vinh hạnh của gia đình chúng tôi! ❤️
+
+#NgocHanHongPhuoc #28112026`,
+      },
+      {
+        id: 'groom', tab: '🤵 Nhà trai', when: 'Đăng trước ngày cưới · thiệp hongphuocngochan.github.io',
+        photos: [0, 3, 10, 12],
+        text: `💍 **THIỆP MỜI CƯỚI** 💍
+
+Trân trọng kính mời quý họ hàng, bạn bè và đồng nghiệp đến chung vui cùng gia đình chúng tôi trong ngày trọng đại của hai con:
+
+🤵 **HỒNG PHƯỚC** & 👰 **NGỌC HÂN**
+
+🏡 **NHÀ TRAI TỔ CHỨC TẠI TƯ GIA**
+🕚 **11:00 · CHỦ NHẬT, 29.11.2026**
+(Tức ngày 21 tháng 10 năm Bính Ngọ)
+📍 **209 Nguyễn Chí Thanh, Tổ 6, Khu Phố Long Kim, Hòa Thành, Tây Ninh**
+🗺️ Chỉ đường: https://www.google.com/maps/dir/?api=1&destination=11.2770625,106.1328125
+
+👨‍👩‍👦 **GIA ĐÌNH NHÀ TRAI**
+Bà Lê Thị Minh Vân
+
+💌 Thiệp cưới online, xác nhận tham dự và gửi lời chúc:
+https://hongphuocngochan.github.io
+
+Sự hiện diện của quý vị là niềm vinh hạnh của gia đình chúng tôi! ❤️
+
+#NgocHanHongPhuoc #29112026`,
+      },
+      {
+        id: 'thanks', tab: '💐 Cảm ơn', when: 'Đăng sau ngày cưới · kèm link trang cảm ơn',
+        photos: [1, 5, 9, 11],
+        text: `💐 **LỜI CẢM ƠN** 💐
+
+Gia đình hai họ cùng cô dâu chú rể **NGỌC HÂN & HỒNG PHƯỚC** xin chân thành cảm ơn quý ông bà, cô chú, anh chị, bạn bè và đồng nghiệp đã dành thời gian đến chung vui, gửi lời chúc phúc và quà mừng trong ngày cưới của chúng con.
+
+🍽️ Nhà gái · **28.11.2026** · Gò Dầu
+🏡 Nhà trai · **29.11.2026** · Hòa Thành
+
+Sự hiện diện và tình cảm của mọi người là món quà quý giá nhất, giúp ngày vui của chúng con thêm trọn vẹn. Nếu có điều gì sơ suất trong lúc đón tiếp, kính mong mọi người bỏ qua và thông cảm.
+
+Chúc mọi người thật nhiều sức khỏe, bình an và hạnh phúc! ❤️
+
+📸 Xem lại ảnh và lời cảm ơn: https://ngochanhongphuoc.github.io/thank-you/
+
+#NgocHanHongPhuoc #CamOn`,
+      },
+    ];
+
+    // ---------- Chữ đậm Unicode (Facebook giữ được khi dán) ----------
+    // Tách dấu tiếng Việt (NFD), đổi chữ cái/số gốc sang chữ đậm, giữ dấu kết hợp phía sau
+    const boldChar = (c) => {
+      const code = c.codePointAt(0);
+      if (code >= 65 && code <= 90) return String.fromCodePoint(0x1D5D4 + code - 65);
+      if (code >= 97 && code <= 122) return String.fromCodePoint(0x1D5EE + code - 97);
+      if (code >= 48 && code <= 57) return String.fromCodePoint(0x1D7EC + code - 48);
+      return c;
+    };
+    const toBold = (s) => [...s.normalize('NFD')].map(boldChar).join('');
+    const render = (text) => text.replace(/\*\*([\s\S]+?)\*\*/g, (_, m) => toBold(m));
+
+    const KEY = (id, part) => `fb-post:${part}:${id}`;
+    const load = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } };
+    const save = (k, v) => { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) { /* bỏ qua */ } };
+
+    document.getElementById('tabs').innerHTML = POSTS.map((p, i) => `<button class="tab" role="tab" type="button" data-tab="${p.id}" aria-selected="${i === 0}">${p.tab}</button>`).join('');
+    document.getElementById('posts').innerHTML = POSTS.map((p, i) => `
+      <section class="post" id="post-${p.id}" ${i ? 'hidden' : ''}>
+        <div class="card">
+          <h2>Nội dung</h2>
+          <p class="when">${p.when}</p>
+          <textarea id="text-${p.id}" spellcheck="false"></textarea>
+          <p class="hint">Viết <code>**chữ**</code> để in đậm. Gõ IN HOA thì giữ nguyên in hoa. Nội dung tự lưu trên máy này.</p>
+          <div class="row">
+            <button class="mini primary" type="button" data-copy="${p.id}">📋 Chép nội dung</button>
+            <button class="mini" type="button" data-reset="${p.id}">↺ Về nội dung gốc</button>
+          </div>
+        </div>
+        <div>
+          <div class="card">
+            <h2>Xem trước (như trên Facebook)</h2>
+            <div class="preview" id="preview-${p.id}"></div>
+          </div>
+          <div class="card" style="margin-top:14px">
+            <h2>Ảnh đăng kèm</h2>
+            <div class="photos" id="photos-${p.id}">${GALLERY.map((src, n) => `<button class="ph" type="button" data-ph="${n}"><img src="${src}" alt="Ảnh cưới ${n + 1}" loading="lazy"></button>`).join('')}</div>
+            <p class="count" id="count-${p.id}"></p>
+            <div class="row">
+              <button class="mini primary" type="button" data-download="${p.id}">⬇️ Tải ảnh đã chọn</button>
+              ${navigator.share ? `<button class="mini" type="button" data-share="${p.id}">📤 Chia sẻ (chữ + ảnh)</button>` : ''}
+            </div>
+          </div>
+        </div>
+      </section>`).join('');
+
+    const state = {};
+    POSTS.forEach((p) => {
+      const ta = document.getElementById(`text-${p.id}`);
+      ta.value = load(KEY(p.id, 'text')) ?? p.text;
+      let picked = []; try { picked = JSON.parse(load(KEY(p.id, 'photos'))) || p.photos; } catch (e) { picked = p.photos; }
+      state[p.id] = { picked };
+      const update = () => { document.getElementById(`preview-${p.id}`).textContent = render(ta.value); };
+      ta.addEventListener('input', () => { save(KEY(p.id, 'text'), ta.value === p.text ? null : ta.value); update(); });
+      update();
+      drawPhotos(p.id);
+    });
+
+    function drawPhotos(id) {
+      const picked = state[id].picked;
+      document.querySelectorAll(`#photos-${id} .ph`).forEach((b) => {
+        const n = +b.dataset.ph;
+        const pos = picked.indexOf(n);
+        b.classList.toggle('on', pos >= 0);
+        if (pos >= 0) b.dataset.n = pos + 1; else delete b.dataset.n;
+      });
+      document.getElementById(`count-${id}`).textContent = picked.length ? `Đã chọn ${picked.length} ảnh (số trên ảnh là thứ tự đăng). Bấm ảnh để chọn / bỏ.` : 'Chưa chọn ảnh nào. Bấm ảnh để chọn.';
+    }
+
+    async function copyText(text, button) {
+      const label = button.textContent;
+      try { await navigator.clipboard.writeText(text); } catch (e) {
+        const a = document.createElement('textarea'); a.value = text; document.body.append(a); a.select();
+        try { document.execCommand('copy'); } catch (err) { /* bỏ qua */ } a.remove();
+      }
+      button.textContent = '✓ Đã chép, dán lên Facebook nha';
+      button.classList.add('is-done');
+      setTimeout(() => { button.textContent = label; button.classList.remove('is-done'); }, 2200);
+    }
+    const fileOf = async (n) => { const src = GALLERY[n]; const blob = await (await fetch(src)).blob(); return new File([blob], `ngoc-han-hong-phuoc-${n + 1}.jpg`, { type: 'image/jpeg' }); };
+
+    document.addEventListener('click', async (e) => {
+      const t = e.target.closest('button'); if (!t) return;
+      if (t.dataset.tab) {
+        document.querySelectorAll('.tab').forEach((b) => b.setAttribute('aria-selected', String(b === t)));
+        document.querySelectorAll('.post').forEach((s) => { s.hidden = s.id !== `post-${t.dataset.tab}`; });
+      } else if (t.dataset.copy) {
+        copyText(render(document.getElementById(`text-${t.dataset.copy}`).value), t);
+      } else if (t.dataset.reset) {
+        const p = POSTS.find((x) => x.id === t.dataset.reset);
+        if (!confirm('Bỏ phần đã sửa, quay về nội dung gốc?')) return;
+        const ta = document.getElementById(`text-${p.id}`); ta.value = p.text; ta.dispatchEvent(new Event('input'));
+      } else if (t.dataset.ph) {
+        const id = t.closest('.post').id.replace('post-', ''); const n = +t.dataset.ph; const list = state[id].picked;
+        const i = list.indexOf(n); if (i >= 0) list.splice(i, 1); else list.push(n);
+        save(KEY(id, 'photos'), JSON.stringify(list)); drawPhotos(id);
+      } else if (t.dataset.download) {
+        for (const n of state[t.dataset.download].picked) {
+          const a = document.createElement('a'); a.href = GALLERY[n]; a.download = `ngoc-han-hong-phuoc-${n + 1}.jpg`; document.body.append(a); a.click(); a.remove();
+          await new Promise((r) => setTimeout(r, 300));
+        }
+      } else if (t.dataset.share) {
+        const id = t.dataset.share; const text = render(document.getElementById(`text-${id}`).value);
+        try { await navigator.clipboard.writeText(text); } catch (err) { /* bỏ qua */ }
+        try {
+          const files = await Promise.all(state[id].picked.map(fileOf));
+          if (navigator.canShare && files.length && navigator.canShare({ files })) await navigator.share({ files, text });
+          else await navigator.share({ text });
+        } catch (err) { /* người dùng huỷ */ }
+      }
+    });
+  </script>
+</body>
+</html>

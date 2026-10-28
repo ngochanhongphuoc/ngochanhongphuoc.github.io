@@ -9,7 +9,7 @@
   <link rel="icon" href="../assets/icons/mc.svg" type="image/svg+xml">
   <link rel="stylesheet" href="../nh/nh.css">
   <style>
-    /* MC lỡ thoát hoặc đổi điện thoại: nhập mã phòng + mã MC (hiện trong bảng "🎤 MC" trên TV) để điều khiển tiếp */
+    /* MC lỡ thoát hoặc đổi điện thoại: chỉ cần nhập mã phòng (TV lưu sẵn mã MC trong rooms/<pin>/mcKey) để điều khiển tiếp */
     .page { width: min(460px, 100%); padding-top: 26px; }
     .page-title { font-size: 32px; }
     .card + .card { margin-top: 14px; }
@@ -40,7 +40,7 @@
     <div class="page-head">
       <p class="eyebrow">Ngọc Hân &amp; Hồng Phước</p>
       <h1 class="page-title">MC vào lại game</h1>
-      <p class="page-lead">Lỡ thoát hoặc đổi điện thoại? Nhập mã để điều khiển tiếp đúng chỗ đang chơi.</p>
+      <p class="page-lead">Lỡ thoát hoặc đổi điện thoại? Chỉ cần nhập mã phòng trên TV là điều khiển tiếp đúng chỗ đang chơi.</p>
     </div>
 
     <section class="card" id="recent" hidden>
@@ -49,13 +49,11 @@
     </section>
 
     <section class="card">
-      <h2>Nhập mã</h2>
+      <h2>Nhập mã phòng</h2>
       <form id="form" autocomplete="off">
         <label for="pin">Mã phòng (6 số)</label>
-        <input id="pin" inputmode="numeric" maxlength="6" placeholder="123456">
-        <label for="code">Mã MC (16 số)</label>
-        <input id="code" inputmode="numeric" maxlength="19" placeholder="0000 0000 0000 0000">
-        <p class="hint">Hai mã này hiện trên màn hình TV: bấm nút <b>🎤 MC</b> (Ai Là Triệu Phú: <b>🎤 Mã điều khiển cho MC</b> ở sảnh chờ), ngay dưới mã QR.</p>
+        <input id="pin" inputmode="numeric" maxlength="6" placeholder="123456" autofocus>
+        <p class="hint">Mã phòng 6 số hiện to trên màn hình TV (dưới mã QR cho khách).</p>
         <p class="err" id="err"></p>
         <button class="button go" type="submit" id="go">Vào điều khiển</button>
       </form>
@@ -63,7 +61,7 @@
   </main>
   <script type="module">
     import { CONFIGURED, roomRef, get } from '../shared/live.js';
-    import { loadMcSessions, formatMcCode } from '../shared/remote.js';
+    import { loadMcSessions } from '../shared/remote.js';
 
     // Trang điều khiển MC của từng game, theo "type" của phòng (Ai Là Triệu Phú không có type)
     const GAMES = {
@@ -74,7 +72,6 @@
     const hostUrl = (game, pin, key) => `${(GAMES[game] || GAMES.quiz).host}?pin=${pin}&key=${key}`;
 
     const pinInput = document.getElementById('pin');
-    const codeInput = document.getElementById('code');
     const err = document.getElementById('err');
     const params = new URLSearchParams(location.search);
     pinInput.value = (params.get('pin') || '').replace(/\D/g, '').slice(0, 6);
@@ -91,15 +88,12 @@
     }
 
     pinInput.addEventListener('input', () => { pinInput.value = pinInput.value.replace(/\D/g, '').slice(0, 6); });
-    codeInput.addEventListener('input', () => { codeInput.value = formatMcCode(codeInput.value.replace(/\D/g, '').slice(0, 16)); });
 
     document.getElementById('form').addEventListener('submit', async (event) => {
       event.preventDefault();
       const pin = pinInput.value;
-      const key = codeInput.value.replace(/\D/g, '');
       err.textContent = '';
       if (pin.length !== 6) { err.textContent = 'Mã phòng gồm 6 số.'; pinInput.focus(); return; }
-      if (key.length !== 16) { err.textContent = 'Mã MC gồm 16 số.'; codeInput.focus(); return; }
       if (!CONFIGURED) { err.textContent = 'Game chưa cấu hình Firebase.'; return; }
       const button = document.getElementById('go');
       button.disabled = true;
@@ -107,8 +101,9 @@
       try {
         const room = (await get(roomRef(pin))).val();
         if (!room) { err.textContent = 'Không tìm thấy phòng này. Kiểm tra lại mã phòng trên TV nha.'; return; }
-        // Mã MC đúng hay sai do trang điều khiển kiểm tra với Firebase
-        location.href = hostUrl(room.type || 'quiz', pin, key);
+        // TV lưu sẵn mã MC trong phòng (rooms/<pin>/mcKey); phòng mở trước bản cập nhật thì chưa có
+        if (!room.mcKey) { err.textContent = 'Phòng này chưa hỗ trợ vào bằng mã phòng. Trên TV bấm "🎤 MC" rồi quét mã QR nha.'; return; }
+        location.href = hostUrl(room.type || 'quiz', pin, room.mcKey);
       } catch (e) {
         err.textContent = 'Không kết nối được, thử lại nha.';
       } finally {

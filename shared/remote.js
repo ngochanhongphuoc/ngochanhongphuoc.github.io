@@ -22,7 +22,9 @@ export const formatMcCode = (key) => String(key || '').replace(/(\d{4})(?=\d)/g,
 
 // ---------- Phía TV ----------
 // Gắn mã bí mật vào phòng; luật Firebase cũ chưa có controlKeys thì game vẫn chạy, chỉ là MC chưa điều khiển được
+// Ghi thêm mã MC vào phòng (rooms/<pin>/mcKey) để trang /mc chỉ cần nhập mã phòng là MC vào lại được
 export async function registerControl(pin, key) {
+  try { await set(ref(db, `rooms/${pin}/mcKey`), key); } catch (e) { /* bỏ qua */ }
   try { await set(ref(db, `controlKeys/${pin}`), key); } catch (e) { console.warn('Chưa cập nhật luật Firebase cho chế độ MC', e); }
 }
 
@@ -39,13 +41,12 @@ export function commandFilter() {
   };
 }
 
-// Khối chữ dưới mã QR: mã phòng + mã MC, để MC lỡ thoát vào lại bằng trang /mc
-export function mcCodeHtml(pin, key) {
+// Khối chữ dưới mã QR: MC lỡ thoát vào lại bằng trang /mc, chỉ cần nhập mã phòng
+export function mcCodeHtml(pin) {
   const mcPage = new URL('../mc/', import.meta.url).href.replace(/^https?:\/\//, '');
   return `<div style="margin:6px auto 12px;padding:12px 16px;border-radius:14px;background:rgba(0,0,0,0.22);line-height:1.5">
-    <div style="font-size:0.85em;opacity:0.85">Lỡ thoát hoặc đổi điện thoại? Vào <b>${mcPage}</b> và nhập:</div>
-    <div style="margin-top:6px">Mã phòng <b style="font-size:1.25em;letter-spacing:0.08em">${pin}</b></div>
-    <div>Mã MC <b style="font-size:1.25em;letter-spacing:0.06em;font-variant-numeric:tabular-nums">${formatMcCode(key)}</b></div>
+    <div style="font-size:0.85em;opacity:0.85">Lỡ thoát hoặc đổi điện thoại? Vào <b>${mcPage}</b> và nhập</div>
+    <div style="margin-top:6px">Mã phòng <b style="font-size:1.35em;letter-spacing:0.08em">${pin}</b></div>
   </div>`;
 }
 
@@ -58,7 +59,7 @@ export function showMcQr(url, what, pin, key) {
     <h2>🎤 Mã điều khiển cho MC</h2>
     <p style="opacity:0.9;line-height:1.5">MC quét mã này bằng điện thoại để ${what} từ xa, không cần ai đứng ở máy tính.</p>
     <div class="mc-qr-code" style="display:flex;justify-content:center;margin:14px 0"><div style="background:#fff;padding:12px;border-radius:14px"></div></div>
-    ${pin && key ? mcCodeHtml(pin, key) : ''}
+    ${pin ? mcCodeHtml(pin) : ''}
     <p style="font-weight:800">⚠️ Chỉ cho MC xem, đừng để khách quét hoặc chép mã này!</p>
     <button class="btn" id="mcQrClose">Đóng</button>
   </div>`;

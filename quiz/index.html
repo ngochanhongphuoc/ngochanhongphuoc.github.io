@@ -10,6 +10,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Great+Vibes&family=Montserrat:wght@500;600;700;800&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="../shared/live.css">
+<link rel="stylesheet" href="../shared/couple-bg.css">
 <style>
   body { font-size: clamp(14px, 1.15vw, 20px); }
   .screen { min-height: 100vh; padding: 24px clamp(16px, 3vw, 48px); display: flex; flex-direction: column; }
@@ -319,6 +320,7 @@
         hostUid: uid, createdAt: serverTimestamp(), status: 'lobby', q: -1, qKey: '', total: QUESTIONS.length,
       });
       // Luật Firebase cũ chưa có controlKeys: game vẫn chạy, chỉ là điện thoại MC chưa điều khiển được
+      try { await set(ref(db, `rooms/${candidate}/mcKey`), ctrlKey); } catch (e) { /* bỏ qua */ } // trang /mc đọc mã này theo mã phòng
       try { await set(ref(db, `controlKeys/${candidate}`), ctrlKey); } catch (e) { console.warn('Chưa cập nhật luật Firebase cho chế độ MC', e); }
       localStorage.setItem(PIN_KEY, candidate);
       saveHistory(candidate);
@@ -394,7 +396,7 @@
       <h3>🎤 Mã điều khiển cho MC</h3>
       <p>MC quét mã này bằng điện thoại để bấm qua câu, xem đáp án trước và xem kết quả.</p>
       <div id="mcQr"></div>
-      ${mcCodeHtml(pin, ctrlKey)}
+      ${mcCodeHtml(pin)}
       <div class="warn">⚠️ Chỉ cho MC xem, đừng để khách quét hoặc chép mã này!</div>
       <button class="btn" id="mcClose">Đóng</button>
     </div>`;
@@ -526,7 +528,6 @@
       <div class="brand couple"><span class="nm">Ngọc Hân</span> <span class="amp">&amp;</span> <span class="nm">Hồng Phước</span></div>
       <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;justify-content:flex-end">${extra}
         ${pin ? '<button class="icon-btn" id="resetBtn">🗑️ Xóa &amp; tạo game mới</button>' : ''}
-        <button class="icon-btn" id="muteBtn">${isMuted() ? '🔇 Bật âm thanh' : '🔊 Tắt âm thanh'}</button>
       </div>
     </div>`;
   }
@@ -534,13 +535,6 @@
   function bindCommon() {
     const r = document.getElementById('resetBtn');
     if (r) r.onclick = () => resetGame();
-    const m = document.getElementById('muteBtn');
-    if (m) m.onclick = () => {
-      unlockAudio();
-      setMuted(!isMuted());
-      if (!isMuted() && room && ['lobby', 'question'].includes(room.status)) startGameMusic(room.status);
-      m.textContent = isMuted() ? '🔇 Bật âm thanh' : '🔊 Tắt âm thanh';
-    };
   }
 
   function render() {

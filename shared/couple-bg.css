@@ -1,0 +1,25 @@
+/* Ảnh cô dâu chú rể làm nền cho mọi trang game (TV, khách, MC).
+   Màu nền riêng của từng game phủ lên ảnh dưới dạng lớp trong mờ (--tint-a → --tint-b), nên vẫn thấy ảnh cưới phía sau.
+   Dùng html::before (không dùng body::before vì Lô tô đã dùng body::before cho hiệu ứng tối màn hình lúc quay số). */
+html::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    linear-gradient(160deg, var(--tint-a, rgba(60, 10, 20, 0.7)), var(--tint-b, rgba(30, 5, 10, 0.82))),
+    url(../assets/images/couple.jpg) center 22% / cover no-repeat;
+  transition: background 0.4s;
+}
+/* Ai Là Triệu Phú: hồng */
+html:has(body.live) { --tint-a: rgba(242, 175, 190, 0.78); --tint-b: rgba(168, 77, 104, 0.86); }
+/* Màn trả lời đúng / sai / hết giờ trên điện thoại khách */
+html:has(body.live.right) { --tint-a: rgba(47, 165, 138, 0.86); --tint-b: rgba(31, 120, 100, 0.9); }
+html:has(body.live.wrong) { --tint-a: rgba(194, 59, 91, 0.86); --tint-b: rgba(140, 35, 60, 0.9); }
+html:has(body.live.none) { --tint-a: rgba(138, 127, 140, 0.86); --tint-b: rgba(90, 82, 92, 0.9); }
+/* Lô tô: đỏ son */
+html:has(body.xs) { --tint-a: rgba(200, 16, 46, 0.78); --tint-b: rgba(78, 6, 16, 0.88); }
+/* Rung Cây: đỏ Tết */
+html:has(body.sk) { --tint-a: rgba(200, 16, 46, 0.76); --tint-b: rgba(90, 7, 18, 0.88); }
+@media print { html::before { display: none; } }
