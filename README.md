@@ -40,6 +40,7 @@ ngochanhongphuoc/
 ├── posts/                # Bài đăng Facebook (link /posts): nhà gái, nhà trai, cảm ơn; chữ đậm Unicode + chọn ảnh, noindex
 ├── thank-you/            # Trang cảm ơn sau ngày cưới (link /thank-you), song ngữ VI/EN
 ├── game-guide/           # Hướng dẫn mini game cho khách (link /game-guide): 3 game, luật, mẹo; song ngữ VI/EN
+├── hint-game/            # Hint game: ảnh gợi ý mini game để đăng Facebook (link /hint-game): 5 ảnh 1080×1350 vẽ bằng canvas, noindex
 ├── musicplay/            # Trình phát nhạc tiệc cho màn LED (link /musicplay)
 │   └── party/            #   Nhạc tiệc (m4a) + list.json (chạy update-list.py khi thêm/bớt bài)
 ├── quiz/                 # Game Ai Là Triệu Phú (đố vui, cả tiệc trả lời cùng lúc)

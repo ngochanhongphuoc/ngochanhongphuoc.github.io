@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <meta name="theme-color" content="#5d1821">
+  <title>Hint game | Ngọc Hân &amp; Hồng Phước</title>
+  <link rel="icon" href="../assets/icons/minigame.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="../nh/nh.css">
+  <style>
+    /* Hint game: ảnh gợi ý mini game để đăng Facebook: vẽ bằng canvas 1080×1350 (khổ dọc 4:5), tải về JPG.
+       Nội dung ảnh nằm trong mảng CARDS; đổi luật game thì sửa cả ở đây, game-guide/ và bài "🎮 Mini game" trong posts/. */
+    @font-face { font-family: "Alex Brush"; font-display: block; src: url("../assets/fonts/alex-brush-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+    @font-face { font-family: "Alex Brush"; font-display: block; src: url("../assets/fonts/alex-brush-vietnamese.woff2") format("woff2"); unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9; }
+    @font-face { font-family: "Lora"; font-weight: 400 700; font-display: block; src: url("../assets/fonts/lora-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+    @font-face { font-family: "Lora"; font-weight: 400 700; font-display: block; src: url("../assets/fonts/lora-vietnamese.woff2") format("woff2"); unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9; }
+    @font-face { font-family: "Be Vietnam Pro"; font-weight: 600; font-display: block; src: url("../assets/fonts/be-vietnam-pro-600-latin.woff2") format("woff2"); unicode-range: U+0000-00FF, U+2000-206F; }
+    @font-face { font-family: "Be Vietnam Pro"; font-weight: 600; font-display: block; src: url("../assets/fonts/be-vietnam-pro-600-vietnamese.woff2") format("woff2"); unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9; }
+    .page { width: min(1180px, 100%); }
+    .toolbar { display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin-bottom: 18px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 16px; }
+    .item { display: flex; flex-direction: column; gap: 10px; padding: 10px; border: 1px solid var(--line); border-radius: 14px; background: var(--paper-light); }
+    .item canvas { width: 100%; height: auto; aspect-ratio: 4 / 5; border-radius: 8px; background: #e9dfd2; box-shadow: 0 8px 20px -14px rgba(69, 16, 24, .6); }
+    .item b { color: var(--wine); font-size: 14px; }
+    .row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mini { display: inline-flex; align-items: center; justify-content: center; min-height: 38px; padding: 7px 14px; border: 1px solid var(--line); border-radius: 999px; color: var(--wine); background: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; }
+    .mini.primary { color: #fff; border-color: var(--wine); background: var(--wine); }
+    .mini.side[aria-pressed="true"] { color: #fff; border-color: var(--rose); background: var(--rose); }
+    .status { margin: 0 0 14px; text-align: center; color: var(--muted); font-size: 13px; }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back-link" href="../nh/">← Trang quản lý</a>
+    <span class="eyebrow" style="margin:0">🖼️ Hint game</span>
+  </header>
+  <main class="page">
+    <div class="page-head">
+      <p class="eyebrow">Ngọc Hân &amp; Hồng Phước</p>
+      <h1 class="page-title">Hint game</h1>
+      <p class="page-lead">5 ảnh khổ dọc Facebook (1080×1350) giới thiệu 3 game, luật chơi và gợi ý ôn bài, có bản nhà gái (28.11) và nhà trai (29.11). Tải về rồi đăng kèm bài <a href="../posts/">🎮 Mini game</a>.</p>
+    </div>
+    <div class="toolbar">
+      <button class="mini side" type="button" data-side="bride">👰 Nhà gái · 28.11</button>
+      <button class="mini side" type="button" data-side="groom">🤵 Nhà trai · 29.11</button>
+      <span style="width:12px"></span>
+      <button class="mini primary" type="button" id="all">⬇️ Tải tất cả ảnh</button>
+      <button class="mini" type="button" id="share-all" hidden>📤 Chia sẻ tất cả</button>
+    </div>
+    <p class="status" id="status">Đang vẽ ảnh...</p>
+    <div class="grid" id="grid"></div>
+  </main>
+  <script>
+    const W = 1080, H = 1350;
+    // Hai bên đều chơi game: nhà gái tiệc 28.11 (thiệp ngochanhongphuoc), nhà trai 29.11 (thiệp hongphuocngochan).
+    // Trang hướng dẫn game chỉ có ở thiệp nhà gái nên cả hai bên đều trỏ về đó; ảnh "Ôn bài" trỏ về Hành trình trên thiệp của từng bên.
+    const SIDES = {
+      bride: { head: 'NGỌC HÂN & HỒNG PHƯỚC · 28.11.2026', guide: 'ngochanhongphuoc.github.io/game-guide', story: 'ngochanhongphuoc.github.io/#story', file: 'nha-gai' },
+      groom: { head: 'HỒNG PHƯỚC & NGỌC HÂN · 29.11.2026', guide: 'ngochanhongphuoc.github.io/game-guide', story: 'hongphuocngochan.github.io/#story', file: 'nha-trai' },
+    };
+    let side = new URLSearchParams(location.search).get('side') === 'groom' ? 'groom' : 'bride';
+    // Mỗi ảnh: biểu tượng, tiêu đề (chữ viết tay), dòng phụ, 2 nhóm nội dung, link cuối ảnh. **chữ** = in đậm
+    const CARDS = [
+      {
+        file: '1-mini-game', icon: '🎮', title: 'Mini game tiệc cưới', sub: '3 TRÒ CHƠI · 9 PHẦN QUÀ · KHÔNG CẦN CÀI APP',
+        sections: [
+          { head: 'Có những game gì?', lines: ['🧠 **Ai Là Triệu Phú**: đố vui về cô dâu chú rể', '🧧 **Loto**: 3 vòng, ai KINH trước thì thắng', '🌳 **Rung Cây, Rinh Quà**: lắc thật mạnh'] },
+          { head: 'Cách vào chơi', lines: ['📷 Quét **mã QR** trên màn hình lớn', '✍️ Nhập **tên** để MC gọi lên nhận quà', '🔋 Sạc đầy pin, bật **4G hoặc Wi-Fi**'] },
+        ],
+        link: 'guide',
+      },
+      {
+        file: '2-ai-la-trieu-phu', icon: '🧠', title: 'Ai Là Triệu Phú', sub: '15 CÂU · 30 GIÂY MỖI CÂU · TOP 3 NHẬN QUÀ',
+        sections: [
+          { head: 'Luật chơi', lines: ['Chọn đáp án **A, B, C, D** ngay trên điện thoại', 'Đúng được 500–1000 điểm: **càng nhanh càng nhiều**', 'Đúng liên tiếp có **thưởng chuỗi 🔥** đến +500 điểm'] },
+          { head: '💡 Gợi ý', lines: ['Đọc kỹ **Hành trình của chúng mình** trong thiệp', 'Để ý **bài hát** và **số ngôn ngữ** của thiệp online', 'Câu khó thì... đoán theo **trái tim cô dâu** 😉'] },
+        ],
+        link: 'guide',
+      },
+      {
+        file: '3-loto', icon: '🧧', title: 'Loto', sub: '3 VÒNG: LỘC → SONG HỶ → ĐỘC ĐẮC',
+        sections: [
+          { head: 'Luật chơi', lines: ['Mỗi người **1 vé 3 × 3 số** (0–30), giữ cả game', 'Màn hình lớn quay số, **vé tự đánh dấu**', 'Đủ **1 hàng ngang hoặc 1 cột dọc** là KINH!'] },
+          { head: '💡 Mẹo', lines: ['Giữ màn hình điện thoại **luôn sáng**', '**Mỗi người tối đa 1 giải**, nhường cơ hội nha', 'Nhiều người cùng KINH thì màn hình **bốc thăm**'] },
+        ],
+        link: 'guide',
+      },
+      {
+        file: '4-rung-cay', icon: '🌳', title: 'Rung Cây, Rinh Quà', sub: '3 VÒNG · 20 GIÂY · AI LẮC NHIỀU NHẤT THẮNG',
+        sections: [
+          { head: 'Luật chơi', lines: ['Đếm ngược xong là **lắc điện thoại thật mạnh**', 'Mỗi vòng, **ai lắc nhiều nhất** nhận bao lì xì', 'Thắng rồi **vẫn được chơi tiếp** vòng sau'] },
+          { head: '💡 Mẹo', lines: ['**Cầm chắc tay**, lắc lên xuống dứt khoát', 'iPhone hỏi quyền chuyển động: bấm **Cho phép**', 'Máy không lắc được thì **bấm nút liên tục**'] },
+        ],
+        link: 'guide',
+      },
+      {
+        file: '5-on-bai', icon: '📖', title: 'Ôn bài trước tiệc', sub: 'GỢI Ý CHO AI LÀ TRIỆU PHÚ',
+        sections: [
+          { head: 'Bạn có biết?', lines: ['☕ Cô dâu chú rể gặp nhau **năm nào, ở đâu**?', '🎮 Lúc cách ly, hai người **chơi game gì** cùng nhau?', '💍 Chú rể cầu hôn **ở đâu**, bằng **hoa gì**?', '🍀 Câu nói **"cảm lạnh"** nhất của chú rể là gì?', '🎵 Thiệp cưới online phát **bài hát** nào?'] },
+          { head: 'Đáp án ở đâu?', lines: ['Tất cả đều nằm trong **thiệp cưới online** 👇'] },
+        ],
+        link: 'story',
+      },
+    ];
+
+    const C = { wine: '#5d1821', ink: '#3f2524', gold: '#b79a65', cream: '#f1dfbf', paper: '#fffaf2' };
+    const EMOJI_START = /^\p{Extended_Pictographic}/u;
+
+    const loadImage = (src) => new Promise((ok, fail) => { const i = new Image(); i.onload = () => ok(i); i.onerror = fail; i.src = src; });
+    function spaced(ctx, px) { if ('letterSpacing' in ctx) ctx.letterSpacing = px; }
+
+    // Tách 1 dòng có **đậm** thành các từ kèm kiểu chữ, rồi xuống dòng theo bề rộng
+    function wrap(ctx, text, width, size) {
+      const words = [];
+      text.split('**').forEach((part, i) => part.split(/(\s+)/).filter(Boolean).forEach((w) => words.push({ w, bold: i % 2 === 1 })));
+      const lines = [[]]; let x = 0;
+      for (const t of words) {
+        ctx.font = `${t.bold ? 700 : 400} ${size}px Lora`;
+        const wpx = ctx.measureText(t.w).width;
+        if (/^\s+$/.test(t.w)) { if (x > 0) { lines.at(-1).push({ ...t, wpx }); x += wpx; } continue; }
+        if (x + wpx > width && x > 0) {
+          const last = lines.at(-1); while (last.length && /^\s+$/.test(last.at(-1).w)) last.pop();
+          lines.push([]); x = 0;
+        }
+        lines.at(-1).push({ ...t, wpx }); x += wpx;
+      }
+      return lines;
+    }
+
+    // Đo / vẽ phần nội dung trong khung giấy; trả về chiều cao đã dùng
+    function body(ctx, card, x, y, width, size, draw) {
+      const lh = Math.round(size * 1.42), headSize = Math.round(size * 0.78);
+      let cy = y;
+      card.sections.forEach((sec, si) => {
+        if (si) cy += Math.round(size * 0.9);
+        if (draw) {
+          ctx.font = `600 ${headSize}px "Be Vietnam Pro"`; spaced(ctx, '4px'); ctx.fillStyle = C.wine; ctx.textBaseline = 'top';
+          ctx.fillText(sec.head.toUpperCase(), x, cy);
+          spaced(ctx, '0px');
+          ctx.fillStyle = C.gold; ctx.fillRect(x, cy + headSize + 12, 70, 3);
+        }
+        cy += headSize + 34;
+        sec.lines.forEach((line) => {
+          // Dòng mở đầu bằng biểu tượng: biểu tượng đứng riêng, chữ (kể cả dòng xuống hàng) thẳng hàng sau nó; không có thì dùng chấm vàng
+          const emoji = EMOJI_START.test(line);
+          const icon = emoji ? line.split(' ')[0] : '';
+          const text = emoji ? line.slice(icon.length).trimStart() : line;
+          const indent = Math.round(size * (emoji ? 1.45 : 0.9));
+          const rows = wrap(ctx, text, width - indent, size);
+          rows.forEach((row, ri) => {
+            if (draw) {
+              if (ri === 0 && emoji) { ctx.font = `${size}px Lora`; ctx.textBaseline = 'top'; ctx.fillText(icon, x, cy); }
+              if (ri === 0 && !emoji) { ctx.fillStyle = C.gold; ctx.beginPath(); ctx.arc(x + size * 0.3, cy + size * 0.62, size * 0.16, 0, Math.PI * 2); ctx.fill(); }
+              let cx = x + indent;
+              row.forEach((t) => { ctx.font = `${t.bold ? 700 : 400} ${size}px Lora`; ctx.fillStyle = t.bold ? C.wine : C.ink; ctx.textBaseline = 'top'; ctx.fillText(t.w, cx, cy); cx += t.wpx; });
+            }
+            cy += lh;
+          });
+          cy += Math.round(size * 0.28);
+        });
+      });
+      return cy - y;
+    }
+
+    function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+    function drawCard(canvas, card, photo) {
+      const sd = SIDES[side];
+      const ctx = canvas.getContext('2d');
+      // Nền: ảnh cưới phủ đỏ rượu
+      const s = Math.max(W / photo.width, H / photo.height);
+      const pw = photo.width * s, ph = photo.height * s;
+      ctx.drawImage(photo, (W - pw) / 2, (H - ph) * 0.15, pw, ph);
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, 'rgba(69,16,24,0.62)'); g.addColorStop(0.45, 'rgba(60,12,20,0.82)'); g.addColorStop(1, 'rgba(36,7,12,0.94)');
+      ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+      // Viền vàng mảnh
+      ctx.strokeStyle = 'rgba(241,223,191,0.55)'; ctx.lineWidth = 2; ctx.strokeRect(28, 28, W - 56, H - 56);
+
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = C.cream; ctx.font = '600 24px "Be Vietnam Pro"'; spaced(ctx, '7px');
+      ctx.fillText(sd.head, W / 2, 96); spaced(ctx, '0px');
+      ctx.font = '96px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+      ctx.fillText(card.icon, W / 2, 222);
+      ctx.fillStyle = '#fff'; ctx.font = `${card.title.length > 16 ? 104 : 118}px "Alex Brush"`;
+      ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 18;
+      ctx.fillText(card.title, W / 2, 352);
+      ctx.shadowBlur = 0;
+      ctx.fillStyle = C.cream; ctx.font = '600 26px "Be Vietnam Pro"'; spaced(ctx, '3px');
+      ctx.fillText(card.sub, W / 2, 412); spaced(ctx, '0px');
+
+      // Khung giấy chứa nội dung: tự thu nhỏ chữ cho vừa
+      const px = 70, py = 456, pw2 = W - 140, ph2 = H - py - 150, pad = 52;
+      ctx.save(); ctx.shadowColor = 'rgba(0,0,0,0.35)'; ctx.shadowBlur = 30; ctx.shadowOffsetY = 10;
+      roundRect(ctx, px, py, pw2, ph2, 26); ctx.fillStyle = 'rgba(255,250,242,0.97)'; ctx.fill(); ctx.restore();
+      ctx.textAlign = 'left';
+      let size = 40;
+      while (size > 22 && body(ctx, card, px + pad, py + pad, pw2 - pad * 2, size, false) > ph2 - pad * 2) size -= 1;
+      const used = body(ctx, card, px + pad, py + pad, pw2 - pad * 2, size, false);
+      body(ctx, card, px + pad, py + pad + Math.max(0, (ph2 - pad * 2 - used) / 2), pw2 - pad * 2, size, true);
+
+      // Chân ảnh: link
+      ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
+      ctx.fillStyle = '#fff'; ctx.font = '600 30px "Be Vietnam Pro"';
+      ctx.fillText(`👉 ${sd[card.link]}`, W / 2, H - 82);
+      ctx.fillStyle = C.cream; ctx.font = '600 21px "Be Vietnam Pro"'; spaced(ctx, '4px');
+      ctx.fillText('#NGOCHANHONGPHUOC', W / 2, H - 46); spaced(ctx, '0px');
+    }
+
+    const blobOf = (canvas) => new Promise((ok) => canvas.toBlob(ok, 'image/jpeg', 0.92));
+    const nameOf = (card) => `ngoc-han-hong-phuoc-${SIDES[side].file}-${card.file}.jpg`;
+    async function download(canvas, card) {
+      const url = URL.createObjectURL(await blobOf(canvas));
+      const a = document.createElement('a'); a.href = url; a.download = nameOf(card); document.body.append(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
+    }
+    async function share(items) {
+      const files = await Promise.all(items.map(async ({ canvas, card }) => new File([await blobOf(canvas)], nameOf(card), { type: 'image/jpeg' })));
+      try { await navigator.share({ files }); } catch (e) { /* người dùng huỷ */ }
+    }
+
+    (async () => {
+      const status = document.getElementById('status');
+      const sample = 'Ạ ắ ằ ẳ ẵ ặ ơ ư đ Ộ ễ';
+      await Promise.all(['400 34px Lora', '700 34px Lora', '600 26px "Be Vietnam Pro"', '118px "Alex Brush"'].map((f) => document.fonts.load(f, sample).catch(() => null)));
+      let photo;
+      try { photo = await loadImage('../assets/images/couple.jpg'); } catch (e) { status.textContent = 'Không tải được ảnh nền couple.jpg.'; return; }
+      const canShare = !!(navigator.canShare && navigator.canShare({ files: [new File([''], 'a.jpg', { type: 'image/jpeg' })] }));
+      const grid = document.getElementById('grid');
+      const items = CARDS.map((card) => {
+        const box = document.createElement('div'); box.className = 'item';
+        const canvas = document.createElement('canvas'); canvas.width = W; canvas.height = H;
+        box.append(canvas);
+        box.insertAdjacentHTML('beforeend', `<b>${card.icon} ${card.title}</b><div class="row"><button class="mini primary" type="button" data-act="dl">⬇️ Tải ảnh</button>${canShare ? '<button class="mini" type="button" data-act="share">📤 Chia sẻ</button>' : ''}</div>`);
+        grid.append(box);
+        drawCard(canvas, card, photo);
+        box.querySelector('[data-act="dl"]').onclick = () => download(canvas, card);
+        const sh = box.querySelector('[data-act="share"]'); if (sh) sh.onclick = () => share([{ canvas, card }]);
+        return { canvas, card };
+      });
+      // Chọn nhà gái / nhà trai: vẽ lại cả 5 ảnh
+      const pick = (v) => {
+        side = v;
+        document.querySelectorAll('.side').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.side === v)));
+        items.forEach((it) => drawCard(it.canvas, it.card, photo));
+      };
+      document.querySelectorAll('.side').forEach((b) => { b.onclick = () => pick(b.dataset.side); });
+      pick(side);
+      status.textContent = 'Bấm "Tải ảnh" dưới từng ảnh, hoặc "Tải tất cả ảnh". Ảnh JPG 1080×1350, đăng Facebook rõ nét.';
+      document.getElementById('all').onclick = async () => { for (const it of items) { await download(it.canvas, it.card); await new Promise((r) => setTimeout(r, 400)); } };
+      if (canShare) { const b = document.getElementById('share-all'); b.hidden = false; b.onclick = () => share(items); }
+    })();
+  </script>
+</body>
+</html>
