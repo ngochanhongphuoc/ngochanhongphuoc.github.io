@@ -302,7 +302,7 @@
     else if (s === 'result') { if (scene !== key) renderResult(); }
     else if (s === 'final') { if (scene !== key) renderFinal(); }
     scene = key;
-    // Nhạc: lúc đang lắc phát nhạc lắc (từ 0:38); còn lại (sảnh chờ, đếm ngược, kết quả, tổng kết) phát nhạc nhẹ của Lô tô
+    // Nhạc: lúc đang lắc phát nhạc lắc (tree-music.mp3, đã cắt từ 0:58); còn lại (sảnh chờ, đếm ngược, kết quả, tổng kết) phát nhạc thiệp
     startGameMusic(s === 'shaking' && serverNow() >= room.startAt ? 'shake' : 'idle');
   }
 

@@ -239,7 +239,7 @@ const MUSIC_FILES = {
   quiz: { lobby: 'quiz-intro', question: 'quiz-music' }, // Ai Là Triệu Phú: giới thiệu/sảnh chờ, lúc trả lời
   tree: {
     idle: { file: '../vi-phuoc-han', volume: 0.35 },        // Rung Cây: sảnh chờ, đếm ngược, kết quả: nhạc thiệp (assets/audio/vi-phuoc-han.mp3)
-    shake: { file: 'tree-music', start: 38, volume: 0.5 },   // lúc cả phòng đang lắc: phát từ giây 0:38
+    shake: { file: 'tree-music', start: 0, volume: 0.5 },    // lúc cả phòng đang lắc: mỗi vòng phát lại từ đầu (file đã cắt sẵn từ 0:58 bản gốc)
   },
 };
 const trackOf = (entry) => (typeof entry === 'string' ? { file: entry } : entry);
@@ -309,7 +309,7 @@ export function startGameMusic(phase) {
   stopTrack();
   const audio = getGameAudio(name);
   if (currentFile !== name) {
-    // Đổi bài: dừng bài cũ; bài có "start" (vd nhạc lắc 0:38) thì tua về đúng giây đó mỗi lần vào
+    // Đổi bài: dừng bài cũ; bài có "start" (vd nhạc lắc: 0) thì tua về đúng giây đó mỗi lần vào
     if (gameAudio && gameAudio !== audio) gameAudio.pause();
     currentFile = name;
     gameAudio = audio;
