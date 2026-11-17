@@ -23,8 +23,8 @@
     --list-w: clamp(230px, 18vw, 300px);
     --list-gap: 2.4vmin;
     --list-space: calc(var(--list-w) + var(--list-gap) * 2);
-    --disc: min(50vh, 30vw);
-    --pads-h: 31vh;
+    --disc: min(36vh, 22vw); /* đĩa gọn, nhường chỗ cho tên bài và bảng pad */
+    --pads-h: 40vh;
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
@@ -55,7 +55,7 @@
     position: relative; z-index: 1;
     height: calc(100vh - var(--pads-h)); height: calc(100dvh - var(--pads-h));
     display: grid; grid-template-columns: auto 1fr;
-    align-items: center; gap: 7vmin;
+    align-items: center; gap: 5vmin;
     padding: 3vmin 4vmin 1vmin 6vmin;
     margin-right: var(--list-space);
   }
@@ -261,28 +261,33 @@
   .pads-head label { display: flex; align-items: center; gap: 6px; color: var(--muted); white-space: nowrap; }
   .pads-head input[type=range] { width: 9vmin; min-width: 60px; accent-color: var(--accent); }
   .pbtn.stop { background: #8E2C3C; border-color: #8E2C3C; }
-  .pad-grid { flex: 1; min-height: 0; display: grid; grid-template-columns: repeat(6, 1fr); grid-auto-rows: 1fr; gap: 1vmin; }
+  .pad-grid { flex: 1; min-height: 0; display: grid; gap: 1.6vmin; }
   .pad {
-    position: relative; overflow: hidden; border-radius: 1.4vmin; padding: 0.9vmin 1.1vmin; text-align: left;
+    position: relative; overflow: hidden; border-radius: 1.2vmin; padding: 0.6vmin 1vmin; text-align: left;
     background: linear-gradient(150deg, var(--c1), var(--c2)); border: 2px solid transparent;
-    display: flex; flex-direction: column; justify-content: space-between; min-height: 0;
-    box-shadow: 0 6px 16px rgba(0,0,0,0.35); transition: transform 0.08s, filter 0.2s;
+    display: flex; flex-direction: column; justify-content: flex-end; min-height: 0;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.3); transition: transform 0.08s, filter 0.2s;
   }
-  .pad:hover { filter: brightness(1.12); }
+  .pad:hover { filter: brightness(1.15); }
   .pad:active { transform: scale(0.97); }
-  .pad .k { font-size: clamp(10px, 1.5vmin, 14px); font-weight: 800; opacity: 0.85; display: flex; justify-content: space-between; gap: 6px; }
+  /* Phím tắt + biểu tượng ở góc trên, tên ở dưới dùng cả chiều cao ô (tối đa 3 dòng) */
+  .pad .k { position: absolute; top: 0.5vmin; left: 1vmin; right: 0.8vmin; pointer-events: none;
+    font-size: clamp(9px, 1.3vmin, 13px); font-weight: 800; opacity: 0.85; display: flex; justify-content: space-between; gap: 6px; }
   .pad .k i { font-style: normal; font-weight: 600; opacity: 0.8; }
-  .pad .n { font-weight: 800; font-size: clamp(11px, 1.9vmin, 19px); line-height: 1.2; text-shadow: 0 1px 4px rgba(0,0,0,0.35);
-    display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .pad .n { font-weight: 700; font-size: clamp(10px, 1.45vmin, 16px); line-height: 1.15; text-shadow: 0 1px 4px rgba(0,0,0,0.35);
+    display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
   .pad .pbar { position: absolute; left: 0; bottom: 0; height: 4px; width: 0; background: #fff; opacity: 0.9; }
   .pad.playing { border-color: #fff; box-shadow: 0 0 0 3px rgba(255,255,255,0.18), 0 0 30px var(--c1); animation: padglow 1.2s ease-in-out infinite; }
   @keyframes padglow { 50% { filter: brightness(1.2); } }
-  body.pads-all { --pads-h: 37vh; }
-  body.pads-all .pad-grid { grid-template-columns: repeat(9, 1fr); gap: 0.8vmin; }
-  body.pads-all .pad .n { font-size: clamp(10px, 1.6vmin, 17px); }
-  .pad .grp { font-weight: 700; letter-spacing: 0.04em; opacity: 0.75; text-transform: uppercase; font-size: 0.85em; }
-  body.pads-all .pad { border-left: 4px solid var(--gc, transparent); }
-  .pad.blank { background: rgba(255,255,255,0.03); border: 1px dashed var(--line); box-shadow: none; cursor: default; }
+  /* Mỗi nhóm 1 cột: chấm màu + tên nhóm, bên dưới 4 hàng ô cùng màu nhóm (renderPads) */
+  .pad-block { display: flex; flex-direction: column; gap: 0.7vmin; min-width: 0; min-height: 0; }
+  .pad-block h4 { margin: 0; display: flex; align-items: center; gap: 0.7vmin; color: var(--gc); font-size: clamp(10px, 1.35vmin, 14px); font-weight: 800; letter-spacing: 0.14em; text-transform: uppercase; white-space: nowrap; }
+  .pad-block h4::before { content: ""; width: 0.8em; height: 0.8em; flex: none; border-radius: 50%; background: var(--gc); }
+  .pad-block .pad-cells { flex: 1; min-height: 0; display: grid; grid-template-rows: repeat(4, minmax(0, 1fr)); gap: 0.7vmin; }
+  /* Màn thấp (laptop 768px): khung pad cao hơn cho đủ 4 hàng ô */
+  @media (min-aspect-ratio: 1/1) and (max-height: 900px) { :root { --pads-h: 44vh; } }
+  /* Màn hẹp: bỏ bớt chữ trên thanh pad để thanh không rớt dòng */
+  @media (max-width: 1599px) { .pads-head .opt-t { display: none; } .pbtn { padding: 0.5vmin 1.1vmin; } }
 
   .footer {
     position: fixed; z-index: 1; left: 0; right: var(--list-space); bottom: 3vmin;
@@ -406,7 +411,8 @@
   @media (max-aspect-ratio: 1/1) {
     :root { --disc: min(78vw, 46vh); --list-w: 0px; --list-space: 0px; --pads-h: 0px; }
     .pads { position: static; height: auto; padding: 0 16px 20px; }
-    .pad-grid, body.pads-all .pad-grid { grid-template-columns: repeat(3, 1fr); grid-auto-rows: 64px; }
+    .pad-grid { grid-template-columns: 1fr !important; }
+    .pad-block .pad-cells { grid-template-columns: repeat(3, 1fr) !important; grid-template-rows: none; grid-auto-rows: 64px; }
     html, body { overflow: auto; height: auto; }
     .stage { grid-template-columns: 1fr; justify-items: center; align-content: center; text-align: center; gap: 5vmin; padding: 5vh 16px 12vh; height: auto; min-height: 100dvh; }
     .footer { position: static; padding: 0 16px 24px; }
@@ -473,11 +479,10 @@
   <section class="pads" aria-label="Pad nhạc nghi lễ">
     <div class="pads-head">
       <span class="lbl">🎛️ Pad nghi lễ</span>
-      <span id="padTabs"></span>
       <span class="sp"></span>
-      <label title="Khi pad hiệu ứng (pháo, cồng, trống) phát, nhạc nền tự nhỏ lại. Pad nhạc thì nhạc nền tạm dừng hẳn"><input type="checkbox" id="autoDuck" checked> Hiệu ứng: nhạc nền nhỏ còn</label>
+      <label title="Khi pad hiệu ứng (pháo, cồng, trống) phát, nhạc nền tự nhỏ lại còn mức này. Pad nhạc thì nhạc nền tạm dừng hẳn"><input type="checkbox" id="autoDuck" checked> ✨<span class="opt-t"> Nền nhỏ còn</span></label>
       <label><input type="range" id="duckLevel" min="0" max="50" step="5" value="15"><span id="duckVal">15%</span></label>
-      <label title="Tự cân âm lượng: bài nhỏ kéo lên, bài to hạ xuống, chặn tiếng quá to (máy tính)"><input type="checkbox" id="levelOn" checked> ⚖️ Cân bằng âm lượng</label>
+      <label title="Tự cân âm lượng: bài nhỏ kéo lên, bài to hạ xuống, chặn tiếng quá to (máy tính)"><input type="checkbox" id="levelOn" checked> ⚖️<span class="opt-t"> Cân bằng</span></label>
       <label title="Bật (mặc định): pad nhạc phát lặp lại đến khi bấm dừng. Tắt: pad phát 1 lần rồi tự tắt"><input type="checkbox" id="padLoop" checked> 🔁 Lặp pad</label>
       <button class="pbtn stop" id="padStop" title="Dừng mọi pad, nhạc nền to lại (Esc)">■ Dừng pad</button>
     </div>
@@ -509,7 +514,7 @@
           <ol>
             <li>Bấm <b>▶</b> (hoặc <kbd>Space</kbd>) để phát nhạc tiệc.</li>
             <li>Bấm <b>⛶</b> (hoặc <kbd>F</kbd>) để chiếu toàn màn hình lên LED.</li>
-            <li>Tới phần nghi lễ, bấm <b>ô pad</b> tương ứng (hoặc phím số). Nhạc nền tự <b>tạm dừng</b>; bấm lại ô đó hoặc <kbd>Esc</kbd> để dừng pad, nhạc nền <b>tự phát tiếp</b> từ chỗ cũ.</li>
+            <li>Tới phần nghi lễ, bấm <b>ô pad</b> tương ứng (hoặc phím số). Nhạc nền tự <b>dừng</b>; bấm lại ô đó hoặc <kbd>Esc</kbd> để dừng pad, rồi bấm <b>▶</b> (hoặc <kbd>Space</kbd>) để nhạc nền phát tiếp từ chỗ cũ.</li>
           </ol>
         </section>
         <section>
@@ -528,13 +533,13 @@
         <section>
           <h3>🎛️ Pad nghi lễ</h3>
           <ul>
-            <li><b>⊞ Tất cả</b> (mặc định): hiện cả 26 pad trên một màn hình, bấm thẳng không cần chuyển tab. Viền trái mỗi ô có màu theo nhóm: <b>Nghi lễ</b>, <b>Cắt bánh</b>, <b>Đoạn lễ</b>, <b>Hiệu ứng</b>.</li>
-            <li>Muốn ô to hơn thì bấm tên một nhóm để chỉ hiện nhóm đó. Phím <kbd>1</kbd>…<kbd>9</kbd> <kbd>0</kbd> <kbd>-</kbd> <kbd>=</kbd> bấm 12 ô của nhóm đang xem (ở "Tất cả" là nhóm Nghi lễ).</li>
-            <li>Ô <b>nhạc</b>: nhạc nền tạm dừng trong lúc pad phát, hết pad thì phát tiếp. Bấm ô nhạc khác thì ô cũ tự tắt (nhạc nền vẫn chờ). Ô <b>✨ hiệu ứng</b> (pháo, cồng, trống) phát chồng lên, nhạc nền chỉ nhỏ lại.</li>
+            <li>Cả 31 pad nằm trên một màn hình, <b>mỗi nhóm 1 cột cùng màu</b>: <b>Kịch bản</b> (5 bài lễ cưới theo thứ tự cô dâu chú rể gửi), <b>Nghi lễ</b>, <b>Cắt bánh</b>, <b>Đoạn lễ</b> (nhạc dự phòng) và <b>Hiệu ứng</b>.</li>
+            <li>Mỗi ô có phím tắt ở góc trên: Kịch bản <kbd>1</kbd>…<kbd>5</kbd>, Hiệu ứng <kbd>6</kbd>…<kbd>9</kbd>, Nghi lễ <kbd>Q</kbd> <kbd>W</kbd> <kbd>E</kbd> <kbd>Y</kbd> <kbd>U</kbd> <kbd>I</kbd> <kbd>O</kbd> <kbd>A</kbd> <kbd>D</kbd> <kbd>G</kbd> <kbd>J</kbd> <kbd>Z</kbd>, Cắt bánh <kbd>X</kbd> <kbd>C</kbd> <kbd>V</kbd> <kbd>B</kbd>, Đoạn lễ <kbd>N</kbd> <kbd>M</kbd> <kbd>,</kbd> <kbd>.</kbd> <kbd>/</kbd> <kbd>;</kbd>.</li>
+            <li>Ô <b>nhạc</b>: nhạc nền dừng khi pad phát và <b>không tự phát lại</b> khi hết pad, bấm ▶ để phát tiếp. Bấm ▶ trong lúc pad đang chạy thì pad tắt, nhạc nền phát ngay. Bấm ô nhạc khác thì ô cũ tự tắt. Ô <b>✨ hiệu ứng</b> (pháo, cồng, trống) phát chồng lên, nhạc nền chỉ nhỏ lại.</li>
             <li><b>🔁 Lặp pad</b> (mặc định bật): pad nhạc phát lặp đến khi bấm dừng. Muốn pad phát 1 lần rồi tự tắt thì bỏ chọn ô này (phím <kbd>P</kbd>).</li>
-            <li><b>Hiệu ứng: nhạc nền nhỏ còn …%</b>: mức nhạc tiệc khi pad hiệu ứng đang phát.</li>
-            <li><b>⚖️ Cân bằng âm lượng</b> (mặc định bật): tự kéo bài nhỏ lên, hạ bài to xuống cho mọi bài và pad to ngang nhau, chặn tiếng quá to khi pad chồng lên nhạc nền. Mỗi bài mới cần 2–3 giây đầu để tự chỉnh.</li>
-            <li><b>■ Dừng pad</b> (<kbd>Esc</kbd>): tắt hết pad, nhạc nền phát tiếp.</li>
+            <li><b>✨ Nền nhỏ còn …%</b>: mức nhạc tiệc khi pad hiệu ứng đang phát.</li>
+            <li><b>⚖️ Cân bằng</b> âm lượng (mặc định bật): tự kéo bài nhỏ lên, hạ bài to xuống cho mọi bài và pad to ngang nhau, chặn tiếng quá to khi pad chồng lên nhạc nền. Mỗi bài mới cần 2–3 giây đầu để tự chỉnh.</li>
+            <li><b>■ Dừng pad</b> (<kbd>Esc</kbd>): tắt hết pad (nhạc nền vẫn dừng, bấm ▶ để phát).</li>
           </ul>
         </section>
         <section>
@@ -1482,7 +1487,7 @@
     else if (k === "arrowleft") prev();
     else if (k === "f") toggleFs();
     else if (e.key === "Escape") stopAllPads();
-    else if (PAD_KEYS.indexOf(e.key) >= 0) { e.preventDefault(); pressPadKey(e.key); }
+    else if (PAD_KEYMAP[k] && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); pressPadKey(k); }
     else if (k === "r") toggleRepeat();
     else if (k === "s") toggleShuffle();
     else if (k === "l") toggleLyrics();
@@ -1556,98 +1561,91 @@
   }
 
   /* ---------- Pad nhạc nghi lễ (dưới đĩa) ---------- */
-  // File nằm ở assets/audio/pads/ (m4a nhẹ). mode "music": phát pad nhạc khác thì pad cũ tắt; "sfx": phát chồng.
+  // File nằm ở assets/audio/pads/ (tên không đuôi = .m4a). Mỗi pad: [tên, file, mode, lặp cố định, giây bắt đầu].
+  // mode "music": phát pad nhạc khác thì pad cũ tắt; "sfx": phát chồng. Giây bắt đầu: phát (và lặp lại) từ giây đó.
   var PAD_DIR = "../assets/audio/pads/", SFX_DIR = "../assets/audio/game/";
   var PAD_TABS = [
-    { name: "Nghi lễ", pads: [
+    // Mỗi nhóm 1 cột trên bảng pad: cols = số cột ô, keys = phím tắt theo thứ tự ô, color = màu ô, dot = màu chấm tiêu đề
+    // Kịch bản nhạc lễ cưới Phước & Hân (cô dâu chú rể gửi), theo thứ tự trên sân khấu
+    { name: "Kịch bản", cols: 2, keys: "12345", color: ["#8E2C3C", "#5A1622"], dot: "#F2A7B8", pads: [
+      ["Chú rể xuất hiện", "23-chu-re-xuat-hien.mp3", "music", false, 5],
+      ["Ba dẫn cô dâu trao tay", "24-ba-dan-co-dau-trao-tay.mp3"],
+      ["Ba mẹ lên sân khấu", "25-ba-me-len-san-khau.mp3"],
+      ["Cắt bánh, thổi nến", "26-cat-banh-thoi-nen.mp3", "music", false, 11],
+      ["Rót gạo", "27-rot-gao.mp3"]
+    ] },
+    { name: "Nghi lễ", cols: 3, keys: "qweyuioadgjz", color: ["#3D4F8C", "#1F2A4E"], dot: "#9FC7E8", pads: [
       ["Ổn định", "01-on-dinh", "music", true], ["MC chào bắt đầu", "02-mc-chao-bat-dau"],
       ["Cô dâu chú rể lên sân khấu", "03-cdcr-len-san-khau"], ["Chú rể xuống đón cô dâu", "04-cr-xuong-don-cd"],
       ["Đón hai họ, ba mẹ", "05-don-hai-ho-ba-me"], ["Phát biểu, đọc lời thề", "06-phat-bieu-vows"],
-      ["Cắt bánh, rót rượu (ngắn)", "07-cat-banh-rot-ruou-ngan"], ["Cắt bánh, rót rượu (dài)", "08-cat-banh-rot-ruou-dai"],
+      ["Cắt bánh, rót rượu · ngắn", "07-cat-banh-rot-ruou-ngan"], ["Cắt bánh, rót rượu · dài", "08-cat-banh-rot-ruou-dai"],
       ["Dâng rượu", "09-dang-ruou"], ["Giao bôi, kết lễ", "10-giao-boi-ket-le"],
       ["Rước cha mẹ", "11-ruoc-cha-me"], ["Nhạc chào cưới", "12-nhac-chao-cuoi"]
     ] },
-    { name: "Cắt bánh", pads: [
+    { name: "Cắt bánh", cols: 1, keys: "xcvb", color: ["#7A5A1E", "#433010"], dot: "#E7CF9B", pads: [
       ["Die With A Smile", "13-cat-banh-die-with-a-smile"], ["Lễ Đường", "14-cat-banh-le-duong"],
       ["Young And Beautiful", "15-cat-banh-young-and-beautiful"], ["Golden Hour", "16-cat-banh-golden-hour"]
     ] },
-    { name: "Đoạn lễ", pads: [
+    { name: "Đoạn lễ", cols: 2, keys: "nm,./;", color: ["#2F6B4F", "#173A2A"], dot: "#B9E3A8", pads: [
       ["Đoạn lễ 1", "17-doan-le-1"], ["Đoạn lễ 2", "18-doan-le-2"], ["Đoạn lễ 3", "19-doan-le-3"],
       ["Đoạn lễ 4", "20-doan-le-4"], ["Đoạn lễ 5", "21-doan-le-5"], ["Đoạn lễ 6", "22-doan-le-6"]
     ] },
-    { name: "Hiệu ứng", pads: [
+    { name: "Hiệu ứng", cols: 1, keys: "6789", color: ["#7B3F7A", "#3F1F3E"], dot: "#D7A8E8", pads: [
       ["🥂 Nâng ly · Dô!", SFX_DIR + "fanfare.mp3", "sfx"], ["🥁 Trống hồi hộp", SFX_DIR + "drum-roll.mp3", "sfx"],
       ["🧨 Pháo mừng", SFX_DIR + "firecrackers.mp3", "sfx"], ["🔔 Cồng", SFX_DIR + "gong.mp3", "sfx"]
     ] }
   ];
-  var PAD_KEYS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "0", "-", "="];
-  var PAD_COLORS = [["#8E2C3C", "#5A1622"], ["#2F6B4F", "#173A2A"], ["#7A5A1E", "#433010"], ["#3D4F8C", "#1F2A4E"],
-                    ["#7B3F7A", "#3F1F3E"], ["#2E6F78", "#163B40"], ["#8A4B2A", "#4A2614"], ["#4F6B2E", "#2A3A16"],
-                    ["#6B2E5A", "#3A162F"], ["#2E5C8A", "#163049"], ["#7A3030", "#401717"], ["#5A5A3A", "#2E2E1C"]];
+  // Phím tắt -> [nhóm, ô]. Tránh các phím đã dùng: Space K H P F R S L T [ ] Esc
+  var PAD_KEYMAP = {};
+  PAD_TABS.forEach(function (tb, t) { tb.pads.forEach(function (_, i) { if (tb.keys[i]) PAD_KEYMAP[tb.keys[i]] = [t, i]; }); });
   var padLoopAll = store("mp-pad-loop") !== "0"; // nút "🔁 Lặp pad" (mặc định BẬT): mọi pad nhạc phát lặp đến khi dừng
-  var PAD_ALL = -1;                      // tab "Tất cả": hiện mọi pad cùng lúc
-  var GROUP_COLORS = ["#E7CF9B", "#F2A7B8", "#9FC7E8", "#B9E3A8"]; // màu viền theo nhóm: Nghi lễ, Cắt bánh, Đoạn lễ, Hiệu ứng
-  var padTab = +store("mp-pad-tab");
-  if (!(padTab === PAD_ALL || (padTab >= 0 && padTab < PAD_TABS.length)) || store("mp-pad-tab") === null) padTab = PAD_ALL;
   var padPlayers = {};   // id "tab-i" -> { audio, stopping }
   function padInfo(t, i) {
     var d = PAD_TABS[t].pads[i];
-    var src = d[1].indexOf("/") >= 0 ? d[1] : PAD_DIR + d[1] + ".m4a";
+    var src = d[1].indexOf("/") >= 0 ? d[1] : PAD_DIR + d[1] + (/\.\w+$/.test(d[1]) ? "" : ".m4a");
     var music = (d[2] || "music") === "music";
-    return { id: t + "-" + i, name: d[0], src: src, mode: d[2] || "music", loop: !!d[3] || (music && padLoopAll), fixedLoop: !!d[3] };
+    return { id: t + "-" + i, name: d[0], src: src, mode: d[2] || "music", loop: !!d[3] || (music && padLoopAll), fixedLoop: !!d[3], start: d[4] || 0 };
   }
-  // Pad nhạc chạy thì nhạc nền tạm dừng; hết pad nhạc thì nhạc nền tự phát tiếp từ chỗ cũ
+  // Pad nhạc chạy thì nhạc nền dừng; hết pad nhạc nhạc nền vẫn dừng, bấm ▶ để phát tiếp từ chỗ cũ.
+  // (resumeMain giờ luôn false: giữ lại để dễ bật lại kiểu tự phát tiếp nếu cần)
   var resumeMain = false, padStarting = false;
   function musicPadsPlaying() { return Object.keys(padPlayers).some(function (k) { return !padPlayers[k].stopping && padPlayers[k].mode === "music"; }); }
   function maybeResumeMain() {
     if (resumeMain && !padStarting && !musicPadsPlaying()) { resumeMain = false; play(); }
   }
   function padsPlaying() { return Object.keys(padPlayers).some(function (k) { return !padPlayers[k].stopping; }); }
-  function renderPadTabs() {
-    var box = $("padTabs");
-    box.innerHTML = "";
-    [{ name: "⊞ Tất cả", t: PAD_ALL }].concat(PAD_TABS.map(function (tb, t) { return { name: tb.name, t: t }; })).forEach(function (tb) {
-      var b = document.createElement("button");
-      b.className = "ptab" + (tb.t === padTab ? " on" : "");
-      b.textContent = tb.name;
-      b.title = tb.t === PAD_ALL ? "Hiện tất cả pad để bấm một lượt" : "Chỉ hiện nhóm " + tb.name;
-      b.addEventListener("click", function () { padTab = tb.t; store("mp-pad-tab", String(padTab)); renderPadTabs(); renderPads(); });
-      box.appendChild(b);
-    });
-    document.body.classList.toggle("pads-all", padTab === PAD_ALL);
-  }
-  function padButton(t, i, colorIdx) {
-    var p = padInfo(t, i);
+  function padButton(t, i) {
+    var p = padInfo(t, i), tb = PAD_TABS[t];
     var el = document.createElement("button");
     el.className = "pad" + (padPlayers[p.id] && !padPlayers[p.id].stopping ? " playing" : "");
     el.dataset.id = p.id;
-    el.style.setProperty("--c1", PAD_COLORS[colorIdx % 12][0]);
-    el.style.setProperty("--c2", PAD_COLORS[colorIdx % 12][1]);
-    el.style.setProperty("--gc", GROUP_COLORS[t % GROUP_COLORS.length]);
-    // Phím tắt 1…= dùng cho tab đang xem; ở "Tất cả" thì dùng cho nhóm Nghi lễ
-    var keyTab = padTab === PAD_ALL ? 0 : padTab;
-    var key = t === keyTab ? PAD_KEYS[i] : "";
+    var key = tb.keys[i] || "";
     el.innerHTML = '<span class="k"><span></span><i></i></span><span class="n"></span><span class="pbar"></span>';
-    el.querySelector(".k span").innerHTML = (key ? key : "") + (padTab === PAD_ALL ? (key ? " · " : "") + '<span class="grp"></span>' : "");
-    if (padTab === PAD_ALL) el.querySelector(".grp").textContent = PAD_TABS[t].name;
+    el.querySelector(".k span").textContent = key.toUpperCase();
     el.querySelector(".k i").textContent = p.mode === "sfx" ? "✨" : p.loop ? "🔁" : "";
     el.querySelector(".n").textContent = p.name;
-    el.title = PAD_TABS[t].name + " · " + p.name + (p.mode === "sfx" ? " (hiệu ứng, phát chồng)" : p.loop ? " (phát lặp đến khi dừng)" : "") + (key ? " · phím " + key : "");
+    el.title = tb.name + " · " + p.name + (p.mode === "sfx" ? " (hiệu ứng, phát chồng)" : p.loop ? " (phát lặp đến khi dừng)" : "") + (key ? " · phím " + key.toUpperCase() : "");
     el.addEventListener("click", function () { togglePad(t, i); });
     return el;
   }
+  // Mỗi nhóm 1 cột (chấm màu + tên), ô cùng màu nhóm, cao 4 hàng ô (CSS .pad-cells); cột rộng theo số cột ô (cols)
   function renderPads() {
     var g = $("padGrid");
     g.innerHTML = "";
-    if (padTab === PAD_ALL) {
-      var n = 0;
-      PAD_TABS.forEach(function (tb, t) { tb.pads.forEach(function (_, i) { g.appendChild(padButton(t, i, n++)); }); });
-      return;
-    }
-    for (var i = 0; i < 12; i++) {
-      if (i >= PAD_TABS[padTab].pads.length) { var el = document.createElement("button"); el.className = "pad blank"; el.disabled = true; g.appendChild(el); continue; }
-      g.appendChild(padButton(padTab, i, i));
-    }
+    g.style.gridTemplateColumns = PAD_TABS.map(function (tb) { return tb.cols + "fr"; }).join(" ");
+    PAD_TABS.forEach(function (tb, t) {
+      var b = document.createElement("div");
+      b.className = "pad-block";
+      b.style.setProperty("--gc", tb.dot);
+      b.style.setProperty("--c1", tb.color[0]);
+      b.style.setProperty("--c2", tb.color[1]);
+      b.innerHTML = "<h4></h4><div class=\"pad-cells\"></div>";
+      b.querySelector("h4").textContent = tb.name;
+      var cells = b.querySelector(".pad-cells");
+      cells.style.gridTemplateColumns = "repeat(" + tb.cols + ", minmax(0, 1fr))";
+      tb.pads.forEach(function (_, i) { cells.appendChild(padButton(t, i)); });
+      g.appendChild(b);
+    });
   }
   function padEl(id) { return document.querySelector('.pad[data-id="' + id + '"]'); }
   function rampVol(a, to, ms, done) {
@@ -1662,10 +1660,11 @@
     var p = padInfo(t, i);
     padStarting = true; // đang đổi pad: không cho nhạc nền phát xen vào giữa
     if (p.mode === "music") Object.keys(padPlayers).forEach(function (k) { if (padPlayers[k].mode === "music") stopPad(k); });
-    var a = new Audio(p.src);
-    a.loop = p.loop;
+    // Có giây bắt đầu: mở từ giây đó (#t=), tự lặp lại về giây đó thay vì về 0:00
+    var a = new Audio(p.start ? p.src + "#t=" + p.start : p.src);
+    a.loop = p.loop && !p.start;
     a.volume = p.mode === "music" ? 0 : 1;
-    var pl = { audio: a, mode: p.mode };
+    var pl = { audio: a, mode: p.mode, loop: p.loop };
     padPlayers[p.id] = pl;
     // Máy tính: pad nhạc qua bộ cân âm lượng, hiệu ứng đi thẳng vào bộ chặn đỉnh
     ensureCtx();
@@ -1679,7 +1678,10 @@
         } else psrc.connect(ensureMaster());
       } catch (e) { /* không nối được Web Audio thì phát thẳng như cũ */ }
     }
-    a.addEventListener("ended", function () { endPad(p.id, pl); });
+    a.addEventListener("ended", function () {
+      if (pl.loop && p.start && !pl.stopping) { a.currentTime = p.start; a.play(); return; }
+      endPad(p.id, pl);
+    });
     a.addEventListener("error", function () { toast("Không mở được nhạc pad: " + p.name); endPad(p.id, pl); });
     a.addEventListener("timeupdate", function () {
       var el = padEl(p.id);
@@ -1691,7 +1693,7 @@
     var el = padEl(p.id);
     if (el) el.classList.add("playing");
     if (p.mode === "music") {
-      if (!audio.paused) { resumeMain = true; pause(); }
+      if (!audio.paused) pause(); // tắt pad xong nhạc nền KHÔNG tự phát lại, người điều khiển tự bấm ▶ (theo yêu cầu)
     } else if ($("autoDuck").checked && !audio.paused) setDuck(true, +$("duckLevel").value / 100);
     padStarting = false;
   }
@@ -1720,9 +1722,8 @@
   }
   function stopAllPads() { Object.keys(padPlayers).forEach(stopPad); if (ducked) setDuck(false); }
   function pressPadKey(key) {
-    var i = PAD_KEYS.indexOf(key);
-    var t = padTab === PAD_ALL ? 0 : padTab; // ở "Tất cả": phím số bấm nhóm Nghi lễ
-    if (i >= 0 && i < PAD_TABS[t].pads.length) togglePad(t, i);
+    var hit = PAD_KEYMAP[key];
+    if (hit) togglePad(hit[0], hit[1]);
   }
   $("padStop").addEventListener("click", stopAllPads);
   $("autoDuck").addEventListener("change", function () {
@@ -1748,12 +1749,11 @@
     // Pad nhạc đang phát cũng đổi theo ngay
     Object.keys(padPlayers).forEach(function (id) {
       var pl = padPlayers[id];
-      if (pl.mode === "music" && !pl.stopping) { var pi = id.split("-"); pl.audio.loop = padInfo(+pi[0], +pi[1]).loop; }
+      if (pl.mode === "music" && !pl.stopping) { var pi = id.split("-"), info = padInfo(+pi[0], +pi[1]); pl.loop = info.loop; pl.audio.loop = info.loop && !info.start; }
     });
     renderPads();
     toast(padLoopAll ? "🔁 Lặp pad: pad nhạc phát lặp đến khi bấm dừng" : "Pad phát 1 lần rồi tự tắt");
   });
-  renderPadTabs();
   renderPads();
 
   load(0, true);
