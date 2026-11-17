@@ -34,6 +34,9 @@
   .v:active { transform: scale(0.95); }
   .v.on { background: var(--accent); color: #2A0B11; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(227,182,168,0.25); }
   .v.wait { animation: pulse 0.8s infinite; }
+  .extra { display: grid; grid-template-columns: 1fr; gap: 6px; margin-top: 6px; }
+  .extra button { min-height: 40px; border-radius: 12px; background: rgba(255,255,255,0.1); border: 1px solid var(--line); font-size: 0.82rem; font-weight: 600; }
+  .extra button:active { transform: scale(0.97); }
   @keyframes pulse { 50% { opacity: 0.5; } }
 
   /* Phần dưới: điều khiển của màn hình đang chiếu */
@@ -122,8 +125,10 @@
     app.innerHTML = `<header class="top">
       <div class="head"><div><b>📺 Màn hình tiệc</b><small>Phòng ${pin} · bấm để đổi màn hình TV</small></div><div class="conn" id="conn"><i></i><span>...</span></div></div>
       <div class="views">${ORDER.map((v) => `<button class="v" data-v="${v}"><span>${VIEWS[v].icon}</span>${VIEWS[v].name}</button>`).join('')}</div>
+      <div class="extra"><button id="inviteQr">💌 Mã QR thiệp cưới trên TV (bật / tắt)</button></div>
     </header>
     <main class="panel" id="panel"></main>`;
+    $('inviteQr').addEventListener('click', () => { send('inviteQr'); toast('Đã gửi: QR thiệp cưới'); });
     document.querySelector('.views').addEventListener('click', (e) => {
       const b = e.target.closest('.v');
       if (!b) return;

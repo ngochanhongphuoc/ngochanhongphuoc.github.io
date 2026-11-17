@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<script src="../shared/screen-mute.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Rung Cây, Rinh Quà | Ngọc Hân & Hồng Phước</title>
 <link rel="icon" href="../assets/icons/tree.svg" type="image/svg+xml">
@@ -102,7 +103,7 @@
     signIn, watchServerTime, serverNow, escapeHtml, unlockAudio, setMuted, isMuted, sfx, burst,
     startGameMusic, stopGameMusic, tidyUrl, avatarHtml, avatarText, audioWithFallback,
   } from '../shared/live.js';
-  import { controlKey, registerControl, commandFilter, showMcQr } from '../shared/remote.js';
+  import { controlKey, registerControl, commandFilter, showMcQr, toggleJoinQr } from '../shared/remote.js';
   import { DURATION, COUNTDOWN, ROUNDS, WINNERS, COUPLE, totalOf, meterOf, topOf, drawWinners, winnersOf, overallTop, played, isOver, showHelp } from './tree.js';
   const BASE = tidyUrl();
 
@@ -195,6 +196,7 @@
   // ---------- Lệnh từ điện thoại MC ----------
   function handleCommand(cmd) {
     if (!cmd) return;
+    if (cmd.type === 'joinqr') { toggleJoinQr(qrUrl, pin); return; } // mọi trạng thái
     if (cmd.status !== room.status || (cmd.round ?? -1) !== (room.round ?? -1)) return;
     switch (cmd.type) {
       case 'start': if (room.status === 'lobby') startRound(0); break;

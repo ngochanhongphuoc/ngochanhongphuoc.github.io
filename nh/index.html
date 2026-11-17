@@ -9,109 +9,107 @@
   <link rel="icon" href="../assets/icons/links.svg" type="image/svg+xml">
   <link rel="stylesheet" href="nh.css">
   <style>
-    /* Sắp theo thời điểm dùng: hàng trên 4 ô mở trên TV/LED, dưới là link hỗ trợ trong tiệc (trái) và link gửi khách (phải) */
+    /* Kiểu gọn: mỗi dòng chỉ biểu tượng + tên (rê chuột xem mô tả), nút viên thuốc ghép "Mở ↗ | Chép" canh phải.
+       Trái: Trong tiệc (TV / LED) + 3 mini game. Phải: Gửi khách + Quản trị (thu gọn). Vừa 1 màn hình không cuộn. */
     .topbar { gap: 14px; }
     .brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
     .brand img { width: 34px; height: 34px; flex: none; border: 2px solid var(--gold); border-radius: 50%; object-fit: cover; object-position: center 22%; }
     .brand b { overflow: hidden; color: var(--wine); font: 600 18px/1.1 var(--serif); text-overflow: ellipsis; white-space: nowrap; }
     .brand small { display: block; color: var(--muted); font: 500 11px var(--sans); }
     .top-actions { display: flex; flex: none; align-items: center; gap: 8px; }
-    .page { width: min(1120px, 100%); padding: 18px 16px 24px; }
-    .block { margin-top: 20px; }
-    /* Danh sách 2 cột: kẻ ô bằng khe 1px trên nền màu đường kẻ */
-    .links.grid2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: var(--line); }
-    .links.grid2 li { border-top: 0; background: #fffaf2; }
-    .links.grid2 li.panel { grid-column: 1 / -1; display: block; padding: 10px 16px 12px; font-size: 12.5px; line-height: 1.55; }
-    .panel ul { margin: 0; padding-left: 18px; }
-    .col-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 8px; }
-    .col-head h2 { margin: 0; color: var(--wine); font: 600 11.5px var(--sans); letter-spacing: .16em; text-transform: uppercase; }
-    .col-head span { color: var(--muted); font-size: 11.5px; }
-
-    /* Ô lớn: 3 game + trình phát nhạc, mở trên máy nối TV / màn LED */
-    .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
-    .tile { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-top: 4px solid var(--gold); }
-    .tile.music-tile { border-top-color: var(--rose); }
-    /* Ô Màn hình tiệc: rộng hết hàng, nằm trên 4 ô */
-    .tile.screen-tile { grid-column: 1 / -1; border-top-color: var(--wine); flex-direction: row; align-items: center; gap: 16px; }
-    .tile.screen-tile .tile-head { flex: none; }
-    .tile.screen-tile .sub { font-size: 12.5px; }
-    .tile.screen-tile .tile-actions { flex: none; width: 260px; margin: 0; }
-    @media (max-width: 759px) { .tile.screen-tile { flex-direction: column; align-items: stretch; } .tile.screen-tile .tile-actions { width: auto; } }
-    .tile-head { display: flex; align-items: center; gap: 10px; }
-    .tile .emoji { font-size: 28px; line-height: 1; }
-    .tile h3 { margin: 0; color: var(--wine); font: 600 18px/1.2 var(--serif); }
-    .tile .prize { color: #9a7a43; font-size: 12px; font-weight: 600; line-height: 1.4; }
-    .tile .sub { flex: 1; color: var(--muted); font-size: 11.5px; line-height: 1.45; }
-    .tile .sub a { color: var(--rose); }
-    .tile-actions { display: grid; grid-template-columns: minmax(0, 1fr) 70px; gap: 6px; margin-top: 4px; }
-    .tile-actions .mini { height: 38px; font-size: 12px; }
-
-    .links { margin: 0; padding: 0; list-style: none; }
-    .links li { display: grid; grid-template-columns: 24px minmax(0, 1fr) auto; align-items: center; gap: 10px; padding: 7px 12px; border-top: 1px solid var(--line); }
-    .links li.group { display: block; padding: 7px 12px 4px; color: var(--gold); background: #f6f0e799; font-size: 10px; font-weight: 600; letter-spacing: .14em; text-transform: uppercase; }
-    .links li:first-child { border-top: 0; }
-    .links .ic { font-size: 16px; text-align: center; }
-    .links .txt { min-width: 0; }
-    .links .sub { display: block; margin-top: 1px; color: var(--muted); font-size: 11.5px; line-height: 1.35; }
-    .links .name { overflow: hidden; color: var(--ink); font-size: 13.5px; font-weight: 500; text-decoration: none; text-overflow: ellipsis; white-space: nowrap; }
-    .links .name:hover { color: var(--wine); text-decoration: underline; text-underline-offset: 3px; }
-    .row-actions { display: grid; grid-template-columns: 70px 70px; gap: 6px; }
-    .row-actions .mini, .tile-actions .mini { width: 100%; min-width: 0; padding: 4px 6px; white-space: nowrap; }
-    .row-actions .mini { height: 34px; }
-    .mini { display: inline-flex; align-items: center; justify-content: center; min-width: 50px; min-height: 30px; box-sizing: border-box; padding: 4px 10px; border: 1px solid var(--line); border-radius: 999px; color: var(--wine); background: var(--paper-light); font-size: 11px; font-weight: 600; text-align: center; text-decoration: none; cursor: pointer; }
+    .mini { display: inline-flex; align-items: center; justify-content: center; min-width: 50px; min-height: 30px; box-sizing: border-box; padding: 4px 12px; border: 1px solid var(--line); border-radius: 999px; color: var(--wine); background: var(--paper-light); font-size: 11px; font-weight: 600; text-decoration: none; white-space: nowrap; cursor: pointer; }
     .mini:hover { border-color: var(--wine); }
-    .mini.open { color: #fff; border-color: var(--wine); background: var(--wine); }
-    .mini.open:hover { background: var(--wine-dark); }
-    .is-done { color: white !important; border-color: #4f7a4a !important; background: #4f7a4a !important; }
-    .card.flush { padding: 0; overflow: hidden; }
 
-    details.card { margin-top: 20px; padding: 10px 14px; font-size: 12.5px; line-height: 1.55; }
-    details summary { color: var(--wine); font-weight: 600; cursor: pointer; }
-    details ul { margin: 6px 0 0; padding-left: 18px; }
-    details.admin ul.links { margin: 8px -14px -10px; padding: 0; border-top: 1px solid var(--line); }
-    .admin-note { margin: 4px 0 0; color: var(--muted); font-size: 12px; }
+    body { min-height: 0; }
+    .page { width: min(1120px, 100%); padding: 14px 16px 18px; }
+    .cols { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 16px; align-items: start; }
+    .sec + .sec, .cols > div > * + * { margin-top: 12px; }
+    .sec-head { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; margin: 0 0 6px; }
+    .sec-head h2 { margin: 0; color: var(--wine); font: 600 11.5px var(--sans); letter-spacing: .14em; text-transform: uppercase; }
+    .sec-head span { color: var(--muted); font-size: 11.5px; white-space: nowrap; }
+
+    /* Thanh công cụ trên cùng: game · remote · màn hình tiệc · nhạc (mỗi ô: tên, chip, nút [Mở ↗ | Chép] rộng hết ô) */
+    .tools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin: 0 0 14px; padding: 0; list-style: none; }
+    .tool { display: flex; align-items: center; gap: 10px; min-width: 0; padding: 9px 10px 10px; border-top: 3px solid var(--gold); }
+    .tool.lead { border-top-color: var(--wine); background: #fff6ee; }
+    .tool-head { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    .tool-head .ic { flex: none; font-size: 17px; }
+    .tool-head b { overflow: hidden; color: var(--wine); font: 600 13.5px/1.2 var(--sans); text-overflow: ellipsis; white-space: nowrap; }
+    .tool small { overflow: hidden; color: #8a6a35; font-size: 10.5px; font-weight: 600; text-overflow: ellipsis; white-space: nowrap; }
+    .tool-txt { display: flex; flex: 1; flex-direction: column; gap: 2px; min-width: 0; }
+    .tool .pg { flex: none; }
+
+    /* Dòng */
+    .rows { margin: 0; padding: 0; overflow: hidden; list-style: none; }
+    .rows li { display: flex; align-items: center; gap: 10px; min-height: 44px; box-sizing: border-box; padding: 6px 12px; border-top: 1px solid var(--line); }
+    .rows li:first-child { border-top: 0; }
+    .rows li.lead { background: #fff6ee; }
+    .rows .ic { flex: none; width: 22px; font-size: 16px; text-align: center; }
+    .rows .name { flex: 1; min-width: 0; overflow: hidden; color: var(--ink); font-size: 13.5px; font-weight: 500; text-overflow: ellipsis; white-space: nowrap; }
+    .rows .tag { flex: none; padding: 2px 8px; border-radius: 999px; color: #8a6a35; background: #f3e7d2; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+    .rows .acts { display: flex; flex: none; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+    .rows li.panel { display: block; min-height: 0; padding: 8px 14px 10px; color: var(--ink); background: #fffaf2; font-size: 12.5px; line-height: 1.55; }
+    .panel ul { margin: 0; padding-left: 18px; }
+
+    /* Nút tròn riêng từng cái: [Mở ↗] [Chép] (theo yêu cầu, không ghép dính) */
+    .pg { display: inline-flex; gap: 6px; }
+    .pill { display: inline-flex; align-items: center; justify-content: center; height: 30px; box-sizing: border-box; padding: 0 13px; border: 1px solid var(--line); border-radius: 999px; color: var(--wine); background: var(--paper-light); font: 600 11.5px var(--sans); text-decoration: none; white-space: nowrap; cursor: pointer; }
+    /* Màu theo loại nút: đỏ rượu mở trang · xanh dương mở game trên TV · xanh lá thiệp VI · navy thiệp EN · tím xem ghi chú · vàng kem chép link */
+    .pill:hover { filter: brightness(1.08); box-shadow: 0 2px 6px #5d182126; }
+    .pill.open { color: #fff; border-color: var(--wine); background: linear-gradient(180deg, #74222d, var(--wine)); }
+    .pill.tv { border-color: #1f5f86; background: linear-gradient(180deg, #2b77a5, #1f5f86); }
+    .pill.vi { border-color: #2f6b45; background: linear-gradient(180deg, #3d8758, #2f6b45); }
+    .pill.en { border-color: #2c3f73; background: linear-gradient(180deg, #3b5291, #2c3f73); }
+    .pill.how { border-color: #5f3f7a; background: linear-gradient(180deg, #7a539b, #5f3f7a); }
+    .pill.copy { color: #7a5a22; border-color: #e0c48f; background: #fbf0d9; }
+    .pill.copy:hover { border-color: #b98d3e; }
+    .is-done { color: white !important; border-color: #4f7a4a !important; background: #4f7a4a !important; }
+
+    details.card { padding: 0; font-size: 12.5px; line-height: 1.55; }
+    details summary { padding: 10px 14px; color: var(--wine); font-weight: 600; cursor: pointer; }
+    details .admin-note { margin: -4px 14px 8px; color: var(--muted); font-size: 12px; }
+    details .rows { border-top: 1px solid var(--line); }
 
     /* ---------- 4 kiểu màn hình ---------- */
-    /* FHD (≥1600px, TV/màn lớn 1920×1080): phóng cả body để chiều rộng % vẫn đúng (trang không lệch, nút không bị cắt) */
-    @media (min-width: 1600px) {
-      body { zoom: 1.3; }
-      .page { width: min(1240px, 100%); }
-    }
-    /* HD / laptop (1200–1599px, vd 1366×768): bố cục mặc định ở trên */
-    /* iPad (760–1199px): ô lớn 2 cột, nút to để chạm; dưới 900px hai danh sách xếp 1 cột */
+    /* FHD (≥1600px): phóng nhẹ cả body (đặt ở body để chiều rộng % vẫn đúng) */
+    @media (min-width: 1600px) { body { zoom: 1.1; } }
+    /* HD / laptop (1200–1599px, vd 1366×768): phóng to 1.2 cho dễ nhìn, vẫn vừa 1 màn hình */
+    @media (min-width: 1200px) and (max-width: 1599px) { body { zoom: 1.2; } .page { padding-top: 10px; padding-bottom: 6px; } }
+    /* iPad (760–1199px): nút to hơn để chạm */
     @media (min-width: 760px) and (max-width: 1199px) {
-      .page { width: 100%; padding: 18px 20px 28px; }
-      .tiles { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-      .links li { padding: 8px 12px; }
-      .links .name { white-space: normal; line-height: 1.3; }
-      .row-actions .mini { height: 38px; }
-      .tile-actions .mini { height: 42px; }
+      .page { width: 100%; padding: 16px 18px 22px; }
+      .pill { height: 34px; padding: 0 13px; font-size: 12.5px; }
+      .rows li { min-height: 50px; }
       .brand small { display: none; }
     }
-    @media (min-width: 760px) and (max-width: 899px) {
-      .links.grid2 { grid-template-columns: 1fr; }
+    /* iPad ngang (1000–1199px): ẩn chip phụ (Link chính, Dùng chung…, Có đáp án) cho tên khỏi bị cắt, giữ chip số quà */
+    @media (min-width: 1000px) and (max-width: 1199px) { .rows .tag.minor { display: none; } }
+    /* iPad dọc / iPad mini (760–999px): 3 ô trên xếp dọc (tên trên, 2 nút dưới chia đều) cho khỏi tràn chữ */
+    @media (min-width: 760px) and (max-width: 999px) {
+      .tool { flex-direction: column; align-items: stretch; gap: 8px; }
+      .tool-txt { flex: none; }
+      .tool .pg { display: flex; }
+      .tool .pill { flex: 1; padding: 0 8px; }
     }
-    /* iPhone (<760px): 1 cột, nút to, thanh trên gọn */
+    /* iPad dọc (<1000px): 2 cột xếp chồng */
+    @media (min-width: 760px) and (max-width: 1199px) { .tool-head b { white-space: normal; } .tool { padding: 8px; } }
+    @media (max-width: 999px) {
+      .cols { grid-template-columns: 1fr; }
+      .cols > div + div { margin-top: 12px; }
+    }
+    /* iPhone (<760px): cuộn, nút xuống dòng dưới tên khi chật */
     @media (max-width: 759px) {
       .page { padding: 12px 12px 28px; }
-      .col-head span { display: none; }
-      .tiles { grid-template-columns: 1fr; gap: 10px; }
-      .tile { padding: 12px; }
-      .tile-actions .mini { height: 44px; }
-      .links.grid2 { grid-template-columns: 1fr; }
-      .block { margin-top: 16px; }
       .brand small { display: none; }
       .brand b { font-size: 16px; }
       .topbar { padding: 10px 12px; }
       #copy-all { display: none; }
-      .links li { padding: 8px 10px; gap: 8px; }
-      .row-actions .mini { height: 40px; }
-      .links .name { white-space: normal; line-height: 1.3; }
-    }
-    /* Điện thoại rất hẹp (<380px): nút Mở/Chép xuống dòng dưới tên */
-    @media (max-width: 379px) {
-      .links li { grid-template-columns: 24px minmax(0, 1fr); }
-      .row-actions { grid-column: 2; }
+      .rows li { flex-wrap: wrap; gap: 6px 10px; padding: 8px 10px; }
+      .rows .name { flex: 1 1 150px; white-space: normal; line-height: 1.3; }
+      .rows .acts { margin-left: auto; }
+      .pill { height: 36px; padding: 0 12px; font-size: 12.5px; }
+      .sec-head span { display: none; }
+      .tools { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -127,23 +125,29 @@
     </div>
   </header>
   <main class="page">
-    <section>
-      <div class="col-head"><h2>📺 Trong tiệc · mở trên máy TV / LED</h2><span>Tổng 10 phần quà</span></div>
-      <ul class="tiles" id="list-tv"></ul>
+    <section class="sec">
+      <div class="sec-head"><h2>📺 Trong tiệc · TV / LED &amp; remote MC</h2></div>
+      <ul class="tools" id="list-top"></ul>
     </section>
-    <section class="block">
-      <div class="col-head"><h2>🎤 Hỗ trợ MC &amp; khách</h2></div>
-      <ul class="links grid2 card flush" id="list-party"></ul>
-    </section>
-    <section class="block">
-      <div class="col-head"><h2>💌 Gửi khách · trước &amp; sau tiệc</h2></div>
-      <ul class="links grid2 card flush" id="list-guest"></ul>
-    </section>
-    <details class="card admin">
-      <summary>⚙️ Quản trị (kỹ thuật)</summary>
-      <p class="admin-note">Link dành cho người làm web, không gửi cho khách.</p>
-      <ul class="links" id="list-admin"></ul>
-    </details>
+    <div class="cols">
+      <div>
+        <section class="sec">
+          <div class="sec-head"><h2>💌 Gửi khách · trước &amp; sau tiệc</h2></div>
+          <ul class="rows card" id="list-guest"></ul>
+        </section>
+        <details class="card">
+          <summary>⚙️ Quản trị (kỹ thuật)</summary>
+          <p class="admin-note">Link dành cho người làm web, không gửi cho khách.</p>
+          <ul class="rows" id="list-admin"></ul>
+        </details>
+      </div>
+      <div>
+        <section class="sec">
+          <div class="sec-head"><h2>🎤 Hỗ trợ MC · game</h2><span>Tổng 10 phần quà</span></div>
+          <ul class="rows card" id="list-party"></ul>
+        </section>
+      </div>
+    </div>
   </main>
   <!-- Ghi chú "Cách chơi trong tiệc": hiện khi bấm Xem, nút Chép chép chữ này để gửi MC -->
   <template id="how-text">
@@ -152,9 +156,10 @@
       <li>Khách quét QR, hoặc vào trang nhập mã phòng rồi gõ 6 số.</li>
       <li>MC điều khiển bằng điện thoại: trên TV bấm "🎤 MC" rồi quét mã đó. Lỡ thoát hoặc đổi điện thoại: vào trang /mc, nhập mã phòng 6 số trên TV là điều khiển tiếp.</li>
       <li>Cách gọn nhất: máy TV chỉ mở <b>Màn hình tiệc</b> (/screen), mặc định chiếu thiệp. MC quét mã QR hiện trên TV, rồi bấm Thiệp / Nhạc tiệc / Triệu Phú / Loto / Rung Cây trên điện thoại để đổi màn hình; phần dưới điện thoại tự thành nút điều khiển game / nhạc đang chiếu. Rê chuột xuống đáy màn hình TV cũng có thanh chuyển màn hình và nút "📱 Mã MC".</li>
+      <li>Khách lỡ thoát game: MC bấm "📲 Hiện / ẩn mã QR cho khách vào lại" để TV hiện lại mã QR. Khách quên link thiệp: trên điện thoại MC (Màn hình tiệc) bấm "💌 Mã QR thiệp cưới".</li>
       <li>Nhạc tiệc điều khiển bằng điện thoại: trên trình phát bấm nút 📱 (cạnh nút ?) rồi quét mã QR, là phát/dừng, chuyển bài, bấm pad nghi lễ từ xa. Mở trình phát xong nhớ chạm màn hình LED 1 lần để trình duyệt cho phát tiếng.</li>
-      <li>"📺 Mở TV" mở game ở tab mới. Nhạc luôn tự chạy, không có nút tắt. Nếu TV chưa có tiếng thì chạm/bấm phím bất kỳ 1 lần. Để có nhạc ngay khi mở: trên máy TV bật Tự phát media trong Edge (edge://settings/content/mediaAutoplay → Cho phép).</li>
-      <li>Đổi bài nhạc: chép file mp3 đè lên file cùng tên trong assets/audio/game/ (bấm tên bài trong ô game để nghe thử).</li>
+      <li>"📺 TV" mở game ở tab mới. Nhạc luôn tự chạy, không có nút tắt. Nếu TV chưa có tiếng thì chạm/bấm phím bất kỳ 1 lần. Để có nhạc ngay khi mở: trên máy TV bật Tự phát media trong Edge (edge://settings/content/mediaAutoplay → Cho phép).</li>
+      <li>Đổi bài nhạc game: chép file mp3 đè lên file cùng tên trong assets/audio/game/ (nghe thử ở ⚙️ Quản trị → Nhạc game).</li>
     </ul>
   </template>
   <script>
@@ -163,86 +168,92 @@
       ? "https://github.com/ngochanhongphuoc/ngochanhongphuoc.github.io"
       : "https://github.com/huuvinhdocthan/ngochanhongphuoc";
     const abs = path => new URL(path, location.href).href;
+    const song = id => `../assets/audio/game/${id}.mp3`;
 
-    const music = (list) => `🎵 ${list.map(([label, id]) => `<a href="../assets/audio/game/${id}.mp3" target="_blank" rel="noreferrer">${label}</a>`).join(" · ")}`;
-    // tv: ô lớn (biểu tượng · tên · quà · mô tả · nút Mở đỏ + Chép). Các nhóm khác: dòng (biểu tượng · tên + mô tả · Mở · Chép)
+    // Mỗi dòng: icon · name · tag (chip nhỏ) · sub (chỉ hiện khi rê chuột) · acts = các nút viên thuốc.
+    // Mỗi act: label, path (trong web) hoặc url (ngoài), copy (thêm nửa "Chép"), copyName (tên trong "Chép tất cả link").
+    // act có nocollect thì không vào "Chép tất cả link". Dòng how: nút Xem / Chép ghi chú #how-text.
     const groups = {
-      // Trong tiệc, mở trên máy nối TV / màn LED
-      tv: [
-        { icon: "📺", name: "Màn hình tiệc (1 link cho TV)", prize: "MC chuyển màn hình bằng điện thoại", sub: "Mặc định chiếu thiệp cưới. MC quét mã QR trên TV, bấm Thiệp / Nhạc tiệc / game để đổi màn hình; chọn game thì TV hiện mã cho khách, điện thoại MC tự hiện nút điều khiển game đó.", path: "../screen/", open: "📺 Mở màn hình", copyName: "Màn hình tiệc (TV / LED)", cls: "screen-tile" },
-        { icon: "🧠", name: "Ai Là Triệu Phú", prize: "🎁 3 quà · top 3 điểm cao nhất", sub: "15 câu · " + music([["Giới thiệu", "quiz-intro"], ["Khi trả lời", "quiz-music"]]), path: "../quiz/", open: "📺 Mở TV", copyName: "Ai Là Triệu Phú (màn hình TV)" },
-        { icon: "🧧", name: "Loto", prize: "🎁 4 quà · ai KINH đầu tiên", sub: "4 vòng, mỗi vòng 1 giải · " + music([["Nhạc nền", "lottery-music"]]), path: "../lottery/", open: "📺 Mở TV", copyName: "Loto (màn hình TV)" },
-        { icon: "🌳", name: "Rung Cây, Rinh Quà", prize: "🎁 3 quà · lắc nhiều nhất", sub: "3 vòng · " + music([["Nhạc chờ", "../vi-phuoc-han"], ["Nhạc lắc", "tree-music"]]), path: "../tree/", open: "📺 Mở TV", copyName: "Rung Cây, Rinh Quà (màn hình TV)" },
-        { icon: "🎵", name: "Nhạc tiệc", prize: "Màn LED · nhạc tiệc", sub: "5 bài kịch bản lễ + 26 pad · 📱 điều khiển bằng điện thoại", path: "../musicplay/", open: "▶ Mở trình phát", copyName: "Trình phát nhạc tiệc", cls: "music-tile" }
+      // Thanh công cụ trên cùng (ưu tiên, theo yêu cầu): mở trên máy TV / LED hoặc điện thoại MC
+      top: [
+        { icon: "📺", name: "Màn hình tiệc", tag: "1 link cho TV", lead: true, sub: "Mặc định chiếu thiệp. MC quét QR trên TV, đổi Thiệp / Nhạc / game từ điện thoại", path: "../screen/", copyName: "Màn hình tiệc (TV / LED)" },
+        { icon: "🎤", name: "Remote MC", tag: "Vào lại bằng mã phòng", lead: true, sub: "Game, nhạc tiệc, màn hình tiệc: nhập mã phòng khi lỡ thoát hoặc đổi điện thoại", path: "../mc/", copyName: "Remote MC (vào lại)" },
+        { icon: "🎵", name: "Nhạc tiệc", tag: "Màn LED · 31 pad", sub: "5 bài kịch bản lễ + 26 pad · 📱 điều khiển bằng điện thoại", path: "../musicplay/", copyName: "Trình phát nhạc tiệc" }
       ],
-      // Trong tiệc, mở trên điện thoại
+      // Hỗ trợ MC trong tiệc
       party: [
-        { icon: "🙋", name: "Khách nhập mã phòng", sub: "Dùng chung cho mọi game, khi khách không quét được QR", path: "../quiz/join/" },
-        { icon: "🎤", name: "MC vào lại", sub: "Game và remote nhạc tiệc: nhập mã phòng khi lỡ thoát hoặc đổi điện thoại", path: "../mc/" },
-        { icon: "📋", name: "Danh sách câu hỏi", sub: "Tự kiểm tra 15 câu Ai Là Triệu Phú, có đáp án", path: "../quiz/questions/" },
-        // Không phải link: nút Xem mở ghi chú #how-text, nút Chép chép chữ để gửi MC
+        { icon: "🙋", name: "Khách nhập mã phòng", tag: "Dùng chung 3 game", sub: "Khách gõ mã phòng 6 số khi không quét được QR", acts: [{ label: "Mở ↗", path: "../quiz/join/", copy: true }] },
+        // 3 game mở riêng (thường không cần: Màn hình tiệc + Remote MC đã chuyển game được)
+        { icon: "🧠", name: "Ai Là Triệu Phú", tag: "🎁 3 quà", sub: "15 câu · top 3 điểm cao nhất", acts: [{ label: "📺 TV", kind: "tv", path: "../quiz/", copy: true, copyName: "Ai Là Triệu Phú (màn hình TV)" }] },
+        { icon: "🧧", name: "Loto", tag: "🎁 4 quà", sub: "4 vòng, mỗi vòng 1 giải · ai KINH đầu tiên", acts: [{ label: "📺 TV", kind: "tv", path: "../lottery/", copy: true, copyName: "Loto (màn hình TV)" }] },
+        { icon: "🌳", name: "Rung Cây, Rinh Quà", tag: "🎁 3 quà", sub: "3 vòng · ai lắc nhiều nhất vòng đó thắng", acts: [{ label: "📺 TV", kind: "tv", path: "../tree/", copy: true, copyName: "Rung Cây, Rinh Quà (màn hình TV)" }] },
+        { icon: "📋", name: "Danh sách câu hỏi", tag: "Có đáp án", sub: "Tự kiểm tra 15 câu Ai Là Triệu Phú", acts: [{ label: "Mở ↗", path: "../quiz/questions/", copy: true }] },
         { icon: "📖", name: "Cách chơi trong tiệc", sub: "Mã QR, MC điều khiển, nhạc trên TV", how: true }
       ],
-      // Gửi khách (trước tiệc rồi sau tiệc), số dòng chẵn để 2 cột không trống ô
+      // Gửi khách (trước tiệc rồi sau tiệc)
       guest: [
-        { icon: "💌", name: "Thiệp cưới (Tiếng Việt)", sub: "Link chính gửi cho khách", path: "../?lang=vi" },
-        { icon: "✉️", name: "Thiệp cưới (English)", sub: "Mở thẳng bản tiếng Anh", path: "../?lang=en" },
-        { icon: "🎮", name: "Hướng dẫn mini game", sub: "3 game, luật chơi và mẹo", path: "../game-guide/" },
-        { icon: "🖼️", name: "Hint game", sub: "5 ảnh khổ Facebook (nhà gái 28.11 / nhà trai 29.11)", path: "../hint-game/" },
-        { icon: "📣", name: "Bài đăng Facebook", sub: "Nhà gái, nhà trai, mini game, cảm ơn: chữ in đậm, kèm ảnh", path: "../posts/" },
-        { icon: "💐", name: "Trang cảm ơn", sub: "Gửi sau ngày cưới: thư cảm ơn, album 12 ảnh", path: "../thank-you/" }
+        { icon: "💌", name: "Thiệp cưới", tag: "Link chính", sub: "Gửi cho khách: bản tiếng Việt / tiếng Anh",
+          acts: [
+            { label: "VI ↗", kind: "vi", path: "../?lang=vi", copy: true, copyName: "Thiệp cưới (Tiếng Việt)" },
+            { label: "EN ↗", kind: "en", path: "../?lang=en", copy: true, copyName: "Thiệp cưới (English)" }
+          ] },
+        { icon: "🎮", name: "Hướng dẫn mini game", sub: "3 game, luật chơi và mẹo", acts: [{ label: "Mở ↗", path: "../game-guide/", copy: true }] },
+        { icon: "🖼️", name: "Hint game", sub: "5 ảnh khổ Facebook (nhà gái 28.11 / nhà trai 29.11)", acts: [{ label: "Mở ↗", path: "../hint-game/", copy: true }] },
+        { icon: "📣", name: "Bài đăng Facebook", sub: "Nhà gái, nhà trai, mini game, cảm ơn: chữ in đậm, kèm ảnh", acts: [{ label: "Mở ↗", path: "../posts/", copy: true }] },
+        { icon: "💐", name: "Trang cảm ơn", sub: "Gửi sau ngày cưới: thư cảm ơn, album 12 ảnh", acts: [{ label: "Mở ↗", path: "../thank-you/", copy: true }] }
       ],
       // Quản trị: không nằm trong "Chép tất cả link"
       admin: [
-        { icon: "🗂️", name: "Mã nguồn GitHub", url: REPO },
-        { icon: "🚀", name: "Lịch sử deploy (GitHub Actions)", url: `${REPO}/actions` },
-        { icon: "📝", name: "Nội dung Hành trình của chúng mình", url: `${REPO}/blob/main/docs/love-story.md` },
-        { icon: "🔥", name: "Firebase: dữ liệu game", url: "https://console.firebase.google.com/project/wedding-game-acf62/database" },
-        { icon: "🖼️", name: "Ảnh xem trước khi chia sẻ link", path: "../thumbnail.png" }
+        { icon: "🗂️", name: "Mã nguồn GitHub", acts: [{ label: "Mở ↗", url: REPO, copy: true }] },
+        { icon: "🚀", name: "Lịch sử deploy", sub: "GitHub Actions", acts: [{ label: "Mở ↗", url: `${REPO}/actions`, copy: true }] },
+        { icon: "📝", name: "Nội dung Hành trình", sub: "docs/love-story.md", acts: [{ label: "Mở ↗", url: `${REPO}/blob/main/docs/love-story.md`, copy: true }] },
+        { icon: "🔥", name: "Firebase: dữ liệu game", acts: [{ label: "Mở ↗", url: "https://console.firebase.google.com/project/wedding-game-acf62/database", copy: true }] },
+        { icon: "🖼️", name: "Ảnh xem trước link", sub: "thumbnail.png khi chia sẻ link", acts: [{ label: "Mở ↗", path: "../thumbnail.png", copy: true }] },
+        { icon: "🎶", name: "Nhạc game (nghe thử)", sub: "Triệu Phú: giới thiệu, lúc trả lời · Loto · Rung Cây: nhạc chờ (nhạc thiệp), lúc lắc",
+          acts: [{ group: [
+            { label: "TP 1", path: song("quiz-intro") }, { label: "TP 2", path: song("quiz-music") },
+            { label: "Loto", path: song("lottery-music") },
+            { label: "Cây 1", path: "../assets/audio/vi-phuoc-han.mp3" }, { label: "Cây 2", path: song("tree-music") }
+          ] }] }
       ]
     };
 
     const allLinks = [];
-    const hrefOf = (link, collect) => {
-      const href = link.url || abs(link.path);
-      if (collect) allLinks.push(`${link.copyName || link.name}: ${href}`);
-      return href;
+    const esc = s => String(s).replace(/&/g, "&amp;").replace(/"/g, "&quot;").replace(/</g, "&lt;");
+    const pill = (a, row, collect) => {
+      const href = a.url || abs(a.path);
+      if (collect) allLinks.push(`${a.copyName || row.name}: ${href}`);
+      return `<a class="pill open${a.kind ? " " + a.kind : ""}" href="${esc(href)}" target="_blank" rel="noopener" title="${esc(href)}">${a.label}</a>`
+        + (a.copy ? `<button class="pill copy" type="button" data-copy="${esc(href)}">📋 Chép</button>` : "");
     };
-    const buttons = (link, href, cls) => `<div class="${cls}">
-          <a class="mini open" href="${href}" target="_blank" rel="noopener">${link.open || "Mở ↗"}</a>
-          <button class="mini" type="button" data-copy="${href}">Chép</button>
-        </div>`;
-    const tiles = list => list.map(link => {
-      const href = hrefOf(link, true);
-      return `<li class="card tile ${link.cls || ""}">
-        <div class="tile-head"><span class="emoji" aria-hidden="true">${link.icon}</span><h3>${link.name}</h3></div>
-        <div class="prize">${link.prize}</div>
-        <div class="sub">${link.sub}</div>
-        ${buttons(link, href, "tile-actions")}
-      </li>`;
-    }).join("");
-    const howText = () => [...document.querySelector("#how-text").content.querySelectorAll("li")].map(li => "• " + li.textContent).join("\n");
-    const rows = (list, collect) => list.map(link => {
-      if (link.how) return `<li>
-        <span class="ic" aria-hidden="true">${link.icon}</span>
-        <div class="txt"><span class="name">${link.name}</span><small class="sub">${link.sub}</small></div>
-        <div class="row-actions">
-          <button class="mini open" type="button" id="how-toggle" aria-expanded="false">Xem ▾</button>
-          <button class="mini" type="button" data-copy-how>Chép</button>
-        </div>
+    const act = (a, row, collect) => a.group
+      ? `<span class="pg">${a.group.map(g => pill(g, row, false)).join("")}</span>`
+      : `<span class="pg">${pill(a, row, collect)}</span>`;
+    const rows = (list, collect) => list.map(row => {
+      const head = `<span class="ic" aria-hidden="true">${row.icon}</span>
+        <span class="name"${row.sub ? ` title="${esc(row.sub)}"` : ""}>${row.name}</span>
+        ${row.tag ? `<span class="tag${row.tag.startsWith("🎁") ? "" : " minor"}">${row.tag}</span>` : ""}`;
+      if (row.how) return `<li>${head}
+        <span class="acts"><span class="pg">
+          <button class="pill open how" type="button" id="how-toggle" aria-expanded="false">Xem ▾</button>
+          <button class="pill copy" type="button" data-copy-how>📋 Chép</button>
+        </span></span>
       </li><li class="panel" id="how-panel" hidden></li>`;
-      const href = hrefOf(link, collect);
-      return `<li>
-        <span class="ic" aria-hidden="true">${link.icon}</span>
-        <div class="txt"><a class="name" href="${href}" target="_blank" rel="noopener" title="${href}">${link.name}</a>${link.sub ? `<small class="sub">${link.sub}</small>` : ""}</div>
-        ${buttons(link, href, "row-actions")}
+      return `<li class="${row.lead ? "lead" : ""}"${row.sub ? ` title="${esc(row.sub)}"` : ""}>${head}
+        <span class="acts">${row.acts.map(a => act(a, row, collect)).join("")}</span>
       </li>`;
     }).join("");
-    document.querySelector("#list-tv").innerHTML = tiles(groups.tv);
+    const tools = list => list.map(item => `<li class="card tool${item.lead ? " lead" : ""}" title="${esc(item.sub)}">
+        <div class="tool-txt"><div class="tool-head"><span class="ic" aria-hidden="true">${item.icon}</span><b>${item.name}</b></div>
+        <small>${item.tag}</small></div>
+        <span class="pg">${pill({ label: item.label || "Mở ↗", path: item.path, copy: true, copyName: item.copyName }, item, true)}</span>
+      </li>`).join("");
+    document.querySelector("#list-top").innerHTML = tools(groups.top);
     document.querySelector("#list-party").innerHTML = rows(groups.party, true);
     document.querySelector("#list-guest").innerHTML = rows(groups.guest, true);
     document.querySelector("#list-admin").innerHTML = rows(groups.admin, false);
 
+    const howText = () => [...document.querySelector("#how-text").content.querySelectorAll("li")].map(li => "• " + li.textContent).join("\n");
     const howPanel = document.querySelector("#how-panel");
     howPanel.append(document.querySelector("#how-text").content.cloneNode(true));
     document.querySelector("#how-toggle").addEventListener("click", event => {

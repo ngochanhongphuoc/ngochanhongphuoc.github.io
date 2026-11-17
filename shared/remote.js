@@ -95,3 +95,31 @@ export function sendCommand(pin, room, type) {
     type, id: randomId(10), status: room.status, round: room.round ?? null, at: serverTimestamp(),
   });
 }
+
+// ---------- Hiện lại mã QR cho khách vào lại giữa game ----------
+// Khách lỡ thoát / tắt điện thoại: quét lại là vào đúng phòng (cùng điện thoại thì giữ nguyên tên, điểm, vé).
+// MC bấm nút trên điện thoại (lệnh 'joinqr', TV xử lý ở mọi trạng thái), TV hiện mã to; bấm lại hoặc sau 90 giây thì tắt.
+export const JOIN_QR_BTN = '<button class="btn btn-soft" data-act="joinqr">📲 Hiện / ẩn mã QR cho khách vào lại</button>';
+export function addJoinQrButton(app, room) {
+  if (!room || room.status === 'lobby') return; // sảnh chờ: TV đã có sẵn mã QR
+  const acts = app.querySelector('.actions');
+  if (acts && !acts.querySelector('[data-act="joinqr"]')) acts.insertAdjacentHTML('beforeend', JOIN_QR_BTN);
+}
+export function toggleJoinQr(url, pin) {
+  const old = document.querySelector('.join-qr');
+  if (old) { old.remove(); return; }
+  const box = document.createElement('div');
+  box.className = 'join-qr';
+  box.style.cssText = 'position:fixed;inset:0;z-index:9999;display:grid;place-items:center;background:rgba(10,3,5,0.72);backdrop-filter:blur(4px)';
+  box.innerHTML = `<div style="text-align:center;padding:3vmin 4vmin;border-radius:28px;background:#FFF8EC;color:#5A1622;box-shadow:0 20px 70px rgba(0,0,0,0.5);font-family:Montserrat,system-ui,sans-serif">
+    <div style="font-size:4.2vmin;font-weight:800">📲 Quét mã để vào lại / tham gia</div>
+    <div style="font-size:2.4vmin;opacity:0.8;margin-top:0.6vmin">Lỡ thoát cũng không sao: cùng điện thoại vẫn giữ nguyên tên, điểm và vé</div>
+    <div class="join-qr-code" style="display:flex;justify-content:center;margin:2.4vmin 0"></div>
+    <div style="font-size:2.6vmin">hoặc nhập mã phòng <b style="font-size:6vmin;letter-spacing:0.08em;color:#C8102E">${pin}</b></div>
+  </div>`;
+  document.body.appendChild(box);
+  const size = Math.round(Math.min(innerWidth, innerHeight) * 0.5);
+  if (window.QRCode) new QRCode(box.querySelector('.join-qr-code'), { text: url, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
+  box.onclick = () => box.remove();
+  setTimeout(() => box.remove(), 90000);
+}

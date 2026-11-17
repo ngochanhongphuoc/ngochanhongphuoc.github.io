@@ -48,7 +48,7 @@
 <script src="../../shared/firebase-config.js"></script>
 <script type="module">
   import { CONFIGURED, roomRef, onValue, signIn, watchServerTime, serverNow, escapeHtml, tidyUrl, avatarHtml } from '../../shared/live.js';
-  import { claimControl, sendCommand, saveMcSession } from '../../shared/remote.js';
+  import { claimControl, sendCommand, saveMcSession, addJoinQrButton } from '../../shared/remote.js';
   import { ROUNDS, WINNERS, totalOf, meterOf, topOf, winnersOf, overallTop, played, isOver } from '../tree.js';
   tidyUrl();
 
@@ -146,6 +146,7 @@
       </div>
       ${body}
     </div>`;
+    addJoinQrButton(app, room);
     bind();
     tick();
   }

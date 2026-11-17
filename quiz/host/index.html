@@ -64,7 +64,7 @@
 <script src="../questions.js"></script>
 <script src="../../shared/firebase-config.js"></script>
 <script type="module">
-  import { saveMcSession } from '../../shared/remote.js';
+  import { saveMcSession, addJoinQrButton } from '../../shared/remote.js';
   import {
     CONFIGURED, EMU, QUESTION_MS, CHOICES, db, ref, roomRef, get, set, onValue, serverTimestamp,
     signIn, watchServerTime, serverNow, rankPlayers, fmtSec, fmtScore, escapeHtml, randomId,
@@ -190,6 +190,7 @@
       ${body}
     </div>`;
     app.querySelectorAll('.tabs button').forEach((b) => { b.onclick = () => { tab = b.dataset.tab; render(); }; });
+    if (tab === 'control') addJoinQrButton(app, room);
     bind();
     tickTimer();
   }

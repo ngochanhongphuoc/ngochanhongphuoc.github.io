@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<script src="../shared/screen-mute.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Loto | Ngọc Hân & Hồng Phước</title>
 <link rel="icon" href="../assets/icons/lottery.svg" type="image/svg+xml">
@@ -156,7 +157,7 @@
     ticketGridHtml, boardHtml, ladderHtml, howToHtml, lanterns, COUPLE,
   } from './lottery.js';
   import { music, applyMute, duck, snd } from './sound.js';
-  import { controlKey, registerControl, commandFilter, showMcQr } from '../shared/remote.js';
+  import { controlKey, registerControl, commandFilter, showMcQr, toggleJoinQr } from '../shared/remote.js';
   // Trình duyệt chỉ cho phát nhạc sau lần bấm đầu tiên vào trang
   ['pointerdown', 'keydown'].forEach((ev) => document.addEventListener(ev, () => music(true), { once: true }));
   music(true); // bị chặn tự phát thì tự thử lại (needGesture)
@@ -384,6 +385,7 @@
   // Lệnh kèm trạng thái lúc MC bấm; TV chỉ làm khi trạng thái còn khớp (tránh bấm 2 lần quay 2 số)
   function handleCommand(cmd) {
     if (!cmd) return;
+    if (cmd.type === 'joinqr') { toggleJoinQr(qrUrl, pin); return; } // mọi trạng thái
     if (['auto', 'help', 'newroom'].includes(cmd.type)) {
       if (cmd.type === 'auto') setAuto(!room.auto);
       else if (cmd.type === 'help') toggleHelp();

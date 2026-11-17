@@ -2,6 +2,7 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
+<script src="../shared/screen-mute.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Ai Là Triệu Phú | Ngọc Hân & Hồng Phước</title>
 <link rel="icon" href="../assets/icons/quiz.svg" type="image/svg+xml">
@@ -153,7 +154,7 @@
 <script src="questions.js"></script>
 <script src="../shared/firebase-config.js"></script>
 <script type="module">
-  import { controlKey, mcCodeHtml } from '../shared/remote.js';
+  import { controlKey, mcCodeHtml, toggleJoinQr } from '../shared/remote.js';
   import {
     CONFIGURED, EMU, QUESTION_MS, CHOICES, db, ref, roomRef, get, set, update, remove, onValue, serverTimestamp, randomId,
     signIn, watchServerTime, serverNow, scoreFor, rankPlayers, fmtSec, fmtScore, escapeHtml,
@@ -373,6 +374,7 @@
     if (!cmdPrimed) { cmdPrimed = true; lastCmdId = cmd.id; return; } // lệnh cũ từ trước khi mở trang
     if (cmd.id === lastCmdId) return;
     lastCmdId = cmd.id;
+    if (cmd.type === 'joinqr') { toggleJoinQr(qrUrl, pin); return; } // mọi trạng thái
     if (cmd.status !== undefined && cmd.status !== room.status) return;
     if (cmd.q !== undefined && cmd.q !== room.q) return;
     const players = Object.keys(room.players || {}).length;

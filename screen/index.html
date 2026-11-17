@@ -16,8 +16,8 @@
   button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
 
   /* Mỗi màn hình là 1 khung, chỉ khung đang chọn hiện */
-  iframe.view { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); opacity: 0; pointer-events: none; transition: opacity 0.5s; }
-  iframe.view.on { opacity: 1; pointer-events: auto; }
+  iframe.view { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); opacity: 0; visibility: hidden; pointer-events: none; transition: opacity 0.5s, visibility 0s 0.5s; }
+  iframe.view.on { opacity: 1; visibility: visible; pointer-events: auto; transition: opacity 0.5s; }
 
   /* Thanh điều khiển tại máy: hiện khi rê chuột, tự ẩn sau 3 giây */
   .dock {
@@ -74,9 +74,9 @@
   const VIEWS = {
     invite: { name: 'Thiệp cưới', icon: '💌', src: '../?lang=vi' },
     music: { name: 'Nhạc tiệc', icon: '🎵', src: '../musicplay/', pinKey: 'mp_host_pin', type: 'music', keep: true },
-    quiz: { name: 'Ai Là Triệu Phú', icon: '🧠', src: '../quiz/', pinKey: 'kh_host_pin', type: null },
-    lottery: { name: 'Loto', icon: '🧧', src: '../lottery/', pinKey: 'xs_host_pin', type: 'lottery' },
-    tree: { name: 'Rung Cây', icon: '🌳', src: '../tree/', pinKey: 'tr_host_pin', type: 'tree' },
+    quiz: { name: 'Ai Là Triệu Phú', icon: '🧠', src: '../quiz/', pinKey: 'kh_host_pin', type: null, keep: true },
+    lottery: { name: 'Loto', icon: '🧧', src: '../lottery/', pinKey: 'xs_host_pin', type: 'lottery', keep: true },
+    tree: { name: 'Rung Cây', icon: '🌳', src: '../tree/', pinKey: 'tr_host_pin', type: 'tree', keep: true },
   };
   const ORDER = ['invite', 'music', 'quiz', 'lottery', 'tree'];
   const STORE = 'sc_host_pin';
@@ -95,6 +95,7 @@
   function frameOf(view) {
     if (!frames[view]) {
       const f = document.createElement('iframe');
+      f.dataset.muted = '1'; // mở ra ở chế độ tắt tiếng, chỉ màn hình đang chiếu mới có tiếng (shared/screen-mute.js)
       f.className = 'view';
       f.allow = 'autoplay; fullscreen';
       f.title = VIEWS[view].name;
@@ -110,14 +111,15 @@
     current = view;
     try { localStorage.setItem(LAST_VIEW, view); } catch (e) { /* bỏ qua */ }
     const f = frameOf(view);
-    if (view === 'music') { try { localStorage.setItem('mp-help-seen', '1'); } catch (e) { /* bỏ qua */ } } // bảng hướng dẫn trình phát không tự bật lên giữa tiệc
-    if (!f.dataset.loaded) { f.src = VIEWS[view].src; f.dataset.loaded = '1'; }
+    load(view);
     f.classList.add('on');
+    setMuted(view, false);
     if (prev && prev !== view) {
       const pf = frames[prev];
       pf.classList.remove('on');
-      if (VIEWS[prev].keep) pauseMusic();
-      else setTimeout(() => { if (current !== prev) { pf.src = 'about:blank'; delete pf.dataset.loaded; } }, 600); // tắt hẳn để game không phát nhạc chồng
+      // Game và nhạc KHÔNG bao giờ tắt (theo yêu cầu): vẫn chạy ngầm, chỉ tắt tiếng. Thiệp thì đóng hẳn (có nhạc riêng).
+      if (VIEWS[prev].keep) setMuted(prev, true);
+      else setTimeout(() => { if (current !== prev) { pf.src = 'about:blank'; delete pf.dataset.loaded; } }, 600);
     }
     if (view !== 'invite') setAuto(false);
     f.focus();
@@ -126,9 +128,15 @@
   }
   let pendingView = null;
 
-  // Nhạc tiệc giữ nguyên (không tải lại, nhớ bài đang phát), chỉ dừng khi chuyển sang màn khác
-  function pauseMusic() {
-    try { const mp = frames.music.contentWindow.MP; mp.run('stopPads'); mp.run('pause'); } catch (e) { /* chưa tải xong */ }
+  function load(view) {
+    const f = frameOf(view);
+    if (!f.dataset.loaded) { f.src = VIEWS[view].src; f.dataset.loaded = '1'; }
+  }
+  function setMuted(view, on) {
+    const f = frames[view];
+    if (!f) return;
+    f.dataset.muted = on ? '1' : '0';
+    try { f.contentWindow.__screenMute && f.contentWindow.__screenMute(on); } catch (e) { /* chưa tải xong: trang tự đọc data-muted khi mở */ }
   }
 
   // ---------- Điều khiển thiệp cưới (cùng tên miền nên điều khiển thẳng trong khung) ----------
@@ -202,6 +210,27 @@
   $('pairClose').onclick = closePair;
   $('pair').onclick = (e) => { if (e.target === $('pair')) closePair(); };
 
+  // ---------- Mã QR mở thiệp cưới cho khách (đè lên mọi màn hình; bấm lại hoặc sau 2 phút thì tắt) ----------
+  function toggleInviteQr() {
+    const old = document.querySelector('.invite-qr');
+    if (old) { old.remove(); return; }
+    const url = new URL('../', import.meta.url).href;
+    const box = document.createElement('div');
+    box.className = 'invite-qr';
+    box.style.cssText = 'position:fixed;inset:0;z-index:65;display:grid;place-items:center;background:rgba(10,3,5,0.72);backdrop-filter:blur(4px)';
+    box.innerHTML = `<div style="text-align:center;padding:3vmin 4vmin;border-radius:28px;background:#FFF8EC;color:#5A1622;box-shadow:0 20px 70px rgba(0,0,0,0.5)">
+      <div style="font-size:4.2vmin;font-weight:700">💌 Quét mã xem lại thiệp cưới</div>
+      <div style="font-size:2.4vmin;opacity:0.8;margin-top:0.6vmin">Ngọc Hân &amp; Hồng Phước · thông tin lễ cưới, hành trình, album ảnh</div>
+      <div class="invite-qr-code" style="display:flex;justify-content:center;margin:2.4vmin 0"></div>
+      <div style="font-size:2.8vmin;font-weight:700">${url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</div>
+    </div>`;
+    document.body.appendChild(box);
+    const size = Math.round(Math.min(innerWidth, innerHeight) * 0.5);
+    if (window.QRCode) new QRCode(box.querySelector('.invite-qr-code'), { text: url, width: size, height: size, correctLevel: QRCode.CorrectLevel.M });
+    box.onclick = () => box.remove();
+    setTimeout(() => box.remove(), 120000);
+  }
+
   // ---------- Firebase ----------
   let lastState = '';
   function pushState() {
@@ -222,6 +251,7 @@
     else if (t === 'inviteDown') scrollInvite(1);
     else if (t === 'inviteTop') scrollInvite('top');
     else if (t === 'inviteAuto') setAuto(!autoScroll);
+    else if (t === 'inviteQr') toggleInviteQr();
     else if (t === 'fullscreen') toggleFs(); // trình duyệt thường chặn nếu không có cú bấm trên máy
   }
 
@@ -253,6 +283,9 @@
     watchServerTime();
     ready = true;
     if (pendingView) { const v = pendingView; pendingView = null; show(v); }
+    // Mở sẵn nhạc và 3 game (tắt tiếng, chạy ngầm): game có phòng + mã QR ngay, chuyển màn hình là hiện tức thì
+    try { localStorage.setItem('mp-help-seen', '1'); } catch (e) { /* bỏ qua */ }
+    ORDER.filter((v) => VIEWS[v].keep).forEach((v, i) => setTimeout(() => load(v), 800 + i * 1500));
     const saved = localStorage.getItem(STORE);
     if (saved) {
       try { const room = (await get(roomRef(saved))).val(); if (room && room.hostUid === uid && room.type === 'screen') pin = saved; } catch (e) { /* tạo mới */ }
