@@ -30,7 +30,7 @@
 
 ## Trang quản lý (`nh/`)
 
-- Một trang duy nhất, sắp theo **thời điểm dùng**: hàng trên **📺 Trong tiệc · mở trên máy TV / LED** là 4 ô lớn (3 game với nút "📺 Mở TV" + Trình phát nhạc tiệc); tiếp theo là 2 khung rộng hết trang, mỗi khung **2 cột** (`.links.grid2`): **🎤 Hỗ trợ MC & khách** (khách nhập mã, MC vào lại, danh sách câu hỏi, "Cách chơi trong tiệc": nút Xem mở ghi chú trong `<template id="how-text">`, nút Chép chép ghi chú gửi MC) và **💌 Gửi khách · trước & sau tiệc**; cuối là khung thu gọn **⚙️ Quản trị** (không nằm trong "Chép tất cả link"). Mọi dòng cùng 1 kiểu (biểu tượng · tên + mô tả nhỏ · nút **Mở** nền đỏ rượu, mở tab mới · nút **Chép** nền trắng). **Thêm link thì thêm dòng vào `groups.tv` / `party` / `guest` / `admin`** trong [nh/index.html](nh/index.html); giữ số dòng mỗi nhóm 2 cột là số chẵn để không trống ô.
+- Một trang duy nhất, sắp theo **thời điểm dùng**: hàng trên **📺 Trong tiệc · mở trên máy TV / LED** là ô rộng **Màn hình tiệc** (`cls: "screen-tile"`) rồi 4 ô lớn (3 game với nút "📺 Mở TV" + Trình phát nhạc tiệc); tiếp theo là 2 khung rộng hết trang, mỗi khung **2 cột** (`.links.grid2`): **🎤 Hỗ trợ MC & khách** (khách nhập mã, MC vào lại, danh sách câu hỏi, "Cách chơi trong tiệc": nút Xem mở ghi chú trong `<template id="how-text">`, nút Chép chép ghi chú gửi MC) và **💌 Gửi khách · trước & sau tiệc**; cuối là khung thu gọn **⚙️ Quản trị** (không nằm trong "Chép tất cả link"). Mọi dòng cùng 1 kiểu (biểu tượng · tên + mô tả nhỏ · nút **Mở** nền đỏ rượu, mở tab mới · nút **Chép** nền trắng). **Thêm link thì thêm dòng vào `groups.tv` / `party` / `guest` / `admin`** trong [nh/index.html](nh/index.html); giữ số dòng mỗi nhóm 2 cột là số chẵn để không trống ô.
 - Có `noindex`, không có link từ thiệp.
 - 4 kiểu màn hình: FHD ≥1600px (`body { zoom: 1.3 }`, đặt zoom ở body để % không bị tràn), HD 1200–1599px (4 ô + 2 cột), iPad 760–1199px (ô 2 cột, nút to; dưới 900px danh sách 1 cột), iPhone <760px (1 cột).
 
@@ -53,6 +53,13 @@ Mọi game dùng chung Firebase (project `wedding-game-acf62`, dùng chung với
 - Danh sách lưu lên Firebase có thể bị trả về dạng object `{0: …, 1: …}`. Đọc bằng `Array.isArray(x) ? x : Object.values(x || {})`.
 - Kiểm tra trang TV ở 1366×768 và trang khách trên điện thoại.
 
+## Màn hình tiệc (`screen/`)
+
+- **1 link cho máy TV / LED**, mặc định chiếu thiệp cưới; MC đổi màn hình từ điện thoại (theo yêu cầu: không phải về máy bấm từng game / chuyển tab). Mỗi màn hình là 1 iframe cùng tên miền (`VIEWS`: `invite` thiệp, `music` trình phát, `quiz`, `lottery`, `tree` trang TV game). Nhạc tiệc giữ khung (chuyển đi thì dừng nhạc + pad, nhớ bài), thiệp và game chuyển đi thì tải `about:blank` để không phát nhạc chồng; game mở lại dùng lại phòng cũ nên chơi tiếp được.
+- Phòng Firebase riêng `type: screen` (localStorage `sc_host_pin`, màn hình đang chiếu `sc_view`), `rooms/<pin>/state = { show, games: { music|quiz|lottery|tree: mã phòng }, auto }`. Mã phòng game đọc từ localStorage của game (`mp_host_pin`, `kh_host_pin`, `xs_host_pin`, `tr_host_pin`), chỉ báo khi `hostUid` trùng (iframe dùng chung tài khoản ẩn danh, nên game chỉ mở sau khi trang ngoài đăng nhập xong). Lệnh: `show`, `hello` (đóng bảng QR), `inviteOpen/Up/Down/Top/Auto` (điều khiển thẳng trong iframe thiệp, tự cuộn dùng `behavior: instant` vì thiệp có scroll-behavior smooth).
+- Mở trang là hiện mã QR, MC quét xong tự đóng. Thanh dưới đáy (rê chuột) chuyển màn hình tại máy, "📱 Mã MC", toàn màn hình.
+- Điện thoại [screen/remote/](screen/remote/index.html): 5 ô chọn màn hình ở trên (chuyển đi khỏi game có `confirm`), phần dưới là iframe trang điều khiển sẵn có (`../../<game>/host/`, `musicplay/remote/`, cùng mã MC `ph_ctrl_key`) hoặc nút điều khiển thiệp. `/mc` nhận phòng qua `GAMES.screen`. Thêm game mới thì thêm vào `VIEWS` ở cả 2 trang.
+
 ## Trình phát nhạc tiệc (`musicplay/`)
 
 - Lấy từ dự án `weddding`, đã đổi sang Phước & Hân: tông đỏ rượu, ảnh `couple.jpg`, ảnh bìa ngẫu nhiên từ album 12 ảnh, ngày 28.11.2026. Bỏ bài "Ván Bài Năm Ấy" (của đám trước); nhóm chính chỉ có nhạc thiệp "Beauty And A Beat (Ballad)" (mảng `BUILTIN`).
@@ -62,6 +69,7 @@ Mọi game dùng chung Firebase (project `wedding-game-acf62`, dùng chung với
 - Lặp nhạc nền 3 chế độ (`repeatMode`: lặp cả danh sách / lặp 1 bài / không lặp, phím R) và nút **🔁 Lặp pad** (`padLoopAll`, **mặc định bật**, phím P); cả hai nhớ ở localStorage `mp-repeat`, `mp-pad-loop`.
 - **Pad nhạc chạy thì nhạc nền dừng**, hết pad nhạc (bấm lại ô, Dừng pad, Esc, pad hết bài) thì nhạc nền **không tự phát lại** (theo yêu cầu), người điều khiển bấm ▶ / Space để phát tiếp từ chỗ cũ; bấm ▶ khi pad đang chạy thì tắt pad và phát nhạc nền (`toggle`). `resumeMain` luôn false (giữ để bật lại kiểu tự phát tiếp nếu cần). Pad hiệu ứng phát chồng, nhạc nền chỉ nhỏ lại (`setDuck`).
 - **⚖️ Cân bằng âm lượng** (`levelOn`, mặc định bật, localStorage `mp-level`): mỗi nguồn (nhạc nền, từng pad nhạc) có bộ đo RMS + gain tự chỉnh về `LEVEL_TARGET` (giới hạn `LEVEL_MIN`…`LEVEL_MAX`, bỏ qua đoạn lặng), tất cả qua 1 `DynamicsCompressor` chung trước loa. Chỉ máy tính (điện thoại không dùng Web Audio).
+- **📱 Remote điện thoại** (nút `#remoteBtn` cạnh nút ?, hiện khi đã nối Firebase): [musicplay/tv-remote.js](musicplay/tv-remote.js) (module riêng, lỗi mạng không ảnh hưởng trình phát) tạo phòng `type: 'music'` (localStorage `mp_host_pin`, dùng chung mã MC `ph_ctrl_key` với game), ghi `rooms/<pin>/state` (đổi gì gửi ngay, không thì 5 giây/lần), `tracks`, `pads`; nhận lệnh `rooms/<pin>/command` (`{type, arg}`) rồi gọi `window.MP.run` (cổng cuối script trình phát: `state`, `tracks`, `padList`, `run`). Trang điện thoại [musicplay/remote/](musicplay/remote/index.html) chỉ ghi lệnh; đổi bài khi đang phát và Dừng pad có `confirm`. `/mc` nhận phòng nhạc qua `GAMES.music`. Thêm lệnh mới thì thêm vào cả `MP.run` lẫn trang remote.
 - Bảng **Hướng dẫn sử dụng** (`#help`, nút ? hoặc phím H) tự mở ở lần đầu vào trang trên mỗi máy (`mp-help-seen`). Thêm chức năng mới thì nhớ thêm dòng vào bảng này.
 
 ## Đổi tên trang đã public

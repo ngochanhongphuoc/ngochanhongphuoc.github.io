@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#1C070B">
+<title>Màn hình tiệc | Ngọc Hân &amp; Hồng Phước</title>
+<link rel="icon" href="../assets/icons/play.svg" type="image/svg+xml">
+<style>
+  @font-face { font-family: "Be Vietnam Pro"; font-weight: 600; font-display: swap; src: url(../assets/fonts/be-vietnam-pro-600-vietnamese.woff2) format("woff2"); unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB; }
+  @font-face { font-family: "Be Vietnam Pro"; font-weight: 600; font-display: swap; src: url(../assets/fonts/be-vietnam-pro-600-latin.woff2) format("woff2"); }
+  :root { --bg: #1C070B; --ink: #F6F1E6; --accent: #E3B6A8; --line: rgba(246,241,230,0.18); }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; background: var(--bg); color: var(--ink); font-family: "Be Vietnam Pro", system-ui, sans-serif; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+
+  /* Mỗi màn hình là 1 khung, chỉ khung đang chọn hiện */
+  iframe.view { position: fixed; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); opacity: 0; pointer-events: none; transition: opacity 0.5s; }
+  iframe.view.on { opacity: 1; pointer-events: auto; }
+
+  /* Thanh điều khiển tại máy: hiện khi rê chuột, tự ẩn sau 3 giây */
+  .dock {
+    position: fixed; left: 50%; bottom: 18px; z-index: 50; transform: translate(-50%, 140%);
+    display: flex; gap: 6px; padding: 8px; border-radius: 18px;
+    background: rgba(20,5,8,0.88); border: 1px solid var(--line); backdrop-filter: blur(10px);
+    transition: transform 0.3s; box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+  }
+  body.show-dock .dock { transform: translate(-50%, 0); }
+  .dock button { padding: 10px 14px; border-radius: 12px; font-size: 14px; font-weight: 600; white-space: nowrap; }
+  .dock button:hover { background: rgba(255,255,255,0.12); }
+  .dock button.on { background: var(--accent); color: #2A0B11; }
+  .dock i { width: 1px; background: var(--line); margin: 4px 2px; }
+
+  /* Bảng mã QR cho MC */
+  .pair { position: fixed; inset: 0; z-index: 60; display: grid; place-items: center; padding: 16px; background: rgba(10,3,5,0.8); backdrop-filter: blur(6px); }
+  .pair[hidden] { display: none; }
+  .pair .box { width: min(480px, 100%); text-align: center; padding: 24px 22px; border-radius: 22px; background: linear-gradient(160deg, #4A1520, #24090E); border: 1px solid rgba(227,182,168,0.35); box-shadow: 0 20px 60px rgba(0,0,0,0.5); }
+  .pair h2 { font-size: 1.5em; margin-bottom: 6px; }
+  .pair p { opacity: 0.85; line-height: 1.5; font-size: 0.95em; }
+  .pair .qr { display: inline-block; background: #fff; padding: 12px; border-radius: 14px; margin: 16px 0; }
+  .pair .code { padding: 10px 14px; border-radius: 14px; background: rgba(0,0,0,0.25); line-height: 1.5; font-size: 0.9em; }
+  .pair .code b.pin { font-size: 1.5em; letter-spacing: 0.08em; }
+  .pair .close { margin-top: 14px; padding: 12px 28px; border-radius: 999px; background: var(--ink); color: #2A0B11; font-weight: 700; }
+
+  .toast { position: fixed; top: 18px; left: 50%; transform: translateX(-50%); z-index: 70; background: rgba(17,17,17,0.9); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 14px; opacity: 0; transition: opacity 0.25s; pointer-events: none; }
+  .toast.show { opacity: 1; }
+</style>
+</head>
+<body>
+<div class="dock" id="dock"></div>
+
+<div class="pair" id="pair" hidden>
+  <div class="box">
+    <h2>📱 Điều khiển màn hình bằng điện thoại</h2>
+    <p>MC quét mã này để chuyển màn hình: thiệp cưới, nhạc tiệc hoặc mini game, và điều khiển luôn game / nhạc trên cùng 1 trang.</p>
+    <div class="qr" id="qr"></div>
+    <div class="code">Lỡ thoát hoặc đổi điện thoại? Vào <b id="mcPage"></b> và nhập<br>Mã phòng <b class="pin" id="pin">······</b></div>
+    <p style="margin-top:12px;font-weight:700;opacity:1">⚠️ Chỉ cho MC xem, đừng để khách quét!</p>
+    <button class="close" id="pairClose">Đóng</button>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script src="../shared/firebase-config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script type="module">
+  // Màn hình tiệc trên máy TV / LED: mở 1 link duy nhất, MC chuyển nội dung từ điện thoại.
+  // Mỗi nội dung là 1 khung (iframe) cùng tên miền; game / nhạc vẫn tự tạo phòng Firebase của riêng nó như khi mở lẻ,
+  // trang này đọc mã phòng của chúng (localStorage) rồi báo cho điện thoại MC mở đúng trang điều khiển.
+  import { CONFIGURED, get, set, onValue, roomRef, signIn, watchServerTime, serverNow } from '../shared/live.js';
+  import { controlKey, registerControl, commandFilter } from '../shared/remote.js';
+
+  const VIEWS = {
+    invite: { name: 'Thiệp cưới', icon: '💌', src: '../?lang=vi' },
+    music: { name: 'Nhạc tiệc', icon: '🎵', src: '../musicplay/', pinKey: 'mp_host_pin', type: 'music', keep: true },
+    quiz: { name: 'Ai Là Triệu Phú', icon: '🧠', src: '../quiz/', pinKey: 'kh_host_pin', type: null },
+    lottery: { name: 'Loto', icon: '🧧', src: '../lottery/', pinKey: 'xs_host_pin', type: 'lottery' },
+    tree: { name: 'Rung Cây', icon: '🌳', src: '../tree/', pinKey: 'tr_host_pin', type: 'tree' },
+  };
+  const ORDER = ['invite', 'music', 'quiz', 'lottery', 'tree'];
+  const STORE = 'sc_host_pin';
+  const LAST_VIEW = 'sc_view';
+  const $ = (id) => document.getElementById(id);
+  const frames = {};
+  let current = null;
+  let pin = null, key = null, uid = null;
+  let games = {};          // mã phòng game / nhạc đang chạy trong khung
+  let autoScroll = false;
+  let ready = !CONFIGURED; // game cần đăng nhập Firebase xong mới mở (tránh 2 khung tạo 2 tài khoản ẩn danh khác nhau)
+
+  const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 2200); };
+
+  // ---------- Khung nội dung ----------
+  function frameOf(view) {
+    if (!frames[view]) {
+      const f = document.createElement('iframe');
+      f.className = 'view';
+      f.allow = 'autoplay; fullscreen';
+      f.title = VIEWS[view].name;
+      document.body.prepend(f);
+      frames[view] = f;
+    }
+    return frames[view];
+  }
+  function show(view) {
+    if (!VIEWS[view]) return;
+    if (VIEWS[view].pinKey && !ready) { pendingView = view; return; }
+    const prev = current;
+    current = view;
+    try { localStorage.setItem(LAST_VIEW, view); } catch (e) { /* bỏ qua */ }
+    const f = frameOf(view);
+    if (view === 'music') { try { localStorage.setItem('mp-help-seen', '1'); } catch (e) { /* bỏ qua */ } } // bảng hướng dẫn trình phát không tự bật lên giữa tiệc
+    if (!f.dataset.loaded) { f.src = VIEWS[view].src; f.dataset.loaded = '1'; }
+    f.classList.add('on');
+    if (prev && prev !== view) {
+      const pf = frames[prev];
+      pf.classList.remove('on');
+      if (VIEWS[prev].keep) pauseMusic();
+      else setTimeout(() => { if (current !== prev) { pf.src = 'about:blank'; delete pf.dataset.loaded; } }, 600); // tắt hẳn để game không phát nhạc chồng
+    }
+    if (view !== 'invite') setAuto(false);
+    f.focus();
+    renderDock();
+    pushState();
+  }
+  let pendingView = null;
+
+  // Nhạc tiệc giữ nguyên (không tải lại, nhớ bài đang phát), chỉ dừng khi chuyển sang màn khác
+  function pauseMusic() {
+    try { const mp = frames.music.contentWindow.MP; mp.run('stopPads'); mp.run('pause'); } catch (e) { /* chưa tải xong */ }
+  }
+
+  // ---------- Điều khiển thiệp cưới (cùng tên miền nên điều khiển thẳng trong khung) ----------
+  const inviteWin = () => { try { return frames.invite && frames.invite.contentWindow; } catch (e) { return null; } };
+  function openInvite() {
+    const w = inviteWin();
+    const btn = w && w.document.getElementById('open-invitation');
+    const cover = w && w.document.getElementById('cover');
+    if (btn && cover && !cover.classList.contains('is-hidden')) btn.click();
+  }
+  function scrollInvite(dir) {
+    const w = inviteWin();
+    if (!w) return;
+    openInvite();
+    if (dir === 'top') w.scrollTo({ top: 0, behavior: 'smooth' });
+    else w.scrollBy({ top: dir * w.innerHeight * 0.8, behavior: 'smooth' });
+  }
+  let autoTimer = null, holdUntil = 0;
+  function setAuto(on) {
+    autoScroll = on;
+    clearInterval(autoTimer);
+    if (on) {
+      openInvite();
+      holdUntil = Date.now() + 1500;
+      autoTimer = setInterval(() => {
+        const w = inviteWin();
+        if (!w || Date.now() < holdUntil) return;
+        const end = w.document.documentElement.scrollHeight - w.innerHeight - 4;
+        if (w.scrollY >= end) { holdUntil = Date.now() + 5000; setTimeout(() => w.scrollTo({ top: 0, behavior: 'smooth' }), 3000); return; }
+        // Thiệp đặt scroll-behavior: smooth, cuộn từng chút phải dùng "instant" mới chạy đều (~40px/giây)
+        w.scrollTo({ top: w.scrollY + 1.2, behavior: 'instant' });
+      }, 30);
+    }
+    pushState();
+  }
+
+  // ---------- Thanh điều khiển tại máy ----------
+  function renderDock() {
+    $('dock').innerHTML = ORDER.map((v) => `<button data-v="${v}" class="${v === current ? 'on' : ''}">${VIEWS[v].icon} ${VIEWS[v].name}</button>`).join('')
+      + '<i></i><button data-a="pair">📱 Mã MC</button><button data-a="fs">⛶</button>';
+  }
+  $('dock').addEventListener('click', (e) => {
+    const b = e.target.closest('button');
+    if (!b) return;
+    if (b.dataset.v) show(b.dataset.v);
+    else if (b.dataset.a === 'pair') openPair();
+    else if (b.dataset.a === 'fs') toggleFs();
+  });
+  function toggleFs() {
+    if (!document.fullscreenElement) document.documentElement.requestFullscreen?.().catch(() => {});
+    else document.exitFullscreen();
+  }
+  let dockTimer = null;
+  const wake = () => { document.body.classList.add('show-dock'); clearTimeout(dockTimer); dockTimer = setTimeout(() => document.body.classList.remove('show-dock'), 3000); };
+  document.addEventListener('mousemove', (e) => { if (e.clientY > innerHeight - 140) wake(); });
+  $('dock').addEventListener('mouseenter', () => clearTimeout(dockTimer));
+  $('dock').addEventListener('mouseleave', wake);
+
+  // ---------- Mã QR ----------
+  function openPair() {
+    if (!pin) { toast(CONFIGURED ? 'Đang kết nối...' : 'Chưa cấu hình Firebase'); return; }
+    const url = new URL(`remote/?pin=${pin}&key=${key}`, import.meta.url).href;
+    $('qr').innerHTML = '';
+    if (window.QRCode) new QRCode($('qr'), { text: url, width: 240, height: 240, correctLevel: QRCode.CorrectLevel.M });
+    else $('qr').textContent = url;
+    $('pin').textContent = pin;
+    $('mcPage').textContent = new URL('../mc/', import.meta.url).href.replace(/^https?:\/\//, '');
+    $('pair').hidden = false;
+  }
+  const closePair = () => { $('pair').hidden = true; frames[current]?.focus(); };
+  $('pairClose').onclick = closePair;
+  $('pair').onclick = (e) => { if (e.target === $('pair')) closePair(); };
+
+  // ---------- Firebase ----------
+  let lastState = '';
+  function pushState() {
+    if (!pin) return;
+    const s = { show: current, games, auto: autoScroll };
+    const sig = JSON.stringify(s);
+    if (sig === lastState && !pushState.force) return;
+    lastState = sig;
+    set(roomRef(pin, 'state'), { ...s, at: serverNow() }).catch(() => {});
+  }
+
+  function handle(cmd) {
+    const t = cmd.type;
+    if (t === 'show') show(cmd.arg);
+    else if (t === 'hello') { closePair(); toast('📱 MC đã kết nối'); }
+    else if (t === 'inviteOpen') openInvite();
+    else if (t === 'inviteUp') scrollInvite(-1);
+    else if (t === 'inviteDown') scrollInvite(1);
+    else if (t === 'inviteTop') scrollInvite('top');
+    else if (t === 'inviteAuto') setAuto(!autoScroll);
+    else if (t === 'fullscreen') toggleFs(); // trình duyệt thường chặn nếu không có cú bấm trên máy
+  }
+
+  // Mã phòng game / nhạc trong khung: game tự tạo phòng khi mở, lưu ở localStorage (dùng chung tên miền).
+  // Chỉ báo cho MC khi phòng đúng là của máy này (cùng tài khoản ẩn danh), tránh mã cũ đã hết hạn.
+  const checked = {};
+  async function scanGames() {
+    for (const v of ORDER) {
+      const def = VIEWS[v];
+      if (!def.pinKey || !frames[v] || !frames[v].dataset.loaded) continue;
+      const p = localStorage.getItem(def.pinKey);
+      if (!p || games[v] === p || checked[v + p] > Date.now()) continue;
+      checked[v + p] = Date.now() + 3000;
+      try {
+        const room = (await get(roomRef(p))).val();
+        if (room && room.hostUid === uid && (room.type || null) === def.type && !room.movedTo) { games = { ...games, [v]: p }; pushState(); }
+      } catch (e) { /* thử lại lần sau */ }
+    }
+  }
+
+  async function init() {
+    renderDock();
+    // Mở lại đúng màn hình đang chiếu nếu lỡ tải lại trang
+    const startView = (localStorage.getItem(LAST_VIEW) in VIEWS) ? localStorage.getItem(LAST_VIEW) : 'invite';
+    show(VIEWS[startView].pinKey && CONFIGURED ? 'invite' : startView);
+    if (VIEWS[startView].pinKey && CONFIGURED) pendingView = startView;
+    if (!CONFIGURED) return;
+    uid = await signIn();
+    watchServerTime();
+    ready = true;
+    if (pendingView) { const v = pendingView; pendingView = null; show(v); }
+    const saved = localStorage.getItem(STORE);
+    if (saved) {
+      try { const room = (await get(roomRef(saved))).val(); if (room && room.hostUid === uid && room.type === 'screen') pin = saved; } catch (e) { /* tạo mới */ }
+    }
+    for (let i = 0; !pin && i < 6; i++) {
+      const c = String(Math.floor(100000 + Math.random() * 900000));
+      try {
+        if ((await get(roomRef(c))).exists()) continue;
+        await set(roomRef(c), { hostUid: uid, createdAt: serverNow(), type: 'screen', status: 'live' });
+        pin = c;
+        localStorage.setItem(STORE, pin);
+      } catch (e) { /* thử mã khác */ }
+    }
+    if (!pin) { toast('Không tạo được phòng điều khiển, kiểm tra mạng'); return; }
+    key = controlKey();
+    await registerControl(pin, key);
+    const take = commandFilter();
+    onValue(roomRef(pin, 'command'), (snap) => { const c = take(snap.val()); if (c) { handle(c); pushState(); } });
+    lastState = '';
+    pushState();
+    setInterval(scanGames, 1000);
+    setInterval(() => { lastState = ''; pushState(); }, 5000); // báo "còn online" cho điện thoại
+    openPair(); // mở trang là hiện mã cho MC quét; MC kết nối xong tự đóng
+  }
+  init().catch((e) => { console.warn(e); toast('Không kết nối được Firebase: vẫn chuyển màn hình bằng thanh dưới đáy'); });
+</script>
+</body>
+</html>

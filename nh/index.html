@@ -31,6 +31,12 @@
     .tiles { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
     .tile { display: flex; flex-direction: column; gap: 6px; padding: 14px; border-top: 4px solid var(--gold); }
     .tile.music-tile { border-top-color: var(--rose); }
+    /* Ô Màn hình tiệc: rộng hết hàng, nằm trên 4 ô */
+    .tile.screen-tile { grid-column: 1 / -1; border-top-color: var(--wine); flex-direction: row; align-items: center; gap: 16px; }
+    .tile.screen-tile .tile-head { flex: none; }
+    .tile.screen-tile .sub { font-size: 12.5px; }
+    .tile.screen-tile .tile-actions { flex: none; width: 260px; margin: 0; }
+    @media (max-width: 759px) { .tile.screen-tile { flex-direction: column; align-items: stretch; } .tile.screen-tile .tile-actions { width: auto; } }
     .tile-head { display: flex; align-items: center; gap: 10px; }
     .tile .emoji { font-size: 28px; line-height: 1; }
     .tile h3 { margin: 0; color: var(--wine); font: 600 18px/1.2 var(--serif); }
@@ -145,6 +151,8 @@
       <li>Mở game trên máy tính nối với TV: màn hình hiện mã QR và mã phòng 6 số.</li>
       <li>Khách quét QR, hoặc vào trang nhập mã phòng rồi gõ 6 số.</li>
       <li>MC điều khiển bằng điện thoại: trên TV bấm "🎤 MC" rồi quét mã đó. Lỡ thoát hoặc đổi điện thoại: vào trang /mc, nhập mã phòng 6 số trên TV là điều khiển tiếp.</li>
+      <li>Cách gọn nhất: máy TV chỉ mở <b>Màn hình tiệc</b> (/screen), mặc định chiếu thiệp. MC quét mã QR hiện trên TV, rồi bấm Thiệp / Nhạc tiệc / Triệu Phú / Loto / Rung Cây trên điện thoại để đổi màn hình; phần dưới điện thoại tự thành nút điều khiển game / nhạc đang chiếu. Rê chuột xuống đáy màn hình TV cũng có thanh chuyển màn hình và nút "📱 Mã MC".</li>
+      <li>Nhạc tiệc điều khiển bằng điện thoại: trên trình phát bấm nút 📱 (cạnh nút ?) rồi quét mã QR, là phát/dừng, chuyển bài, bấm pad nghi lễ từ xa. Mở trình phát xong nhớ chạm màn hình LED 1 lần để trình duyệt cho phát tiếng.</li>
       <li>"📺 Mở TV" mở game ở tab mới. Nhạc luôn tự chạy, không có nút tắt. Nếu TV chưa có tiếng thì chạm/bấm phím bất kỳ 1 lần. Để có nhạc ngay khi mở: trên máy TV bật Tự phát media trong Edge (edge://settings/content/mediaAutoplay → Cho phép).</li>
       <li>Đổi bài nhạc: chép file mp3 đè lên file cùng tên trong assets/audio/game/ (bấm tên bài trong ô game để nghe thử).</li>
     </ul>
@@ -161,15 +169,16 @@
     const groups = {
       // Trong tiệc, mở trên máy nối TV / màn LED
       tv: [
+        { icon: "📺", name: "Màn hình tiệc (1 link cho TV)", prize: "MC chuyển màn hình bằng điện thoại", sub: "Mặc định chiếu thiệp cưới. MC quét mã QR trên TV, bấm Thiệp / Nhạc tiệc / game để đổi màn hình; chọn game thì TV hiện mã cho khách, điện thoại MC tự hiện nút điều khiển game đó.", path: "../screen/", open: "📺 Mở màn hình", copyName: "Màn hình tiệc (TV / LED)", cls: "screen-tile" },
         { icon: "🧠", name: "Ai Là Triệu Phú", prize: "🎁 3 quà · top 3 điểm cao nhất", sub: "15 câu · " + music([["Giới thiệu", "quiz-intro"], ["Khi trả lời", "quiz-music"]]), path: "../quiz/", open: "📺 Mở TV", copyName: "Ai Là Triệu Phú (màn hình TV)" },
         { icon: "🧧", name: "Loto", prize: "🎁 4 quà · ai KINH đầu tiên", sub: "4 vòng, mỗi vòng 1 giải · " + music([["Nhạc nền", "lottery-music"]]), path: "../lottery/", open: "📺 Mở TV", copyName: "Loto (màn hình TV)" },
         { icon: "🌳", name: "Rung Cây, Rinh Quà", prize: "🎁 3 quà · lắc nhiều nhất", sub: "3 vòng · " + music([["Nhạc chờ", "../vi-phuoc-han"], ["Nhạc lắc", "tree-music"]]), path: "../tree/", open: "📺 Mở TV", copyName: "Rung Cây, Rinh Quà (màn hình TV)" },
-        { icon: "🎵", name: "Nhạc tiệc", prize: "Màn LED · nhạc tiệc", sub: "5 bài kịch bản lễ + 26 pad · cân bằng âm lượng", path: "../musicplay/", open: "▶ Mở trình phát", copyName: "Trình phát nhạc tiệc", cls: "music-tile" }
+        { icon: "🎵", name: "Nhạc tiệc", prize: "Màn LED · nhạc tiệc", sub: "5 bài kịch bản lễ + 26 pad · 📱 điều khiển bằng điện thoại", path: "../musicplay/", open: "▶ Mở trình phát", copyName: "Trình phát nhạc tiệc", cls: "music-tile" }
       ],
       // Trong tiệc, mở trên điện thoại
       party: [
         { icon: "🙋", name: "Khách nhập mã phòng", sub: "Dùng chung cho mọi game, khi khách không quét được QR", path: "../quiz/join/" },
-        { icon: "🎤", name: "MC vào lại", sub: "Chỉ cần nhập mã phòng khi lỡ thoát hoặc đổi điện thoại", path: "../mc/" },
+        { icon: "🎤", name: "MC vào lại", sub: "Game và remote nhạc tiệc: nhập mã phòng khi lỡ thoát hoặc đổi điện thoại", path: "../mc/" },
         { icon: "📋", name: "Danh sách câu hỏi", sub: "Tự kiểm tra 15 câu Ai Là Triệu Phú, có đáp án", path: "../quiz/questions/" },
         // Không phải link: nút Xem mở ghi chú #how-text, nút Chép chép chữ để gửi MC
         { icon: "📖", name: "Cách chơi trong tiệc", sub: "Mã QR, MC điều khiển, nhạc trên TV", how: true }

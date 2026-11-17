@@ -233,6 +233,7 @@
     background: rgba(255,255,255,0.10); border: 1px solid var(--line);
     transition: background 0.2s, transform 0.1s;
   }
+  .ctl[hidden] { display: none; }
   .ctl:hover { background: rgba(255,255,255,0.2); }
   .ctl:active { transform: scale(0.94); }
   .ctl.big { width: clamp(56px, 9.5vmin, 104px); height: clamp(56px, 9.5vmin, 104px); background: var(--ink); color: #1E0A0E; border: 0; }
@@ -470,6 +471,7 @@
         <button class="ctl" id="shuffle" title="Phát ngẫu nhiên (S)"><svg viewBox="0 0 24 24"><path d="M14 4h6v6l-2.3-2.3-4.2 4.2-1.4-1.4 4.2-4.2zM4 5.4 5.4 4 20 18.6 18.6 20zM20 14v6h-6l2.3-2.3-3.1-3.1 1.4-1.4 3.1 3.1z"/></svg></button>
         <button class="ctl on" id="repeat" title="Lặp nhạc (R): bấm để đổi Lặp cả danh sách → Lặp 1 bài → Không lặp"><svg viewBox="0 0 24 24"><path d="M7 7h10v3l4-4-4-4v3H5v6h2zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2z"/></svg><span class="rep-badge" id="repBadge"></span></button>
         <button class="ctl on" id="lyBtn" title="Hiện / ẩn lời bài hát (L)"><svg viewBox="0 0 24 24"><path d="M4 6h16v2H4zm0 5h16v2H4zm0 5h10v2H4zm13-1 5 3-5 3z"/></svg></button>
+        <button class="ctl" id="remoteBtn" title="Điều khiển bằng điện thoại: hiện mã QR cho người điều khiển quét" hidden><svg viewBox="0 0 24 24"><path d="M8 2h8a2 2 0 0 1 2 2v16a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2zm0 3v13h8V5zm4 14.2a1 1 0 1 0 0 2 1 1 0 0 0 0-2z"/></svg></button>
         <button class="ctl" id="helpBtn" title="Hướng dẫn sử dụng (H)">?</button>
         <button class="ctl" id="fsBtn" title="Toàn màn hình (F)"><svg viewBox="0 0 24 24"><path d="M4 4h6v2H6v4H4zm10 0h6v6h-2V6h-4zM4 14h2v4h4v2H4zm14 0h2v6h-6v-2h4z"/></svg></button>
       </div>
@@ -540,6 +542,15 @@
             <li><b>✨ Nền nhỏ còn …%</b>: mức nhạc tiệc khi pad hiệu ứng đang phát.</li>
             <li><b>⚖️ Cân bằng</b> âm lượng (mặc định bật): tự kéo bài nhỏ lên, hạ bài to xuống cho mọi bài và pad to ngang nhau, chặn tiếng quá to khi pad chồng lên nhạc nền. Mỗi bài mới cần 2–3 giây đầu để tự chỉnh.</li>
             <li><b>■ Dừng pad</b> (<kbd>Esc</kbd>): tắt hết pad (nhạc nền vẫn dừng, bấm ▶ để phát).</li>
+          </ul>
+        </section>
+        <section>
+          <h3>📱 Điều khiển bằng điện thoại</h3>
+          <ul>
+            <li>Bấm nút <b>📱</b> (cạnh nút ?) để hiện <b>mã QR</b>. Người điều khiển quét bằng điện thoại là bấm được ▶/⏸, chuyển bài, chọn bài, bấm pad, dừng pad từ xa.</li>
+            <li>Lỡ thoát hoặc đổi điện thoại: vào trang <b>/mc</b>, nhập <b>mã phòng</b> hiện dưới mã QR.</li>
+            <li>Trình duyệt chặn phát tiếng khi trang chưa được bấm: mở trang xong <b>chạm màn hình máy này 1 lần</b> (điện thoại sẽ báo nếu cần).</li>
+            <li>Cần mạng Internet. Mất mạng thì vẫn điều khiển bằng chuột / phím như bình thường.</li>
           </ul>
         </section>
         <section>
@@ -1757,7 +1768,51 @@
   renderPads();
 
   load(0, true);
+
+  /* ---------- Cổng cho remote điện thoại (musicplay/tv-remote.js) ----------
+     Remote chỉ gửi lệnh, trình phát trên máy LED tự làm và báo lại trạng thái. */
+  window.MP = {
+    state: function () {
+      var t = tracks[idx] || {};
+      return {
+        title: t.title || "", artist: t.artist || "", idx: idx, n: tracks.length,
+        playing: !audio.paused, cur: Math.floor(audio.currentTime || 0), dur: Math.floor(audio.duration || 0),
+        shuffle: shuffle, repeat: repeatMode, padLoop: padLoopAll,
+        pads: Object.keys(padPlayers).filter(function (k) { return !padPlayers[k].stopping; }),
+        needTap: document.body.classList.contains("need-tap")
+      };
+    },
+    tracks: function () { return tracks.map(function (t) { return { t: t.title || "", a: t.artist || "" }; }); },
+    padList: function () {
+      return PAD_TABS.map(function (g) {
+        return { name: g.name, dot: g.dot, color: g.color[0], pads: g.pads.map(function (p, i) { return { n: p[0], k: (g.keys || "").charAt(i), sfx: p[2] === "sfx" }; }) };
+      });
+    },
+    run: function (type, arg) {
+      if (type === "toggle") toggle();
+      else if (type === "play") { if (audio.paused) toggle(); }
+      else if (type === "pause") { if (!audio.paused) pause(); }
+      else if (type === "next") next();
+      else if (type === "prev") prev();
+      else if (type === "shuffle") toggleShuffle();
+      else if (type === "repeat") toggleRepeat();
+      else if (type === "padLoop") $("padLoop").click();
+      else if (type === "pad") { var pi = String(arg || "").split("-"); if (PAD_TABS[+pi[0]] && PAD_TABS[+pi[0]].pads[+pi[1]]) togglePad(+pi[0], +pi[1]); }
+      else if (type === "stopPads") stopAllPads();
+      else if (type === "track") { var j = +arg; if (j >= 0 && j < tracks.length) { stopAllPads(); load(j, true); } }
+      else if (type === "seek") { var s = +arg; if (s >= 0 && isFinite(audio.duration)) audio.currentTime = Math.min(s, audio.duration - 1); }
+      else return;
+      // shuffle / repeat / padLoop tự hiện thông báo riêng
+      var say = { toggle: "phát / dừng", play: "phát", pause: "dừng", next: "bài tiếp", prev: "bài trước", stopPads: "dừng pad", track: "chọn bài", seek: "tua" }[type];
+      if (say) toast("📱 Remote: " + say);
+    }
+  };
+  document.dispatchEvent(new Event("mp-ready"));
 })();
 </script>
+<!-- Remote điện thoại: chạy riêng, lỗi mạng / Firebase không ảnh hưởng trình phát -->
+<script src="../shared/firebase-config.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script type="module" src="tv-remote.js"></script>
 </body>
 </html>

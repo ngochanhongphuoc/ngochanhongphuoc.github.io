@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#2A0B11">
+<meta name="robots" content="noindex">
+<title>MC điều khiển màn hình | Ngọc Hân &amp; Hồng Phước</title>
+<link rel="icon" href="../../assets/icons/mc.svg" type="image/svg+xml">
+<style>
+  @font-face { font-family: "Be Vietnam Pro"; font-weight: 400; font-display: swap; src: url(../../assets/fonts/be-vietnam-pro-400-vietnamese.woff2) format("woff2"); unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB; }
+  @font-face { font-family: "Be Vietnam Pro"; font-weight: 400; font-display: swap; src: url(../../assets/fonts/be-vietnam-pro-400-latin.woff2) format("woff2"); }
+  @font-face { font-family: "Be Vietnam Pro"; font-weight: 600; font-display: swap; src: url(../../assets/fonts/be-vietnam-pro-600-vietnamese.woff2) format("woff2"); unicode-range: U+0102-0103, U+0110-0111, U+0128-0129, U+0168-0169, U+01A0-01A1, U+01AF-01B0, U+0300-0301, U+0303-0304, U+0308-0309, U+0323, U+0329, U+1EA0-1EF9, U+20AB; }
+  @font-face { font-family: "Be Vietnam Pro"; font-weight: 600; font-display: swap; src: url(../../assets/fonts/be-vietnam-pro-600-latin.woff2) format("woff2"); }
+  :root { --bg: #1C070B; --card: rgba(255,255,255,0.07); --line: rgba(246,241,230,0.14); --ink: #F6F1E6; --muted: rgba(246,241,230,0.68); --accent: #E3B6A8; --ok: #3DD68C; --warn: #F2B544; --red: #D6334A; }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  html, body { height: 100%; touch-action: manipulation; }
+  body { display: flex; flex-direction: column; height: 100dvh; overflow: hidden; background: var(--bg); color: var(--ink); font-family: "Be Vietnam Pro", system-ui, sans-serif; -webkit-user-select: none; user-select: none; }
+  button { font: inherit; color: inherit; border: 0; background: none; cursor: pointer; }
+
+  /* Phần trên: chọn màn hình TV */
+  .top { flex: none; padding: calc(env(safe-area-inset-top) + 10px) calc(env(safe-area-inset-right) + 12px) 10px calc(env(safe-area-inset-left) + 12px); background: linear-gradient(180deg, #4A1520, #2A0B11); border-bottom: 1px solid var(--line); }
+  .head { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .head b { font-size: 1rem; }
+  .head small { display: block; font-size: 0.72rem; color: var(--muted); font-weight: 400; }
+  .conn { display: flex; align-items: center; gap: 6px; padding: 6px 11px; border-radius: 999px; background: var(--card); border: 1px solid var(--line); font-size: 0.75rem; font-weight: 600; white-space: nowrap; }
+  .conn i { width: 9px; height: 9px; border-radius: 50%; background: var(--muted); }
+  .conn.ok i { background: var(--ok); box-shadow: 0 0 0 3px rgba(61,214,140,0.25); }
+  .conn.warn i { background: var(--warn); }
+  .conn.bad i { background: var(--red); }
+  .views { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+  .v { min-height: 66px; border-radius: 14px; background: var(--card); border: 1px solid var(--line); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; font-size: 0.7rem; font-weight: 600; line-height: 1.15; text-align: center; padding: 6px 2px; }
+  .v span { font-size: 1.45rem; line-height: 1; }
+  .v:active { transform: scale(0.95); }
+  .v.on { background: var(--accent); color: #2A0B11; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(227,182,168,0.25); }
+  .v.wait { animation: pulse 0.8s infinite; }
+  @keyframes pulse { 50% { opacity: 0.5; } }
+
+  /* Phần dưới: điều khiển của màn hình đang chiếu */
+  .panel { flex: 1; min-height: 0; position: relative; }
+  .panel iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; background: var(--bg); }
+  .pane { height: 100%; overflow: auto; padding: 16px calc(env(safe-area-inset-right) + 16px) calc(env(safe-area-inset-bottom) + 16px) calc(env(safe-area-inset-left) + 16px); }
+  .pane h2 { font-size: 1.1rem; margin-bottom: 4px; }
+  .pane p { color: var(--muted); font-size: 0.88rem; line-height: 1.5; }
+  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 16px; }
+  .btn { min-height: 64px; border-radius: 16px; background: var(--card); border: 1px solid var(--line); font-weight: 600; font-size: 0.95rem; display: flex; align-items: center; justify-content: center; gap: 8px; padding: 8px; }
+  .btn:active { transform: scale(0.96); }
+  .btn.wide { grid-column: 1 / -1; }
+  .btn.main { background: var(--ink); color: #2A0B11; border: 0; }
+  .btn.on { background: rgba(61,214,140,0.2); border-color: var(--ok); }
+  .center { height: 100%; display: grid; place-items: center; text-align: center; padding: 24px; }
+  .center .ic { font-size: 3rem; margin-bottom: 8px; }
+  .tip { margin-top: 18px; padding: 12px 14px; border-radius: 14px; background: rgba(242,181,68,0.12); border: 1px solid rgba(242,181,68,0.4); font-size: 0.85rem; line-height: 1.5; }
+
+  .toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 110px); transform: translateX(-50%); z-index: 30; background: #111; color: #fff; padding: 10px 18px; border-radius: 999px; font-size: 0.85rem; font-weight: 600; opacity: 0; transition: opacity 0.2s; pointer-events: none; white-space: nowrap; }
+  .toast.show { opacity: 1; }
+  .msg { height: 100dvh; display: grid; place-items: center; text-align: center; padding: 24px; }
+  .msg div { max-width: 340px; }
+  .msg .ic { font-size: 3.6rem; }
+  .msg h2 { margin: 10px 0 8px; font-size: 1.3rem; }
+  .msg p { color: var(--muted); line-height: 1.5; }
+</style>
+</head>
+<body>
+<div id="app" style="display:contents"></div>
+<div class="toast" id="toast"></div>
+
+<script src="../../shared/firebase-config.js"></script>
+<script type="module">
+  // Điện thoại MC: chọn màn hình đang chiếu trên TV (thiệp / nhạc / game) và điều khiển luôn màn hình đó.
+  // Khi TV chiếu game hoặc nhạc, phần dưới mở trang điều khiển sẵn có của game / nhạc (cùng mã MC) trong khung.
+  import { CONFIGURED, db, ref, set, onValue, roomRef, signIn, watchServerTime, serverNow, serverTimestamp, randomId, escapeHtml, tidyUrl } from '../../shared/live.js';
+  import { claimControl, saveMcSession } from '../../shared/remote.js';
+  tidyUrl();
+
+  const VIEWS = {
+    invite: { name: 'Thiệp', icon: '💌' },
+    music: { name: 'Nhạc tiệc', icon: '🎵', ctrl: '../../musicplay/remote/' },
+    quiz: { name: 'Triệu Phú', icon: '🧠', ctrl: '../../quiz/host/', full: 'Ai Là Triệu Phú' },
+    lottery: { name: 'Loto', icon: '🧧', ctrl: '../../lottery/host/' },
+    tree: { name: 'Rung Cây', icon: '🌳', ctrl: '../../tree/host/', full: 'Rung Cây, Rinh Quà' },
+  };
+  const ORDER = ['invite', 'music', 'quiz', 'lottery', 'tree'];
+  const app = document.getElementById('app');
+  const params = new URLSearchParams(location.search);
+  const pin = (params.get('pin') || '').replace(/\D/g, '');
+  const key = params.get('key') || '';
+  const $ = (id) => document.getElementById(id);
+  let st = null, online = true, built = false, waitingFor = null, panelSig = '';
+
+  const toast = (msg) => { const t = $('toast'); t.textContent = msg; t.classList.add('show'); clearTimeout(toast.t); toast.t = setTimeout(() => t.classList.remove('show'), 1600); };
+  const message = (icon, title, sub = '') => { built = false; app.innerHTML = `<div class="msg"><div><div class="ic">${icon}</div><h2>${title}</h2><p>${sub}</p></div></div>`; };
+
+  if (!CONFIGURED) message('🛠️', 'Chưa cấu hình Firebase');
+  else if (!pin || !key) message('📱', 'Thiếu mã điều khiển', 'Trên màn hình tiệc (máy TV / LED) rê chuột xuống đáy, bấm "📱 Mã MC" rồi quét mã QR.');
+  else start();
+
+  async function start() {
+    message('⏳', 'Đang kết nối...');
+    let uid;
+    try { uid = await signIn(); } catch (e) { message('😢', 'Không kết nối được', escapeHtml(e.message)); return; }
+    watchServerTime();
+    if (!(await claimControl(pin, uid, key))) { message('🔒', 'Mã điều khiển không đúng', 'Quét lại mã QR trên màn hình tiệc, hoặc vào trang /mc nhập lại mã phòng.'); return; }
+    saveMcSession(pin, key, 'screen');
+    build();
+    send('hello', null, true); // TV đóng bảng mã QR
+    onValue(ref(db, '.info/connected'), (s) => { online = s.val() === true; updateConn(); });
+    onValue(roomRef(pin, 'type'), (s) => { if (!s.exists()) message('👋', 'Màn hình đã đóng', 'Mở lại màn hình tiệc trên máy TV rồi quét mã QR mới.'); });
+    onValue(roomRef(pin, 'state'), (s) => { st = s.val(); update(); });
+    setInterval(updateConn, 2000);
+    keepAwake();
+  }
+
+  async function send(type, arg, quiet) {
+    if (!quiet && navigator.vibrate) navigator.vibrate(30);
+    try { await set(roomRef(pin, 'command'), { type, id: randomId(10), arg: arg ?? null, at: serverTimestamp() }); }
+    catch (e) { if (!quiet) toast('Không gửi được lệnh, thử lại nha'); }
+  }
+
+  function build() {
+    built = true;
+    app.innerHTML = `<header class="top">
+      <div class="head"><div><b>📺 Màn hình tiệc</b><small>Phòng ${pin} · bấm để đổi màn hình TV</small></div><div class="conn" id="conn"><i></i><span>...</span></div></div>
+      <div class="views">${ORDER.map((v) => `<button class="v" data-v="${v}"><span>${VIEWS[v].icon}</span>${VIEWS[v].name}</button>`).join('')}</div>
+    </header>
+    <main class="panel" id="panel"></main>`;
+    document.querySelector('.views').addEventListener('click', (e) => {
+      const b = e.target.closest('.v');
+      if (!b) return;
+      const v = b.dataset.v;
+      if (st && st.show === v) return;
+      // Đang chiếu game mà chuyển đi: hỏi lại (game không mất, mở lại vẫn tiếp tục đúng phòng)
+      if (st && VIEWS[st.show]?.ctrl && st.show !== 'music' && !confirm(`Chuyển TV từ ${VIEWS[st.show].full || VIEWS[st.show].name} sang ${VIEWS[v].full || VIEWS[v].name}?\nGame vẫn giữ nguyên, chuyển lại là chơi tiếp.`)) return;
+      waitingFor = v;
+      send('show', v);
+      update();
+    });
+    update();
+  }
+
+  function update() {
+    if (!built) return;
+    const show = st && st.show;
+    if (waitingFor === show) waitingFor = null;
+    document.querySelectorAll('.v').forEach((b) => { b.classList.toggle('on', b.dataset.v === show); b.classList.toggle('wait', b.dataset.v === waitingFor); });
+    updateConn();
+    renderPanel();
+  }
+
+  // Phần dưới: chỉ vẽ lại khi màn hình / mã phòng đổi (giữ nguyên khung điều khiển game đang mở)
+  function renderPanel() {
+    const show = st && st.show;
+    const gamePin = show && st.games && st.games[show];
+    const sig = show === 'invite' ? 'invite' : `${show}:${gamePin || ''}`;
+    if (sig === panelSig) { if (show === 'invite') $('autoBtn')?.classList.toggle('on', !!st.auto); return; }
+    panelSig = sig;
+    const panel = $('panel');
+    if (!show) { panel.innerHTML = '<div class="center"><div><div class="ic">⏳</div><p>Đang chờ màn hình tiệc...</p></div></div>'; return; }
+    if (show === 'invite') {
+      panel.innerHTML = `<div class="pane">
+        <h2>💌 TV đang chiếu thiệp cưới</h2>
+        <p>Đón khách: bật tự cuộn để thiệp chạy chậm từ trên xuống, hết thì quay lại đầu.</p>
+        <div class="grid">
+          <button class="btn main wide" data-c="inviteAuto" id="autoBtn">🔃 Tự cuộn thiệp (bật / tắt)</button>
+          <button class="btn" data-c="inviteUp">⬆️ Lên</button>
+          <button class="btn" data-c="inviteDown">⬇️ Xuống</button>
+          <button class="btn" data-c="inviteOpen">✉️ Mở thiệp</button>
+          <button class="btn" data-c="inviteTop">⏫ Về đầu</button>
+        </div>
+        <div class="tip">💡 Tới phần game: bấm ô game ở trên, TV hiện mã QR cho khách quét, phần này tự chuyển sang nút điều khiển game.<br>Tới phần lễ / nhạc: bấm <b>🎵 Nhạc tiệc</b>.</div>
+      </div>`;
+      $('autoBtn').classList.toggle('on', !!st.auto);
+      panel.querySelectorAll('[data-c]').forEach((b) => b.addEventListener('click', () => send(b.dataset.c)));
+      return;
+    }
+    const def = VIEWS[show];
+    if (!gamePin) {
+      panel.innerHTML = `<div class="center"><div><div class="ic">${def.icon}</div><h2 style="font-size:1.1rem;margin-bottom:6px">Đang mở ${escapeHtml(def.full || def.name)} trên TV...</h2><p style="color:var(--muted);font-size:0.88rem">Vài giây là xong. Mất lâu thì kiểm tra mạng của máy TV.</p></div></div>`;
+      return;
+    }
+    // Trang điều khiển sẵn có của game / nhạc, dùng chung mã MC với màn hình
+    panel.innerHTML = `<iframe title="Điều khiển ${escapeHtml(def.name)}" src="${def.ctrl}?pin=${gamePin}&key=${encodeURIComponent(key)}"></iframe>`;
+  }
+
+  function updateConn() {
+    const el = $('conn');
+    if (!el) return;
+    let cls = 'ok', text = 'Đã kết nối';
+    if (!online) { cls = 'bad'; text = 'Mất mạng'; }
+    else if (!st || serverNow() - st.at > 20000) { cls = 'warn'; text = 'TV chưa mở'; }
+    if (el.dataset.s !== cls) { el.dataset.s = cls; el.className = 'conn ' + cls; el.querySelector('span').textContent = text; }
+  }
+
+  async function keepAwake() {
+    if (!('wakeLock' in navigator)) return;
+    const req = async () => { try { await navigator.wakeLock.request('screen'); } catch (e) { /* bỏ qua */ } };
+    await req();
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') req(); });
+  }
+</script>
+</body>
+</html>
