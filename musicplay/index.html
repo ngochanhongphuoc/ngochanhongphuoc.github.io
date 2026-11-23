@@ -250,7 +250,7 @@
   }
   body.idle .pads { opacity: 0.35; }
   body.idle .pads:hover { opacity: 1; }
-  .pads-head { display: flex; align-items: center; gap: 0.8vmin; flex-wrap: wrap; font-size: clamp(11px, 1.6vmin, 16px); }
+  .pads-head { display: flex; align-items: center; gap: 1.6vmin; flex-wrap: wrap; font-size: clamp(11px, 1.6vmin, 16px); }
   .pads-head .lbl { font-weight: 700; letter-spacing: 0.2em; text-transform: uppercase; color: var(--gold); margin-right: 0.6vmin; }
   .ptab, .pbtn {
     padding: 0.5vmin 1.4vmin; border-radius: 9999px; border: 1px solid var(--line);
@@ -260,8 +260,32 @@
   .ptab:hover, .pbtn:hover { background: rgba(255,255,255,0.16); }
   .ptab.on:hover { background: #fff; }
   .pads-head .sp { flex: 1; }
+  /* Thanh phát pad đang chạy (trên bảng pad): tên, tạm dừng, tua, thời gian; không có pad thì ẩn nhưng vẫn giữ chỗ */
+  .pad-now { flex: 1; min-width: 0; display: flex; align-items: center; gap: 1vmin; padding: 0.3vmin 1.2vmin 0.3vmin 0.4vmin;
+    border-radius: 9999px; background: rgba(0,0,0,0.28); border: 1px solid var(--line); visibility: hidden; }
+  .pad-now.on { visibility: visible; }
+  .pad-now .pn-play { flex: none; width: 2.2em; height: 2.2em; border-radius: 50%; background: var(--ink); color: #1E0A0E; font-weight: 800; line-height: 1; }
+  .pad-now .pn-play:hover { background: #fff; }
+  .pad-now .pn-name { flex: 0 1 auto; max-width: 30%; font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .pad-now .pn-bar { flex: 1; min-width: 40px; position: relative; height: 8px; border-radius: 9999px; background: rgba(255,255,255,0.18); cursor: pointer; }
+  .pad-now .pn-bar::before { content: ""; position: absolute; inset: -8px 0; } /* vùng bấm rộng hơn */
+  .pad-now .pn-fill { position: absolute; left: 0; top: 0; bottom: 0; width: 0; border-radius: inherit; background: linear-gradient(90deg, var(--accent), var(--gold)); }
+  .pad-now .pn-time { flex: none; color: var(--ink); opacity: 0.8; font-variant-numeric: tabular-nums; white-space: nowrap; }
   .pads-head label { display: flex; align-items: center; gap: 6px; color: var(--muted); white-space: nowrap; }
-  .pads-head input[type=range] { width: 9vmin; min-width: 60px; accent-color: var(--accent); }
+  .pads-head input[type=range] { width: 8vmin; min-width: 56px; accent-color: var(--accent); }
+  /* Nhóm tùy chọn: mỗi ô là 1 chip bật/tắt (ô đánh dấu ẩn, chip sáng = đang bật), ngăn cách bằng vạch mờ */
+  .pad-opts { flex: none; display: flex; align-items: center; gap: 0.4vmin; padding: 0.3vmin; border-radius: 9999px;
+    background: rgba(0,0,0,0.28); border: 1px solid var(--line); }
+  .pad-opts .opt { display: flex; align-items: center; gap: 0.6vmin; }
+  .pad-opts .opt + .opt { border-left: 1px solid var(--line); padding-left: 0.4vmin; }
+  .pad-opts .chip { position: relative; cursor: pointer; padding: 0.45vmin 1.2vmin; border-radius: 9999px; font-weight: 600; transition: background 0.2s, color 0.2s; }
+  .pad-opts .chip input { position: absolute; opacity: 0; pointer-events: none; }
+  .pad-opts .chip:hover { background: rgba(255,255,255,0.1); }
+  .pad-opts .chip:has(input:checked) { background: rgba(255,255,255,0.16); color: var(--ink); }
+  .pad-opts .chip:has(input:focus-visible) { outline: 2px solid var(--gold); }
+  .pad-opts .lvl { padding-right: 1vmin; font-variant-numeric: tabular-nums; }
+  .pad-opts .lvl span { min-width: 3ch; }
+  .pad-opts .duck:not(:has(input:checked)) .lvl { opacity: 0.4; }
   .pbtn.stop { background: #8E2C3C; border-color: #8E2C3C; }
   .pad-grid { flex: 1; min-height: 0; display: grid; gap: 1.6vmin; }
   .pad {
@@ -482,11 +506,20 @@
   <section class="pads" aria-label="Pad nhạc nghi lễ">
     <div class="pads-head">
       <span class="lbl">🎛️ Pad nghi lễ</span>
-      <span class="sp"></span>
-      <label title="Khi pad hiệu ứng (pháo, cồng, trống) phát, nhạc nền tự nhỏ lại còn mức này. Pad nhạc thì nhạc nền tạm dừng hẳn"><input type="checkbox" id="autoDuck" checked> ✨<span class="opt-t"> Nền nhỏ còn</span></label>
-      <label><input type="range" id="duckLevel" min="0" max="50" step="5" value="15"><span id="duckVal">15%</span></label>
-      <label title="Tự cân âm lượng: bài nhỏ kéo lên, bài to hạ xuống, chặn tiếng quá to (máy tính)"><input type="checkbox" id="levelOn" checked> ⚖️<span class="opt-t"> Cân bằng</span></label>
-      <label title="Bật (mặc định): pad nhạc phát lặp lại đến khi bấm dừng. Tắt: pad phát 1 lần rồi tự tắt"><input type="checkbox" id="padLoop" checked> 🔁 Lặp pad</label>
+      <div class="pad-now" id="padNow" title="Pad đang phát: bấm vào thanh để tua">
+        <button class="pn-play" id="padNowPlay" title="Tạm dừng / phát tiếp pad">⏸</button>
+        <span class="pn-name" id="padNowName"></span>
+        <div class="pn-bar" id="padNowBar"><div class="pn-fill" id="padNowFill"></div></div>
+        <span class="pn-time" id="padNowTime">0:00 / 0:00</span>
+      </div>
+      <div class="pad-opts">
+        <div class="opt duck">
+          <label class="chip" title="Khi pad hiệu ứng (pháo, cồng, trống) phát, nhạc nền tự nhỏ lại còn mức này. Pad nhạc thì nhạc nền tạm dừng hẳn"><input type="checkbox" id="autoDuck" checked> ✨<span class="opt-t"> Nền nhỏ còn</span></label>
+          <label class="lvl"><input type="range" id="duckLevel" min="0" max="50" step="5" value="15"><span id="duckVal">15%</span></label>
+        </div>
+        <label class="opt chip" title="Tự cân âm lượng: bài nhỏ kéo lên, bài to hạ xuống, chặn tiếng quá to (máy tính)"><input type="checkbox" id="levelOn" checked> ⚖️<span class="opt-t"> Cân bằng</span></label>
+        <label class="opt chip" title="Bật (mặc định): pad nhạc phát lặp lại đến khi bấm dừng. Tắt: pad phát 1 lần rồi tự tắt"><input type="checkbox" id="padLoop" checked> 🔁 Lặp pad</label>
+      </div>
       <button class="pbtn stop" id="padStop" title="Dừng mọi pad, nhạc nền to lại (Esc)">■ Dừng pad</button>
     </div>
     <div class="pad-grid" id="padGrid"></div>
@@ -542,6 +575,7 @@
             <li><b>🔁 Lặp pad</b> (mặc định bật): pad nhạc phát lặp đến khi bấm dừng. Muốn pad phát 1 lần rồi tự tắt thì bỏ chọn ô này (phím <kbd>P</kbd>).</li>
             <li><b>✨ Nền nhỏ còn …%</b>: mức nhạc tiệc khi pad hiệu ứng đang phát.</li>
             <li><b>⚖️ Cân bằng</b> âm lượng (mặc định bật): tự kéo bài nhỏ lên, hạ bài to xuống cho mọi bài và pad to ngang nhau, chặn tiếng quá to khi pad chồng lên nhạc nền. Mỗi bài mới cần 2–3 giây đầu để tự chỉnh.</li>
+            <li><b>Thanh phát pad</b> (trên bảng pad, hiện khi có pad đang chạy): tên pad, nút ⏸ / ▶ tạm dừng hoặc phát tiếp, bấm vào thanh để tua tới đoạn muốn phát, thời gian đang phát / tổng.</li>
             <li><b>■ Dừng pad</b> (<kbd>Esc</kbd>): tắt hết pad (nhạc nền vẫn dừng, bấm ▶ để phát).</li>
           </ul>
         </section>
@@ -696,6 +730,13 @@
       if (val === undefined) return localStorage.getItem(key);
       if (val === null) localStorage.removeItem(key); else localStorage.setItem(key, val);
     } catch (e) { return null; }
+  }
+  // Xoá 1 lần mọi lời đã canh tay lưu trên máy (lời cũ canh sai, theo yêu cầu). Canh lại sau đó vẫn được lưu bình thường.
+  if (!store("musicplay-lrc-cleared-1")) {
+    try {
+      Object.keys(localStorage).forEach(function (k) { if (k.indexOf("musicplay-lrc") === 0) localStorage.removeItem(k); });
+    } catch (e) {}
+    store("musicplay-lrc-cleared-1", "1");
   }
   function parseLrc(text) {
     var out = [];
@@ -1738,6 +1779,38 @@
     if (hit) togglePad(hit[0], hit[1]);
   }
   $("padStop").addEventListener("click", stopAllPads);
+  // Thanh phát pad: hiện pad nhạc đang chạy (không có thì pad hiệu ứng), tua bằng cách bấm vào thanh
+  function nowPad() {
+    var ids = Object.keys(padPlayers).filter(function (k) { return !padPlayers[k].stopping; });
+    var m = ids.filter(function (k) { return padPlayers[k].mode === "music"; });
+    var id = (m.length ? m : ids).pop();
+    return id ? { id: id, pl: padPlayers[id] } : null;
+  }
+  function drawPadNow() {
+    var n = nowPad(), box = $("padNow");
+    box.classList.toggle("on", !!n);
+    if (!n) return;
+    var a = n.pl.audio, pi = n.id.split("-"), d = a.duration;
+    $("padNowName").textContent = PAD_TABS[+pi[0]].pads[+pi[1]][0];
+    $("padNowPlay").textContent = a.paused ? "▶" : "⏸";
+    $("padNowFill").style.width = (d ? a.currentTime / d * 100 : 0) + "%";
+    $("padNowTime").textContent = fmt(a.currentTime) + " / " + fmt(d);
+  }
+  setInterval(drawPadNow, 250);
+  $("padNowBar").addEventListener("click", function (e) {
+    var n = nowPad();
+    if (!n || !n.pl.audio.duration) return;
+    var r = this.getBoundingClientRect();
+    n.pl.audio.currentTime = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width)) * n.pl.audio.duration;
+    drawPadNow();
+  });
+  $("padNowPlay").addEventListener("click", function () {
+    var n = nowPad();
+    if (!n) return;
+    var a = n.pl.audio;
+    if (a.paused) { if (n.pl.mode === "music" && !audio.paused) pause(); a.play(); } else a.pause();
+    drawPadNow();
+  });
   $("autoDuck").addEventListener("change", function () {
     if (!this.checked && ducked) setDuck(false);
     else if (this.checked && padsPlaying() && !audio.paused) setDuck(true, +$("duckLevel").value / 100);
